@@ -1,134 +1,210 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Shirt Company — Local printing made easy</title>
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Shirt Printing — Local printing made easy</title>
 
   <style>
-    :root{
-      --bg-sky:#F2F8FF; --surface:#FFFFFF; --primary:#246B78;
-      --accent:#F6E7A6; --support:#D9EEF6; --text:#18313A;
-      --muted:#3A4F57; --border:#D7E6F2;
-      --radius-card:16px; --radius-pill:999px;
-      --shadow-soft:0 10px 30px rgba(24,49,58,.06);
-      --shadow-card:0 8px 20px rgba(24,49,58,.06);
-      --container:1120px;
+    :root {
+      --primary: #246B78;
+      --text: #18313A;
+      --muted: #3A4F57;
+      --border: #D7E6F2;
+      --bg-sky: #F2F8FF;
+      --container: 1100px;
     }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui;background:#fff;color:var(--text);line-height:1.6}
-    a{text-decoration:none;color:inherit}
-    img{max-width:100%;display:block}
-    .container{max-width:var(--container);margin:auto;padding:0 20px}
 
-    /* Header */
-    .site-header{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--border);z-index:50}
-    .header-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
-    .brand{display:flex;align-items:center;gap:10px}
-    .logo{width:34px;height:34px;border-radius:10px;background:var(--support);
-      display:grid;place-items:center;font-weight:700;color:var(--primary)}
-    .brand-name{font-family:"DM Sans";font-weight:700}
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: #fff;
+      line-height: 1.6;
+    }
+    a { text-decoration: none; color: inherit; }
 
-    .nav{display:flex;gap:16px}
-    .nav a{font-size:14px;color:var(--muted);padding:8px 10px;border-radius:10px}
-    .nav a:hover{background:var(--bg-sky)}
+    .container {
+      max-width: var(--container);
+      margin: auto;
+      padding: 0 20px;
+    }
 
-    .btn{border-radius:999px;padding:12px 16px;font-weight:600;display:inline-flex}
-    .btn-primary{background:var(--primary);color:#fff}
+    /* ===== HEADER ===== */
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
 
-    /* Hero */
-    .section{padding:56px 0}
-    .section.sky{background:var(--bg-sky)}
-    .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}
-    .hero h1{font-family:"DM Sans";font-size:42px;margin:0}
-    .hero p{color:var(--muted)}
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+    }
 
-    /* Footer */
-    footer{background:var(--text);color:#fff;padding:44px 0}
-    .footer-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
-    .footer-bottom{margin-top:18px;font-size:13px;opacity:.8}
+    .brand {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
 
-    @media(max-width:900px){
-      .hero-grid,.footer-grid{grid-template-columns:1fr}
-      .nav{display:none}
+    .brand-logo {
+      height: 40px;          /* SMALL, LOCKED SIZE */
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      display: block;
+    }
+
+    nav {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+
+    nav a {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      background: var(--bg-sky);
+      padding: 70px 0;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      margin: 0 0 12px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      margin: 0 0 20px;
+      max-width: 50ch;
+    }
+
+    .hero img {
+      width: 100%;
+      border-radius: 16px;
+      display: block;
+    }
+
+    /* ===== SECTIONS ===== */
+    section {
+      padding: 60px 0;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--text);
+      color: #fff;
+      padding: 30px 0;
+      font-size: 14px;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      nav {
+        display: none;
+      }
     }
   </style>
 </head>
 
 <body>
 
-<header class="site-header">
+<!-- ===== HEADER ===== -->
+<header>
   <div class="container header-inner">
-   <a class="brand" href="#top">
-  <img src="logo.png" alt="My Shirt Printing logo" class="brand-logo">
-</a>
+    <a class="brand" href="#">
+      <img src="logo.png" alt="My Shirt Printing logo" class="brand-logo">
+    </a>
 
-    <nav class="nav">
-      <a href="#top">Home</a>
-      <a href="#quote">Get a Quote</a>
-      <a href="#gallery">Gallery</a>
-      <a href="#contact">Contact</a>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">Get a Quote</a>
+      <a href="#">Gallery</a>
+      <a href="#">Contact</a>
     </nav>
-    <a class="btn btn-primary" href="#quote">Get a Quote</a>
+
+    <a href="#" class="btn">Get a Quote</a>
   </div>
 </header>
 
-<main id="top">
-
-<section class="section sky hero">
+<!-- ===== HERO ===== -->
+<section class="hero">
   <div class="container hero-grid">
     <div>
       <h1>Local printing made easy.</h1>
-      <p>Family-owned service, quick turnaround, and quality prints for businesses and events.</p>
-      <a class="btn btn-primary" href="#quote">Get a Quote</a>
+      <p>
+        Family-owned service, quick turnaround, and quality prints
+        for businesses and events.
+      </p>
+      <a href="#" class="btn">Get a Quote</a>
     </div>
-    <img src="https://images.unsplash.com/photo-1526481280695-3c687fd5432c?auto=format&fit=crop&w=1200&q=80"
-         alt="Printed materials on a desk">
+
+    <!-- Put hero.jpg in the same folder as index.html -->
+    <img src="hero.jpg" alt="Printed materials on a desk">
   </div>
 </section>
 
-<section class="section" id="quote">
+<!-- ===== QUOTE ===== -->
+<section>
   <div class="container">
     <h2>Get a Quote</h2>
     <p>We’ll add a quote form here next.</p>
   </div>
 </section>
 
-<section class="section sky" id="contact">
-  <div class="container">
-    <h2>Contact</h2>
-    <p>
-      <strong>Phone:</strong> (123) 456-7890<br>
-      <strong>Email:</strong> info@myshirtcompany.com
-    </p>
-  </div>
-</section>
-
-</main>
-
+<!-- ===== FOOTER ===== -->
 <footer>
-  <div class="container footer-grid">
-    <div>
-      <strong>My Shirt Company</strong><br>
-      123 Main St, Your City<br>
-      Mon–Fri 9am–5pm
-    </div>
-    <div>
-      <a href="#quote">Get a Quote</a><br>
-      <a href="#gallery">Gallery</a>
-    </div>
-    <div>
-      Quality custom printing with friendly service.
-    </div>
-  </div>
-
-  <div class="container footer-bottom">
-    © <span id="year"></span> My Shirt Company. All rights reserved.
+  <div class="container footer-inner">
+    <div>© <span id="year"></span> My Shirt Printing</div>
+    <div>Made with care.</div>
   </div>
 </footer>
 
