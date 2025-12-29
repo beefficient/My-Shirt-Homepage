@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Shirt Printing — Quote</title>
+
+  <style>
+    :root{
+      --surface:#ffffff;
+      --bg:#f6faf7;
+      --border:#d8e5db;
+      --text:#173028;
+      --muted:#456057;
+      --accent:#2f7a5a;
+      --accent2:#e8f6ee;
+      --danger:#a63a3a;
+      --container:1100px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:var(--container);margin:0 auto;padding:0 20px}
+
+    /* Shared header/nav */
+    header{
+      background:var(--surface);
+      border-bottom:1px solid var(--border);
+      position:sticky; top:0; z-index:50;
+    }
+    .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:12px;min-width:220px}
+    .brand img{height:44px;width:auto;display:block}
+    nav{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
+    nav a{font-weight:600;font-size:14px;color:var(--muted);padding:8px 10px;border-radius:10px}
+    nav a:hover{background:#eef7f1;color:var(--text)}
+    nav a.active{background:#eef7f1;color:var(--text)}
+    .btnTop{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:12px 16px;border-radius:999px;
+      background:var(--accent);color:#fff;font-weight:700;border:1px solid transparent;
+    }
+
+    /* Quote layout */
+    .wrap{max-width:980px;margin:22px auto 28px;padding:0 16px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+    .card{
+      background:#fff;border:1px solid var(--border);
+      border-radius:14px;padding:16px;
+      box-shadow:0 8px 20px rgba(0,0,0,.04);
+    }
+    h1{margin:0 0 6px;font-size:22px}
+    p{margin:0 0 14px;color:var(--muted)}
+    label{display:block;font-weight:600;margin:12px 0 6px}
+    input,select{
+      width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);font-size:14px;background:#fff;
+    }
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .choices{display:grid;gap:10px;margin-top:8px}
+    .choice{
+      display:flex;align-items:flex-start;gap:10px;
+      padding:10px;border:1px solid var(--border);
+      border-radius:12px;background:var(--accent2);
+    }
+    .choice input[type="checkbox"]{width:auto;margin-top:2px}
+    .choice .inline{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:6px 10px;border-radius:999px;border:1px solid var(--border);
+      background:#fff;font-size:13px;color:var(--muted);
+    }
+    .pill select, .pill input{
+      width:auto; padding:6px 8px; border-radius:10px;
+      border:1px solid var(--border); font-size:13px;
+    }
+    .btn{
+      margin-top:14px;width:100%;
+      padding:12px 14px;border:none;border-radius:12px;
+      background:var(--accent);color:#fff;font-weight:800;cursor:pointer;font-size:15px;
+    }
+    .error{color:var(--danger);font-weight:600;margin-top:10px;white-space:pre-line}
+    .summary{
+      background:#eaf7ef;border:1px solid #bfe2cc;border-radius:14px;padding:14px;
+    }
+    .summary .line{
+      display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);
+    }
+    .summary .line:last-child{border-bottom:none}
+    .summary .k{color:#1a3a2f}
+    .summary .v{font-weight:800}
+    .divider{height:1px;background:rgba(0,0,0,.08);margin:14px 0}
+    .section-title{font-weight:900;margin:0 0 8px;font-size:18px}
+    .loc{margin:12px 0;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06)}
+    .loc:last-child{border-bottom:none}
+    .muted{color:var(--muted);font-weight:500}
+    .emptyBox{
+      border:1px dashed rgba(0,0,0,.2);
+      border-radius:12px;
+      padding:12px;
+      color:var(--muted);
+      background:#fff;
+    }
+    @media (max-width: 900px){nav{display:none}}
+    @media (max-width: 860px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+
+<body>
+  <!-- Shared header -->
+  <header>
+    <div class="container">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="My Shirt Printing Home">
+          <img src="logo.png" alt="My Shirt Printing logo">
+        </a>
+
+        <nav aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <a class="active" href="quote.html">Quote</a>
+          <a href="gallery.html">Gallery</a>
+          <a href="about.html">About Us</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+
+        <a class="btnTop" href="quote.html">Get a Quote</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <h1>Quote Calculator</h1>
+    <p>Fill out the form to generate an estimate. This page clears automatically for the next customer.</p>
+
+    <div class="grid">
+      <!-- INPUTS -->
+      <div class="card">
+        <div class="row">
+          <div>
+            <label for="qty">Quantity</label>
+            <input id="qty" type="number" min="1" step="1" autocomplete="off" />
+          </div>
+          <div>
+            <label for="garmentTone">Garments</label>
+            <select id="garmentTone" autocomplete="off">
+              <option value="" selected disabled>Select one</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="reorder">Reorder?</label>
+            <select id="reorder" autocomplete="off">
+              <option value="" selected disabled>Select one</option>
+              <option value="new">New order</option>
+              <option value="reorder">Reorder</option>
+            </select>
+          </div>
+          <div>
+            <label for="rush">Rush</label>
+            <select id="rush" autocomplete="off">
+              <option value="" selected disabled>Select one</option>
+              <option value="standard">Standard</option>
+              <option value="3-5">3–5 business days (+25%)</option>
+              <option value="2-3">2–3 business days (+35%)</option>
+              <option value="1day">1 business day (+50%)</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Print Locations</label>
+        <div class="choices" id="locations">
+          <div class="choice">
+            <input type="checkbox" class="locCheck" data-loc="Front Center">
+            <div class="meta">
+              <strong>Front Center</strong>
+              <div class="inline">
+                <span class="pill">Colors:
+                  <select class="colors" data-loc="Front Center">
+                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
+                    <option>5</option><option>6</option><option>7</option><option>8</option>
+                  </select>
+                </span>
+                <span class="pill">Ink colors:
+                  <input class="inkNotes" data-loc="Front Center" placeholder="ex: black, red, pink" autocomplete="off" />
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="choice">
+            <input type="checkbox" class="locCheck" data-loc="Back Center">
+            <div class="meta">
+              <strong>Back Center</strong>
+              <div class="inline">
+                <span class="pill">Colors:
+                  <select class="colors" data-loc="Back Center">
+                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
+                    <option>5</option><option>6</option><option>7</option><option>8</option>
+                  </select>
+                </span>
+                <span class="pill">Ink colors:
+                  <input class="inkNotes" data-loc="Back Center" placeholder="ex: black" autocomplete="off" />
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="choice">
+            <input type="checkbox" class="locCheck" data-loc="Left Sleeve">
+            <div class="meta">
+              <strong>Left Sleeve</strong>
+              <div class="inline">
+                <span class="pill">Colors:
+                  <select class="colors" data-loc="Left Sleeve">
+                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
+                    <option>5</option><option>6</option><option>7</option><option>8</option>
+                  </select>
+                </span>
+                <span class="pill">Ink colors:
+                  <input class="inkNotes" data-loc="Left Sleeve" placeholder="ex: white" autocomplete="off" />
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="choice">
+            <input type="checkbox" class="locCheck" data-loc="Right Sleeve">
+            <div class="meta">
+              <strong>Right Sleeve</strong>
+              <div class="inline">
+                <span class="pill">Colors:
+                  <select class="colors" data-loc="Right Sleeve">
+                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
+                    <option>5</option><option>6</option><option>7</option><option>8</option>
+                  </select>
+                </span>
+                <span class="pill">Ink colors:
+                  <input class="inkNotes" data-loc="Right Sleeve" placeholder="ex: white" autocomplete="off" />
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn" id="calc">Calculate Quote</button>
+        <div class="error" id="error"></div>
+      </div>
+
+      <!-- OUTPUT -->
+      <div class="card">
+        <div class="emptyBox" id="emptyState">
+          Your quote will appear here after you click <b>Calculate Quote</b>.
+        </div>
+
+        <div class="summary" id="summary" style="display:none"></div>
+
+        <div class="divider" id="div1" style="display:none"></div>
+
+        <div class="section-title" id="bdTitle" style="display:none">Location breakdown</div>
+        <div id="breakdown"></div>
+
+        <div class="divider" id="div2" style="display:none"></div>
+
+        <div class="summary" id="totalBox" style="display:none">
+          <div class="line">
+            <div class="k section-title" style="margin:0">Total estimate</div>
+            <div class="v" id="totalEstimate">$0.00</div>
+          </div>
+          <div class="muted">Estimate only. Final price may change after review.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // === EDIT PRICING HERE (example values) ===
+  const PRICING_TIERS = [
+    { qty: 24,  c1: 3.55, c2: 3.70, c3: 3.95, c4: 4.20, c5: 4.45, c6: 4.70, c7: 4.95, c8: 5.20, df: 1.70 },
+    { qty: 48,  c1: 3.35, c2: 3.60, c3: 3.85, c4: 4.10, c5: 4.35, c6: 4.60, c7: 4.85, c8: 5.10, df: 1.70 },
+    { qty: 72,  c1: 3.15, c2: 3.40, c3: 3.65, c4: 3.90, c5: 4.15, c6: 4.40, c7: 4.65, c8: 4.90, df: 1.60 },
+    { qty: 100, c1: 2.95, c2: 3.20, c3: 3.45, c4: 3.70, c5: 3.95, c6: 4.20, c7: 4.45, c8: 4.70, df: 1.50 },
+  ];
+
+  const SCREEN_SETUP_FEE_NEW = 25;      // per screen
+  const SCREEN_SETUP_FEE_REORDER = 20;  // per screen
+  const FILM_FEE = 15;                 // per film/screen
+
+  function getTier(qty){
+    const tiers = [...PRICING_TIERS].sort((a,b)=>a.qty-b.qty);
+    let tier = tiers.find(t => Number(t.qty) >= qty);
+    if(!tier) tier = tiers[tiers.length - 1];
+    return tier;
+  }
+  function money(n){ return `$${Number(n).toFixed(2)}`; }
+
+  function showResults(){
+    document.getElementById("emptyState").style.display = "none";
+    document.getElementById("summary").style.display = "block";
+    document.getElementById("div1").style.display = "block";
+    document.getElementById("bdTitle").style.display = "block";
+    document.getElementById("div2").style.display = "block";
+    document.getElementById("totalBox").style.display = "block";
+  }
+
+  function hideResults(){
+    document.getElementById("emptyState").style.display = "block";
+    document.getElementById("summary").style.display = "none";
+    document.getElementById("div1").style.display = "none";
+    document.getElementById("bdTitle").style.display = "none";
+    document.getElementById("breakdown").innerHTML = "";
+    document.getElementById("div2").style.display = "none";
+    document.getElementById("totalBox").style.display = "none";
+    document.getElementById("totalEstimate").textContent = "$0.00";
+  }
+
+  function renderSummary({qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,perGarmentTotalAllLocations,garmentsPrintCost,rushRate,rushFee}){
+    const summary = document.getElementById("summary");
+    summary.innerHTML = `
+      <div class="line"><div class="k">Quantity</div><div class="v">${qty} <span class="muted">(uses ${tierQty}-tier pricing)</span></div></div>
+      <div class="line"><div class="k">Garments</div><div class="v">${isDark ? "Dark" : "Light"}</div></div>
+      <div class="line"><div class="k">Total screens</div><div class="v">${totalScreens}</div></div>
+      <div class="line"><div class="k">Setup fee</div><div class="v">${money(setupFee)} <span class="muted">(${money(setupRate)} per screen)</span></div></div>
+      <div class="line"><div class="k">Film fee</div><div class="v">${money(filmFee)} <span class="muted">(${totalScreens} film${totalScreens!==1?"s":""} @ ${money(FILM_FEE)})</span></div></div>
+      <div class="line"><div class="k">Per garment print total (all locations)</div><div class="v">${money(perGarmentTotalAllLocations)}</div></div>
+      <div class="line"><div class="k">Garments print cost</div><div class="v">${money(garmentsPrintCost)}</div></div>
+      ${rushRate > 0 ? `<div class="line"><div class="k">Rush</div><div class="v">${money(rushFee)} <span class="muted">(+${Math.round(rushRate*100)}%)</span></div></div>` : ""}
+    `;
+  }
+
+  function calc(){
+    const errorEl = document.getElementById("error");
+    errorEl.textContent = "";
+
+    const qtyRaw = document.getElementById("qty").value;
+    const qty = Number(qtyRaw);
+    const garmentTone = document.getElementById("garmentTone").value;
+    const reorder = document.getElementById("reorder").value;
+    const rush = document.getElementById("rush").value;
+
+    if(!qtyRaw || !qty || qty <= 0){
+      errorEl.textContent = "Please enter a valid quantity.";
+      hideResults();
+      return;
+    }
+    if(!garmentTone){
+      errorEl.textContent = "Please select Light or Dark garments.";
+      hideResults();
+      return;
+    }
+    if(!reorder){
+      errorEl.textContent = "Please select New order or Reorder.";
+      hideResults();
+      return;
+    }
+    if(!rush){
+      errorEl.textContent = "Please select a Rush option.";
+      hideResults();
+      return;
+    }
+
+    const isDark = garmentTone === "dark";
+
+    const selected = [...document.querySelectorAll(".locCheck")]
+      .filter(cb => cb.checked)
+      .map(cb => cb.dataset.loc);
+
+    if(selected.length === 0){
+      errorEl.textContent = "Please select at least one print location.";
+      hideResults();
+      return;
+    }
+
+    const tier = getTier(qty);
+    const tierQty = Number(tier.qty);
+
+    let colorScreensTotal = 0;
+    let underbaseScreensTotal = 0;
+    let perGarmentTotalAllLocations = 0;
+
+    const breakdownLines = [];
+
+    for(const loc of selected){
+      const colorsEl = document.querySelector(`.colors[data-loc="${CSS.escape(loc)}"]`);
+      const colors = Number(colorsEl?.value || 1);
+
+      const perGarmentBase = Number(tier[`c${colors}`]);
+      if(!perGarmentBase || perGarmentBase <= 0){
+        errorEl.textContent = `Missing pricing for ${colors} colors at tier ${tierQty}. Update PRICING_TIERS.`;
+        hideResults();
+        return;
+      }
+
+      colorScreensTotal += colors;
+
+      // Underbase screens: 1 per location if dark garment
+      const underbaseScreensForLoc = isDark ? 1 : 0;
+      underbaseScreensTotal += underbaseScreensForLoc;
+
+      // DF logic (dark only):
+      // - Front Center or Back Center: charge DF once
+      // - Any other location: charge DF twice (underbase + difficulty)
+      const dfBase = Number(tier.df) || 0;
+      const isPrimaryLoc = (loc === "Front Center" || loc === "Back Center");
+      const dfMultiplier = isDark ? (isPrimaryLoc ? 1 : 2) : 0;
+      const dfForLoc = dfBase * dfMultiplier;
+
+      const perGarmentLocTotal = perGarmentBase + dfForLoc;
+      perGarmentTotalAllLocations += perGarmentLocTotal;
+
+      const inkNotes = (document.querySelector(`.inkNotes[data-loc="${CSS.escape(loc)}"]`)?.value || "").trim();
+      const labelInk = inkNotes ? `: ${inkNotes}` : "";
+      const dfText = dfMultiplier === 0 ? "" : (dfMultiplier === 1 ? ` + D.F ${money(dfBase)}` : ` + D.F ${money(dfBase)} × 2`);
+
+      breakdownLines.push(`
+        <div class="loc">
+          <strong>${loc}</strong> <span class="muted">(${colors} color${colors>1?"s":""})${labelInk}</span>
+          <div class="muted">
+            Per garment: ${money(perGarmentBase)}${dfText} = <b>${money(perGarmentLocTotal)}</b>
+          </div>
+          ${isDark ? `<div class="muted">Underbase included for this location.</div>` : `<div class="muted">No underbase needed (light garment).</div>`}
+        </div>
+      `);
+    }
+
+    const totalScreens = colorScreensTotal + underbaseScreensTotal;
+
+    const setupRate = (reorder === "reorder") ? SCREEN_SETUP_FEE_REORDER : SCREEN_SETUP_FEE_NEW;
+    const setupFee = totalScreens * setupRate;
+
+    const filmFee = (reorder === "reorder") ? 0 : totalScreens * FILM_FEE;
+
+    const garmentsPrintCost = qty * perGarmentTotalAllLocations;
+
+    let subtotal = garmentsPrintCost + setupFee + filmFee;
+
+    let rushRate = 0;
+    if(rush === "3-5") rushRate = 0.25;
+    if(rush === "2-3") rushRate = 0.35;
+    if(rush === "1day") rushRate = 0.50;
+
+    const rushFee = subtotal * rushRate;
+    const total = subtotal + rushFee;
+
+    renderSummary({qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,perGarmentTotalAllLocations,garmentsPrintCost,rushRate,rushFee});
+    document.getElementById("breakdown").innerHTML = breakdownLines.join("");
+    document.getElementById("totalEstimate").textContent = money(total);
+
+    showResults();
+  }
+
+  function resetQuoteForm(){
+    // Clear all inputs for next customer
+    document.getElementById("qty").value = "";
+    document.getElementById("garmentTone").value = "";
+    document.getElementById("reorder").value = "";
+    document.getElementById("rush").value = "";
+
+    document.querySelectorAll(".locCheck").forEach(cb => cb.checked = false);
+    document.querySelectorAll(".colors").forEach(sel => sel.value = "1");
+    document.querySelectorAll(".inkNotes").forEach(inp => inp.value = "");
+
+    document.getElementById("error").textContent = "";
+    document.getElementById("summary").innerHTML = "";
+    document.getElementById("breakdown").innerHTML = "";
+    document.getElementById("totalEstimate").textContent = "$0.00";
+
+    hideResults();
+  }
+
+  // Clear even when browser tries to restore previous values
+  window.addEventListener("pageshow", () => {
+    resetQuoteForm();
+  });
+
+  document.getElementById("calc").addEventListener("click", (e) => {
+    e.preventDefault();
+    calc();
+  });
+
+  // Start blank
+  hideResults();
+</script>
+</body>
+</html>

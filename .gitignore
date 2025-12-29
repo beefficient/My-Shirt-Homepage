@@ -1,0 +1,5 @@
+.vscode/
+lib/
+test/
+*.log
+.DS_Store
