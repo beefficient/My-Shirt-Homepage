@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Shirt Printing — Gallery</title>
+
+  <style>
+    :root{
+      --surface:#ffffff;
+      --bg:#f6faf7;
+      --border:#d8e5db;
+      --text:#173028;
+      --muted:#456057;
+      --accent:#2f7a5a;
+      --shadow: 0 10px 24px rgba(0,0,0,.06);
+      --container:1120px;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+
+    .container{max-width:var(--container);margin:0 auto;padding:0 20px}
+
+    /* Shared header/nav */
+    header{
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:14px 0;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 220px;
+    }
+    .brand img{
+      height:46px;
+      width:auto;
+      object-fit:contain;
+      display:block;
+    }
+
+    nav{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    nav a{
+      font-size:14px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+    nav a:hover{background:#eef7f1;color:var(--text)}
+    nav a.active{background:#eef7f1;color:var(--text)}
+
+    .btnTop{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: var(--accent);
+      color:#fff;
+      font-weight: 800;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    /* Page header */
+    .page-hero{
+      padding: 26px 0 10px;
+    }
+    .page-hero h1{
+      margin:0 0 6px;
+      font-size: 28px;
+      letter-spacing:-.2px;
+    }
+    .page-hero p{
+      margin:0;
+      color: var(--muted);
+      max-width: 70ch;
+    }
+
+    /* Gallery grid */
+    .gallery-wrap{
+      padding: 18px 0 34px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+    .tile{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      overflow:hidden;
+      box-shadow: 0 8px 18px rgba(0,0,0,.04);
+      cursor: zoom-in;
+      position: relative;
+    }
+    .tile img{
+      width:100%;
+      height: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      background: #e9eef3;
+      transition: transform .18s ease;
+    }
+    .tile:hover img{ transform: scale(1.03); }
+
+    .caption{
+      position:absolute;
+      left:10px;
+      bottom:10px;
+      background: rgba(0,0,0,.55);
+      color:#fff;
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity .15s ease, transform .15s ease;
+      pointer-events:none;
+      max-width: calc(100% - 20px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tile:hover .caption{
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Lightbox */
+    .lightbox{
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(0,0,0,.75);
+      z-index: 1000;
+      padding: 20px;
+    }
+    .lightbox.open{ display: grid; }
+
+    .lb-panel{
+      max-width: min(1000px, 96vw);
+      max-height: 86vh;
+      width: 100%;
+      position: relative;
+    }
+    .lb-img{
+      width: 100%;
+      max-height: 86vh;
+      object-fit: contain;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      box-shadow: var(--shadow);
+    }
+    .lb-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom: 10px;
+      color:#fff;
+    }
+    .lb-title{
+      font-weight: 800;
+      font-size: 14px;
+      color: rgba(255,255,255,.92);
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .lb-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.10);
+      color:#fff;
+      cursor:pointer;
+      user-select:none;
+      font-weight: 900;
+    }
+    .lb-btn:hover{ background: rgba(255,255,255,.16); }
+
+    .lb-nav{
+      position:absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      display:flex;
+      justify-content:space-between;
+      width: 100%;
+      pointer-events:none;
+    }
+    .lb-nav .lb-btn{
+      pointer-events:auto;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      nav{display:none}
+      .grid{ grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 720px){
+      .grid{ grid-template-columns: repeat(2, 1fr); }
+      .brand{min-width:unset}
+      .brand img{height:42px}
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Shared header -->
+  <header>
+    <div class="container">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="My Shirt Printing Home">
+          <img src="logo.png" alt="My Shirt Printing logo">
+        </a>
+
+        <nav aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <a href="quote.html">Quote</a>
+          <a class="active" href="gallery.html">Gallery</a>
+          <a href="about.html">About Us</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+
+        <a class="btnTop" href="quote.html">Get a Quote</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>Gallery</h1>
+        <p>Click any photo to enlarge. (These images are stored in your project folder, not pulled from Yelp.)</p>
+      </div>
+    </section>
+
+    <section class="gallery-wrap">
+      <div class="container">
+        <div class="grid" id="galleryGrid">
+          <!-- ✅ UPDATE THESE FILENAMES to match your photos -->
+          <!-- Recommended location: /images/ -->
+          <button class="tile" type="button" data-src="images/gallery-1.jpg" data-title="Gallery Photo 1">
+            <img src="images/gallery-1.jpg" alt="Gallery photo 1">
+            <div class="caption">Gallery Photo 1</div>
+          </button>
+
+          <button class="tile" type="button" data-src="images/gallery-2.jpg" data-title="Gallery Photo 2">
+            <img src="images/gallery-2.jpg" alt="Gallery photo 2">
+            <div class="caption">Gallery Photo 2</div>
+          </button>
+
+          <button class="tile" type="button" data-src="images/gallery-3.jpg" data-title="Gallery Photo 3">
+            <img src="images/gallery-3.jpg" alt="Gallery photo 3">
+            <div class="caption">Gallery Photo 3</div>
+          </button>
+
+          <button class="tile" type="button" data-src="images/gallery-4.jpg" data-title="Gallery Photo 4">
+            <img src="images/gallery-4.jpg" alt="Gallery photo 4">
+            <div class="caption">Gallery Photo 4</div>
+          </button>
+
+          <button class="tile" type="button" data-src="images/gallery-5.jpg" data-title="Gallery Photo 5">
+            <img src="images/gallery-5.jpg" alt="Gallery photo 5">
+            <div class="caption">Gallery Photo 5</div>
+          </button>
+
+          <button class="tile" type="button" data-src="images/gallery-6.jpg" data-title="Gallery Photo 6">
+            <img src="images/gallery-6.jpg" alt="Gallery photo 6">
+            <div class="caption">Gallery Photo 6</div>
+          </button>
+
+          <button class="tile" type="button" data-src="images/gallery-7.jpg" data-title="Gallery Photo 7">
+            <img src="images/gallery-7.jpg" alt="Gallery photo 7">
+            <div class="caption">Gallery Photo 7</div>
+          </button>
+
+          <button class="tile" type="button" data-src="images/gallery-8.jpg" data-title="Gallery Photo 8">
+            <img src="images/gallery-8.jpg" alt="Gallery photo 8">
+            <div class="caption">Gallery Photo 8</div>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Lightbox (click-to-enlarge) -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <div class="lb-panel" role="dialog" aria-modal="true" aria-label="Image viewer">
+      <div class="lb-top">
+        <div class="lb-title" id="lbTitle">Photo</div>
+        <button class="lb-btn" id="lbClose" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <img class="lb-img" id="lbImg" src="" alt="Enlarged photo">
+
+      <div class="lb-nav" aria-hidden="false">
+        <button class="lb-btn" id="lbPrev" type="button" aria-label="Previous">‹</button>
+        <button class="lb-btn" id="lbNext" type="button" aria-label="Next">›</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tiles = Array.from(document.querySelectorAll("#galleryGrid .tile"));
+    const lightbox = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lbImg");
+    const lbTitle = document.getElementById("lbTitle");
+    const lbClose = document.getElementById("lbClose");
+    const lbPrev = document.getElementById("lbPrev");
+    const lbNext = document.getElementById("lbNext");
+
+    let currentIndex = 0;
+
+    function openAt(index){
+      currentIndex = index;
+      const t = tiles[currentIndex];
+      const src = t.getAttribute("data-src");
+      const title = t.getAttribute("data-title") || "Photo";
+
+      lbImg.src = src;
+      lbTitle.textContent = title;
+
+      lightbox.classList.add("open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeLb(){
+      lightbox.classList.remove("open");
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      lbImg.src = "";
+    }
+
+    function prev(){
+      openAt((currentIndex - 1 + tiles.length) % tiles.length);
+    }
+
+    function next(){
+      openAt((currentIndex + 1) % tiles.length);
+    }
+
+    tiles.forEach((t, i) => {
+      t.addEventListener("click", () => openAt(i));
+      t.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") openAt(i);
+      });
+    });
+
+    lbClose.addEventListener("click", closeLb);
+    lbPrev.addEventListener("click", prev);
+    lbNext.addEventListener("click", next);
+
+    // Close if user clicks outside the image panel
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) closeLb();
+    });
+
+    // Keyboard controls
+    window.addEventListener("keydown", (e) => {
+      if (!lightbox.classList.contains("open")) return;
+      if (e.key === "Escape") closeLb();
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
+    });
+  </script>
+</body>
+</html>
