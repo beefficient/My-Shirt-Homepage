@@ -100,6 +100,16 @@
       color:var(--muted);
       background:#fff;
     }
+
+    /* Discount message */
+    .discMsg{
+      margin-top:8px;
+      font-weight:600;
+      color:var(--muted);
+      white-space:pre-line;
+    }
+    .discMsg.bad{ color: var(--danger); }
+
     @media (max-width: 900px){nav{display:none}}
     @media (max-width: 860px){.grid{grid-template-columns:1fr}}
   </style>
@@ -169,6 +179,11 @@
             </select>
           </div>
         </div>
+
+        <!-- NEW: Discount code (blank, no examples) -->
+        <label for="discountCode">Discount code</label>
+        <input id="discountCode" type="text" autocomplete="off" placeholder="" />
+        <div class="discMsg" id="discMsg"></div>
 
         <label>Print Locations</label>
         <div class="choices" id="locations">
@@ -288,6 +303,55 @@
   const SCREEN_SETUP_FEE_REORDER = 20;  // per screen
   const FILM_FEE = 15;                 // per film/screen
 
+  // === Discount codes & rules ===
+  // WELCOME10 = 10% off printing only
+  // SAVE25 = $25 off orders over $300 (printing only)
+  // RUSHFREE = removes rush fee
+  // "Pause Discounts" pauses all codes; "Go Codes" reenables them.
+  const DISCOUNTS_PAUSED_KEY = "myshirt_discounts_paused";
+  const DISCOUNT_RULES = {
+    "WELCOME10": { type: "percent_printing", value: 10 },
+    "SAVE25":    { type: "fixed_printing", value: 25, minPrinting: 300 },
+    "RUSHFREE":  { type: "rush_free" }
+  };
+
+  function normalizeCode(s){ return String(s || "").trim().toUpperCase(); }
+  function areDiscountsPaused(){ return localStorage.getItem(DISCOUNTS_PAUSED_KEY) === "true"; }
+  function setDiscountsPaused(paused){ localStorage.setItem(DISCOUNTS_PAUSED_KEY, paused ? "true" : "false"); }
+
+  function handlePauseGoCodes(raw){
+    const v = String(raw || "").trim().toLowerCase();
+    if (v === "pause discounts"){ setDiscountsPaused(true); return {handled:true, msg:"Discount codes are currently PAUSED."}; }
+    if (v === "go codes"){ setDiscountsPaused(false); return {handled:true, msg:"Discount codes are now ENABLED."}; }
+    return {handled:false, msg:""};
+  }
+
+  function applyDiscount(codeRaw, printingAmount){
+    if (areDiscountsPaused()){
+      return { discountAmount: 0, rushOverride: null, label: "Discounts paused" , ok:false };
+    }
+    const code = normalizeCode(codeRaw);
+    if (!code) return { discountAmount: 0, rushOverride: null, label: "" , ok:true };
+
+    const rule = DISCOUNT_RULES[code];
+    if (!rule) return { discountAmount: 0, rushOverride: null, label: "Invalid code" , ok:false };
+
+    if (rule.type === "percent_printing"){
+      const amt = printingAmount * (rule.value / 100);
+      return { discountAmount: amt, rushOverride: null, label: `${code} (-${rule.value}% printing)` , ok:true };
+    }
+    if (rule.type === "fixed_printing"){
+      if (typeof rule.minPrinting === "number" && printingAmount < rule.minPrinting){
+        return { discountAmount: 0, rushOverride: null, label: `${code} requires ${money(rule.minPrinting)} printing` , ok:false };
+      }
+      return { discountAmount: Math.min(rule.value, printingAmount), rushOverride: null, label: `${code} (-${money(rule.value)} printing)` , ok:true };
+    }
+    if (rule.type === "rush_free"){
+      return { discountAmount: 0, rushOverride: 0, label: `${code} (rush removed)` , ok:true };
+    }
+    return { discountAmount: 0, rushOverride: null, label: "Invalid code" , ok:false };
+  }
+
   function getTier(qty){
     const tiers = [...PRICING_TIERS].sort((a,b)=>a.qty-b.qty);
     let tier = tiers.find(t => Number(t.qty) >= qty);
@@ -316,7 +380,7 @@
     document.getElementById("totalEstimate").textContent = "$0.00";
   }
 
-  function renderSummary({qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,perGarmentTotalAllLocations,garmentsPrintCost,rushRate,rushFee}){
+  function renderSummary({qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,perGarmentTotalAllLocations,garmentsPrintCost,discountLine,rushRate,rushFee}){
     const summary = document.getElementById("summary");
     summary.innerHTML = `
       <div class="line"><div class="k">Quantity</div><div class="v">${qty} <span class="muted">(uses ${tierQty}-tier pricing)</span></div></div>
@@ -326,19 +390,31 @@
       <div class="line"><div class="k">Film fee</div><div class="v">${money(filmFee)} <span class="muted">(${totalScreens} film${totalScreens!==1?"s":""} @ ${money(FILM_FEE)})</span></div></div>
       <div class="line"><div class="k">Per garment print total (all locations)</div><div class="v">${money(perGarmentTotalAllLocations)}</div></div>
       <div class="line"><div class="k">Garments print cost</div><div class="v">${money(garmentsPrintCost)}</div></div>
+      ${discountLine ? `<div class="line"><div class="k">Discount</div><div class="v">${discountLine}</div></div>` : ""}
       ${rushRate > 0 ? `<div class="line"><div class="k">Rush</div><div class="v">${money(rushFee)} <span class="muted">(+${Math.round(rushRate*100)}%)</span></div></div>` : ""}
     `;
   }
 
   function calc(){
     const errorEl = document.getElementById("error");
+    const discMsgEl = document.getElementById("discMsg");
     errorEl.textContent = "";
+    discMsgEl.textContent = "";
+    discMsgEl.classList.remove("bad");
 
     const qtyRaw = document.getElementById("qty").value;
     const qty = Number(qtyRaw);
     const garmentTone = document.getElementById("garmentTone").value;
     const reorder = document.getElementById("reorder").value;
     const rush = document.getElementById("rush").value;
+    const discountCode = document.getElementById("discountCode").value;
+
+    // Pause/Go controls
+    const pg = handlePauseGoCodes(discountCode);
+    if (pg.handled){
+      discMsgEl.textContent = pg.msg;
+      // do NOT clear the discount box immediately; let user see what they typed
+    }
 
     if(!qtyRaw || !qty || qty <= 0){
       errorEl.textContent = "Please enter a valid quantity.";
@@ -432,19 +508,53 @@
 
     const filmFee = (reorder === "reorder") ? 0 : totalScreens * FILM_FEE;
 
-    const garmentsPrintCost = qty * perGarmentTotalAllLocations;
+    // Printing total BEFORE setup/film/rush (for discount rules)
+    const printingOnlyTotal = qty * perGarmentTotalAllLocations;
 
-    let subtotal = garmentsPrintCost + setupFee + filmFee;
+    // Base subtotal before rush (includes printing + setup + film)
+    let subtotal = printingOnlyTotal + setupFee + filmFee;
 
     let rushRate = 0;
     if(rush === "3-5") rushRate = 0.25;
     if(rush === "2-3") rushRate = 0.35;
     if(rush === "1day") rushRate = 0.50;
 
-    const rushFee = subtotal * rushRate;
-    const total = subtotal + rushFee;
+    let rushFee = subtotal * rushRate;
 
-    renderSummary({qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,perGarmentTotalAllLocations,garmentsPrintCost,rushRate,rushFee});
+    // Apply discount rules
+    const disc = applyDiscount(discountCode, printingOnlyTotal);
+    if (discountCode && disc.label){
+      if (!disc.ok){
+        discMsgEl.textContent = disc.label;
+        discMsgEl.classList.add("bad");
+      } else {
+        discMsgEl.textContent = disc.label;
+      }
+    }
+    if (disc.rushOverride === 0) rushFee = 0;
+
+    const discountAmount = Math.max(0, Number(disc.discountAmount || 0));
+    const total = (subtotal + rushFee) - discountAmount;
+
+    const discountLine = discountCode
+      ? (discountAmount > 0 ? `-${money(discountAmount)} <span class="muted">(${disc.label})</span>` : `<span class="muted">${disc.label || "—"}</span>`)
+      : "";
+
+    renderSummary({
+      qty,
+      isDark,
+      tierQty,
+      totalScreens,
+      setupFee,
+      setupRate,
+      filmFee,
+      perGarmentTotalAllLocations,
+      garmentsPrintCost: printingOnlyTotal,
+      discountLine,
+      rushRate,
+      rushFee
+    });
+
     document.getElementById("breakdown").innerHTML = breakdownLines.join("");
     document.getElementById("totalEstimate").textContent = money(total);
 
@@ -457,6 +567,9 @@
     document.getElementById("garmentTone").value = "";
     document.getElementById("reorder").value = "";
     document.getElementById("rush").value = "";
+    document.getElementById("discountCode").value = "";
+    document.getElementById("discMsg").textContent = "";
+    document.getElementById("discMsg").classList.remove("bad");
 
     document.querySelectorAll(".locCheck").forEach(cb => cb.checked = false);
     document.querySelectorAll(".colors").forEach(sel => sel.value = "1");
