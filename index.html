@@ -90,6 +90,50 @@
     nav a:hover{background: var(--sky)}
     nav a.active{border-bottom: 2px solid var(--primary); border-radius: 0; padding-bottom: 6px}
 
+    /* ===== NEW: Quote dropdown styles ===== */
+    details.quoteDrop{
+      position: relative;
+      display: inline-block;
+    }
+    details.quoteDrop > summary{
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+      font-size: 14px;
+      color: var(--primary-2);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    details.quoteDrop > summary:hover{ background: var(--sky); }
+    details.quoteDrop > summary::-webkit-details-marker{ display:none; }
+
+    .qMenu{
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 200px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 6px;
+      z-index: 100;
+    }
+    .qMenu a{
+      display: block;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary-2);
+      white-space: nowrap;
+    }
+    .qMenu a:hover{ background: var(--sky); }
+
     .btn{
       display:inline-flex;
       align-items:center;
@@ -404,20 +448,28 @@
     <div class="container">
       <div class="navwrap">
         <a class="brand" href="index.html" aria-label="Go to homepage">
-          <!-- Use your own logo file in the repo named logo.png -->
           <img src="logo.png" alt="My Shirt Printing logo" />
           <div class="name">My Shirt Printing</div>
         </a>
 
         <nav aria-label="Main menu">
           <a class="active" href="index.html">Home</a>
-          <a href="quote.html">Quote</a>
+
+          <!-- UPDATED: Quote dropdown -->
+          <details class="quoteDrop" id="quoteDrop">
+            <summary>Quote <span aria-hidden="true">▾</span></summary>
+            <div class="qMenu">
+              <a href="quote.html">Screen Print Quote</a>
+              <a href="embroidery-quote.html">Embroidery Quote</a>
+            </div>
+          </details>
+
           <a href="gallery.html">Gallery</a>
           <a href="about.html">About Us</a>
           <a href="contact.html">Contact</a>
         </nav>
 
-        <a class="btn primary" href="quote.html">Get a Quote</a>
+        <!-- REMOVED: header Get a Quote button -->
       </div>
     </div>
   </header>
@@ -634,6 +686,13 @@
 
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Close quote dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      const dd = document.getElementById("quoteDrop");
+      if (!dd) return;
+      if (!dd.contains(e.target)) dd.removeAttribute("open");
+    });
   </script>
 </body>
 </html>
