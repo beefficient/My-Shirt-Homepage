@@ -427,8 +427,9 @@ www.companycasuals.com
 
 **Inquiry ID Pattern:**
 ```regex
-(?:^|\s)#CC-\d{4}-\d{6}(?:\s|$)
+#CC-\d{4}-\d{6}
 ```
+Note: When implementing, use context-aware matching. The `#` character is not a word character, so standard word boundaries won't work. In practice, search for the pattern within the email text and validate the match.
 
 **Product Detail Section:**
 ```regex
@@ -437,7 +438,7 @@ Product Details:[\s\S]*?(?=Your inquiry reference|Best regards|$)
 
 **Customer Name Pattern:**
 ```regex
-Dear ([A-Za-z\s'.\-]+),
+Dear ([A-Za-z\s'.-]+),
 ```
 
 ---
