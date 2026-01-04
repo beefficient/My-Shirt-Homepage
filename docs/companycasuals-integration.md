@@ -168,17 +168,17 @@ CompanyCasuals Team
 
 2. **Parser Logic:**
    ```javascript
-   // Pseudo-code for email parser
+   // Email parser with helper functions
    function parseCompanyCasualsEmail(emailBody, emailSubject) {
      // Input validation
      if (!emailBody || !emailSubject) {
-       return { error: 'Missing required email data' };
+       return { success: false, error: 'Missing required email data' };
      }
      
      // Extract structured data
      const inquiryId = extractInquiryId(emailSubject); // Extract #CC-YYYY-NNNNNN (year-sequential number, e.g. 4-digit year + 6-digit number)
      if (!inquiryId) {
-       return { error: 'Inquiry ID not found in subject' };
+       return { success: false, error: 'Inquiry ID not found in subject' };
      }
      
      const productDetails = extractProductDetails(emailBody);
@@ -192,6 +192,51 @@ CompanyCasuals Team
        customer: customerInfo,
        source: 'companycasuals',
        timestamp: new Date()
+     };
+   }
+   
+   // Extract inquiry ID from email subject
+   function extractInquiryId(emailSubject) {
+     const match = emailSubject.match(/#CC-\d{4}-\d{6}/);
+     return match ? match[0] : null;
+   }
+   
+   // Extract product details from email body
+   function extractProductDetails(emailBody) {
+     const products = [];
+     // Match product section: "Product Details:...Your inquiry reference"
+     const productMatch = emailBody.match(/Product Details:([\s\S]*?)(?=Your inquiry reference|Best regards|$)/);
+     
+     if (productMatch) {
+       const productText = productMatch[1];
+       // Parse individual product lines (format: "- 50 Custom T-Shirts")
+       const lines = productText.split('\n').filter(line => line.trim().startsWith('-'));
+       
+       for (const line of lines) {
+         const cleanLine = line.replace(/^-\s*/, '').trim();
+         // Extract quantity and product type
+         const qtyMatch = cleanLine.match(/^(\d+)\s+(.+)$/);
+         if (qtyMatch) {
+           products.push({
+             quantity: parseInt(qtyMatch[1], 10),
+             description: qtyMatch[2]
+           });
+         }
+       }
+     }
+     
+     return products;
+   }
+   
+   // Extract customer information from email body
+   function extractCustomerInfo(emailBody) {
+     // Extract customer name from "Dear [Name]," greeting
+     const nameMatch = emailBody.match(/Dear ([A-Za-z\s.'-]+),/);
+     
+     return {
+       name: nameMatch ? nameMatch[1].trim() : null,
+       // Additional fields can be extracted as needed
+       // email, phone, etc. from email headers or body
      };
    }
    ```
@@ -454,9 +499,9 @@ Product Details:[\s\S]*?(?=Your inquiry reference|Best regards|$)
 
 **Customer Name Pattern:**
 ```regex
-Dear ([A-Za-z\s'-]+),
+Dear ([A-Za-z\s.'-]+),
 ```
-Note: Matches names with letters, spaces, apostrophes, and hyphens. Extend pattern if names with periods (e.g., "Dr.") are encountered.
+Note: Matches names with letters, spaces, periods (for titles like "Dr."), apostrophes, and hyphens.
 
 ---
 
