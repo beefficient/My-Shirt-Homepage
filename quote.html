@@ -258,6 +258,44 @@
               </div>
             </div>
           </div>
+
+          <!-- NEW: Left Chest -->
+          <div class="choice">
+            <input type="checkbox" class="locCheck" data-loc="Left Chest">
+            <div class="meta">
+              <strong>Left Chest</strong>
+              <div class="inline">
+                <span class="pill">Colors:
+                  <select class="colors" data-loc="Left Chest">
+                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
+                    <option>5</option><option>6</option><option>7</option><option>8</option>
+                  </select>
+                </span>
+                <span class="pill">Ink colors:
+                  <input class="inkNotes" data-loc="Left Chest" placeholder="ex: small logo, black" autocomplete="off" />
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- NEW: Right Chest -->
+          <div class="choice">
+            <input type="checkbox" class="locCheck" data-loc="Right Chest">
+            <div class="meta">
+              <strong>Right Chest</strong>
+              <div class="inline">
+                <span class="pill">Colors:
+                  <select class="colors" data-loc="Right Chest">
+                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
+                    <option>5</option><option>6</option><option>7</option><option>8</option>
+                  </select>
+                </span>
+                <span class="pill">Ink colors:
+                  <input class="inkNotes" data-loc="Right Chest" placeholder="ex: small logo, white" autocomplete="off" />
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <button class="btn" id="calc">Calculate Quote</button>
@@ -475,12 +513,18 @@
       const underbaseScreensForLoc = isDark ? 1 : 0;
       underbaseScreensTotal += underbaseScreensForLoc;
 
-      // DF logic (dark only):
-      // - Front Center or Back Center: charge DF once
-      // - Any other location: charge DF twice (underbase + difficulty)
+      // DF logic:
+      // - Front Center or Back Center: charge DF once on dark, zero on light
+      // - Left Chest or Right Chest: charge DF twice on dark, once on light
+      // - Any other location (sleeves): charge DF twice on dark, zero on light
       const dfBase = Number(tier.df) || 0;
-      const isPrimaryLoc = (loc === "Front Center" || loc === "Back Center");
-      const dfMultiplier = isDark ? (isPrimaryLoc ? 1 : 2) : 0;
+      let dfMultiplier;
+      if (loc === "Left Chest" || loc === "Right Chest") {
+        dfMultiplier = isDark ? 2 : 1;
+      } else {
+        const isPrimaryLoc = (loc === "Front Center" || loc === "Back Center");
+        dfMultiplier = isDark ? (isPrimaryLoc ? 1 : 2) : 0;
+      }
       const dfForLoc = dfBase * dfMultiplier;
 
       const perGarmentLocTotal = perGarmentBase + dfForLoc;
@@ -488,7 +532,7 @@
 
       const inkNotes = (document.querySelector(`.inkNotes[data-loc="${CSS.escape(loc)}"]`)?.value || "").trim();
       const labelInk = inkNotes ? `: ${inkNotes}` : "";
-      const dfText = dfMultiplier === 0 ? "" : (dfMultiplier === 1 ? ` + D.F ${money(dfBase)}` : ` + D.F ${money(dfBase)} × 2`);
+      const dfText = dfMultiplier === 0 ? "" : (dfMultiplier === 1 ? ` + D.F ${money(dfBase)}` : ` + D.F ${money(dfBase)} × ${dfMultiplier}`);
 
       breakdownLines.push(`
         <div class="loc">
