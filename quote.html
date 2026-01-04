@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>My Shirt Printing — Quote</title>
 
+  <!-- Fonts (match other pages) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
   <style>
     :root{
       --surface:#ffffff;
@@ -16,32 +21,149 @@
       --accent2:#e8f6ee;
       --danger:#a63a3a;
       --container:1100px;
+
+      /* Header colors (match index vibe) */
+      --navText:#0b3f5b;
+      --navHover:#eaf4ff;
+      --navBorder:#d7e7f7;
+      --shadow: 0 10px 24px rgba(10,35,45,.08);
     }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    html,body{margin:0;padding:0}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.55;
+    }
     a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
     .container{max-width:var(--container);margin:0 auto;padding:0 20px}
 
-    /* Shared header/nav */
+    /* =========================================================
+       HEADER (match embroidery header)
+    ========================================================= */
     header{
-      background:var(--surface);
-      border-bottom:1px solid var(--border);
-      position:sticky; top:0; z-index:50;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--navBorder);
     }
-    .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0}
-    .brand{display:flex;align-items:center;gap:12px;min-width:220px}
-    .brand img{height:44px;width:auto;display:block}
-    nav{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
-    nav a{font-weight:600;font-size:14px;color:var(--muted);padding:8px 10px;border-radius:10px}
-    nav a:hover{background:#eef7f1;color:var(--text)}
-    nav a.active{background:#eef7f1;color:var(--text)}
-    .btnTop{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:12px 16px;border-radius:999px;
-      background:var(--accent);color:#fff;font-weight:700;border:1px solid transparent;
+    .navwrap{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:14px 0;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
+    }
+    .brand img{
+      height: 42px;
+      width: auto;
+      object-fit: contain;
+    }
+    .brand .name{
+      font-family: "DM Sans", Inter, sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: .2px;
+      white-space: nowrap;
+      color: var(--navText);
     }
 
-    /* Quote layout */
+    nav{
+      display:flex;
+      gap:18px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap: wrap;
+    }
+    nav a{
+      font-size: 14px;
+      color: var(--navText);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    nav a:hover{background: var(--navHover)}
+    nav a.active{
+      border-bottom: 2px solid #0e4f73;
+      border-radius: 0;
+      padding-bottom: 6px;
+    }
+
+    /* Quote dropdown (same style as nav links) */
+    details.quoteDrop{
+      position: relative;
+      display: inline-block;
+    }
+    details.quoteDrop > summary{
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+      font-size: 14px;
+      color: var(--navText);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    details.quoteDrop > summary:hover{ background: var(--navHover); }
+    details.quoteDrop > summary::-webkit-details-marker{ display:none; }
+
+    /* active underline like index */
+    details.quoteDrop.active > summary{
+      border-bottom: 2px solid #0e4f73;
+      border-radius: 0;
+      padding-bottom: 6px;
+    }
+
+    .qMenu{
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      min-width: 240px;
+      background: #fff;
+      border: 1px solid var(--navBorder);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 6px;
+      z-index: 200;
+    }
+    .qMenu a{
+      display: block;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--navText);
+      white-space: nowrap;
+    }
+    .qMenu a:hover{ background: var(--navHover); }
+    .qMenu a.activeItem{ background: var(--navHover); }
+
+    @media (max-width: 980px){
+      nav{display:none;} /* matches index behavior */
+      .brand .name{display:none;}
+    }
+
+    /* =========================================================
+       ORIGINAL QUOTE PAGE STYLES (kept mostly intact)
+    ========================================================= */
     .wrap{max-width:980px;margin:22px auto 28px;padding:0 16px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
     .card{
@@ -101,6 +223,24 @@
       background:#fff;
     }
 
+    /* Garment supply box (from embroidery page) */
+    .garmentBox{
+      margin-top:12px;
+      background:#fff8e9;
+      border:1px solid #f0d8b0;
+      border-radius:12px;
+      padding:12px;
+      display:none;
+      gap:12px;
+    }
+    .garmentBox .txt{color:var(--muted);font-weight:600;margin-bottom:8px}
+    .garmentBox .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .garmentBox .linkBtn{
+      background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px;font-weight:800;text-decoration:none;
+      border:1px solid transparent;display:inline-flex;align-items:center;gap:8px;
+    }
+    .garmentBox .note{ font-size:13px; color:var(--muted); margin-top:6px; max-width:100%; }
+
     /* Discount message */
     .discMsg{
       margin-top:8px;
@@ -116,23 +256,32 @@
 </head>
 
 <body>
-  <!-- Shared header -->
+  <!-- HEADER (updated to match embroidery header) -->
   <header>
     <div class="container">
-      <div class="header-inner">
-        <a class="brand" href="index.html" aria-label="My Shirt Printing Home">
-          <img src="logo.png" alt="My Shirt Printing logo">
+      <div class="navwrap">
+        <a class="brand" href="index.html" aria-label="Go to homepage">
+          <img src="logo.png" alt="My Shirt Printing logo" />
+          <div class="name">My Shirt Printing and Embroidery</div>
         </a>
 
-        <nav aria-label="Main navigation">
+        <nav aria-label="Main menu">
           <a href="index.html">Home</a>
-          <a class="active" href="quote.html">Quote</a>
+
+          <!-- Quote dropdown (active on quote pages) -->
+          <details class="quoteDrop active" id="quoteDrop">
+            <summary>Quote <span aria-hidden="true">▾</span></summary>
+            <div class="qMenu" role="menu" aria-label="Quote menu">
+              <a class="activeItem" href="quote.html">Garment Printing Quote</a>
+              <a href="embroidery-quote.html">Embroidery Quote</a>
+              <a href="other-quote.html">Other (Print)</a>
+            </div>
+          </details>
+
           <a href="gallery.html">Gallery</a>
           <a href="about.html">About Us</a>
           <a href="contact.html">Contact</a>
         </nav>
-
-        <a class="btnTop" href="quote.html">Get a Quote</a>
       </div>
     </div>
   </header>
@@ -259,7 +408,7 @@
             </div>
           </div>
 
-          <!-- NEW: Left Chest -->
+          <!-- Left Chest -->
           <div class="choice">
             <input type="checkbox" class="locCheck" data-loc="Left Chest">
             <div class="meta">
@@ -278,7 +427,7 @@
             </div>
           </div>
 
-          <!-- NEW: Right Chest -->
+          <!-- Right Chest -->
           <div class="choice">
             <input type="checkbox" class="locCheck" data-loc="Right Chest">
             <div class="meta">
@@ -324,9 +473,38 @@
           </div>
           <div class="muted">Estimate only. Final price may change after review.</div>
         </div>
+
+        <!-- Garment supply box (added from embroidery page) -->
+        <div id="garmentBox" class="garmentBox" aria-hidden="true">
+          <div class="txt">Would you like us to supply the garments for this order?</div>
+          <div class="actions">
+            <div class="muted" style="font-weight:500">Click the button to start a garments quote on our partner site.</div>
+            <a id="garmentQuoteBtn" class="linkBtn" href="#" role="button" target="_blank" rel="noopener noreferrer">Start garments quote</a>
+          </div>
+          <div class="note">Prices may change after review. Some items may be on sale or out of stock. All quotes will be confirmed after review.</div>
+        </div>
+
       </div>
     </div>
   </div>
+
+<script>
+  // Close quote dropdown when clicking outside (from embroidery header behavior)
+  document.addEventListener("click", (e) => {
+    const dd = document.getElementById("quoteDrop");
+    if (!dd) return;
+    if (!dd.contains(e.target)) dd.removeAttribute("open");
+  });
+
+  // Garment quote button opens partner site in a new window (same as embroidery page)
+  const garmentBtn = document.getElementById("garmentQuoteBtn");
+  if (garmentBtn){
+    garmentBtn.addEventListener("click", function(e){
+      e.preventDefault();
+      window.open("https://www.companycasuals.com/myshirtcompany//start.jsp", "_blank", "noopener,noreferrer");
+    });
+  }
+</script>
 
 <script>
   // === EDIT PRICING HERE (example values) ===
@@ -342,10 +520,6 @@
   const FILM_FEE = 15;                 // per film/screen
 
   // === Discount codes & rules ===
-  // WELCOME10 = 10% off printing only
-  // SAVE25 = $25 off orders over $300 (printing only)
-  // RUSHFREE = removes rush fee
-  // "Pause Discounts" pauses all codes; "Go Codes" reenables them.
   const DISCOUNTS_PAUSED_KEY = "myshirt_discounts_paused";
   const DISCOUNT_RULES = {
     "WELCOME10": { type: "percent_printing", value: 10 },
@@ -405,6 +579,10 @@
     document.getElementById("bdTitle").style.display = "block";
     document.getElementById("div2").style.display = "block";
     document.getElementById("totalBox").style.display = "block";
+
+    // show garment box when results are visible
+    const g = document.getElementById("garmentBox");
+    if (g){ g.style.display = "flex"; g.style.flexDirection = "column"; g.setAttribute("aria-hidden","false"); }
   }
 
   function hideResults(){
@@ -416,6 +594,9 @@
     document.getElementById("div2").style.display = "none";
     document.getElementById("totalBox").style.display = "none";
     document.getElementById("totalEstimate").textContent = "$0.00";
+
+    const g = document.getElementById("garmentBox");
+    if (g){ g.style.display = "none"; g.setAttribute("aria-hidden","true"); }
   }
 
   function renderSummary({qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,perGarmentTotalAllLocations,garmentsPrintCost,discountLine,rushRate,rushFee}){
@@ -451,7 +632,6 @@
     const pg = handlePauseGoCodes(discountCode);
     if (pg.handled){
       discMsgEl.textContent = pg.msg;
-      // do NOT clear the discount box immediately; let user see what they typed
     }
 
     if(!qtyRaw || !qty || qty <= 0){
@@ -497,7 +677,7 @@
     const breakdownLines = [];
 
     for(const loc of selected){
-      const colorsEl = document.querySelector(`.colors[data-loc="${CSS.escape(loc)}"]`);
+      const colorsEl = document.querySelector(`.colors[data-loc="${loc}"]`);
       const colors = Number(colorsEl?.value || 1);
 
       const perGarmentBase = Number(tier[`c${colors}`]);
@@ -509,14 +689,9 @@
 
       colorScreensTotal += colors;
 
-      // Underbase screens: 1 per location if dark garment
       const underbaseScreensForLoc = isDark ? 1 : 0;
       underbaseScreensTotal += underbaseScreensForLoc;
 
-      // DF logic:
-      // - Front Center or Back Center: charge DF once on dark, zero on light
-      // - Left Chest or Right Chest: charge DF twice on dark, once on light
-      // - Any other location (sleeves): charge DF twice on dark, zero on light
       const dfBase = Number(tier.df) || 0;
       let dfMultiplier;
       if (loc === "Left Chest" || loc === "Right Chest") {
@@ -530,7 +705,7 @@
       const perGarmentLocTotal = perGarmentBase + dfForLoc;
       perGarmentTotalAllLocations += perGarmentLocTotal;
 
-      const inkNotes = (document.querySelector(`.inkNotes[data-loc="${CSS.escape(loc)}"]`)?.value || "").trim();
+      const inkNotes = (document.querySelector(`.inkNotes[data-loc="${loc}"]`)?.value || "").trim();
       const labelInk = inkNotes ? `: ${inkNotes}` : "";
       const dfText = dfMultiplier === 0 ? "" : (dfMultiplier === 1 ? ` + D.F ${money(dfBase)}` : ` + D.F ${money(dfBase)} × ${dfMultiplier}`);
 
@@ -552,10 +727,8 @@
 
     const filmFee = (reorder === "reorder") ? 0 : totalScreens * FILM_FEE;
 
-    // Printing total BEFORE setup/film/rush (for discount rules)
     const printingOnlyTotal = qty * perGarmentTotalAllLocations;
 
-    // Base subtotal before rush (includes printing + setup + film)
     let subtotal = printingOnlyTotal + setupFee + filmFee;
 
     let rushRate = 0;
@@ -565,7 +738,6 @@
 
     let rushFee = subtotal * rushRate;
 
-    // Apply discount rules
     const disc = applyDiscount(discountCode, printingOnlyTotal);
     if (discountCode && disc.label){
       if (!disc.ok){
@@ -606,7 +778,6 @@
   }
 
   function resetQuoteForm(){
-    // Clear all inputs for next customer
     document.getElementById("qty").value = "";
     document.getElementById("garmentTone").value = "";
     document.getElementById("reorder").value = "";
@@ -627,7 +798,6 @@
     hideResults();
   }
 
-  // Clear even when browser tries to restore previous values
   window.addEventListener("pageshow", () => {
     resetQuoteForm();
   });
