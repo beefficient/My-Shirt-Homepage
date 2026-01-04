@@ -3,323 +3,904 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Shirt Printing — Screen Printing & Signs</title>
+  <title>Print Shop Name — Local printing made easy</title>
+
+  <!-- Google Fonts (OK to remove if you want system fonts only) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --surface:#ffffff;
-      --bg:#f6faf7;
-      --border:#d8e5db;
-      --text:#173028;
-      --muted:#456057;
-      --accent:#2f7a5a;
-      --accent2:#e8f6ee;
-      --container:1200px;
+      /* Direction B palette */
+      --bg-sky: #F2F8FF;
+      --surface: #FFFFFF;
+      --primary: #246B78;   /* navy-teal */
+      --accent: #F6E7A6;    /* soft butter (sparingly) */
+      --support: #D9EEF6;   /* light aqua */
+      --text: #18313A;
+      --muted: #3A4F57;
+      --border: #D7E6F2;
+
+      --radius-card: 16px;
+      --radius-pill: 999px;
+
+      --shadow-soft: 0 10px 30px rgba(24,49,58,.06);
+      --shadow-card: 0 8px 20px rgba(24,49,58,.06);
+
+      --container: 1120px;
     }
-    *{box-sizing:border-box}
+
+    *{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; }
     body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      line-height:1.6;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: #fff;
+      line-height: 1.6;
     }
-    a{color:inherit;text-decoration:none}
-    img{max-width:100%;display:block}
+    a{ color: inherit; text-decoration: none; }
+    img{ max-width: 100%; display:block; }
 
-    .container{max-width:var(--container);margin:0 auto;padding:0 20px}
+    .container{
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 0 20px;
+    }
 
-    /* ===== HEADER / NAV ===== */
-    header{
-      background:var(--surface);
-      border-bottom:1px solid var(--border);
-      position:sticky;
-      top:0;
-      z-index:100;
+    /* Header */
+    .site-header{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
     }
     .header-inner{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:16px;
-      padding:14px 0;
+      gap: 16px;
+      padding: 14px 0;
     }
     .brand{
       display:flex;
       align-items:center;
-      gap:12px;
-      min-width:220px;
+      gap: 10px;
+      min-width: 220px;
     }
-    .brand img{
-      height:44px;
-      width:auto;
+    .logo{
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--support);
+      display:grid;
+      place-items:center;
+      border: 1px solid var(--border);
+      font-weight: 700;
+      color: var(--primary);
+      font-family: "DM Sans", Inter, sans-serif;
     }
-    nav{
+    .brand-name{
+      font-family: "DM Sans", Inter, sans-serif;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .nav{
       display:flex;
       align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      justify-content:center;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
-    nav a{
-      font-weight:600;
-      font-size:14px;
-      color:var(--muted);
-      padding:8px 10px;
-      border-radius:10px;
+    .nav a{
+      font-size: 14px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 10px;
     }
-    nav a:hover,
-    nav a.active{
-      background:#eef7f1;
-      color:var(--text);
-    }
-    .btnTop{
+    .nav a:hover{ background: var(--bg-sky); color: var(--text); }
+
+    .btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:12px 16px;
-      border-radius:999px;
-      background:var(--accent);
-      color:#fff;
-      font-weight:700;
+      gap: 8px;
+      border-radius: var(--radius-pill);
+      padding: 12px 16px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      white-space: nowrap;
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn-primary{
+      background: var(--primary);
+      color: #fff;
+      box-shadow: var(--shadow-soft);
+    }
+    .btn-primary:hover{ filter: brightness(.98); }
+
+    .btn-outline{
+      background: transparent;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .btn-outline:hover{ background: rgba(36,107,120,.08); }
+
+    .header-cta{ display:flex; gap: 10px; align-items:center; }
+
+    /* ===== Dropdown (shared for nav + buttons) ===== */
+    details.dd{
+      position: relative;
+      display: inline-block;
+    }
+    details.dd > summary{
+      list-style:none;
+      cursor:pointer;
+      user-select:none;
+    }
+    details.dd > summary::-webkit-details-marker{ display:none; }
+
+    /* make nav dropdown look like other nav links */
+    details.dd.navdd > summary{
+      font-size: 14px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 10px;
+      display:inline-flex;
+      align-items:center;
+      gap: 6px;
+    }
+    details.dd.navdd > summary:hover{
+      background: var(--bg-sky);
+      color: var(--text);
     }
 
-    /* ===== HERO ===== */
+    /* make button dropdown use the same .btn styles */
+    details.dd.btndd > summary{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+    }
+
+    .caret{
+      font-size: 12px;
+      transform: translateY(1px);
+      opacity: .9;
+    }
+
+    .ddmenu{
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      min-width: 240px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow-soft);
+      padding: 6px;
+      z-index: 9999; /* avoid being hidden behind sections */
+    }
+    .ddmenu a{
+      display:block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .ddmenu a:hover{ background: var(--bg-sky); }
+
+    /* Hero */
+    .section{ padding: 56px 0; }
+    .section.sky{ background: var(--bg-sky); }
+
     .hero{
-      background:linear-gradient(135deg,#e8f6ee,#ffffff);
-      padding:72px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-140px;
+      top: 70px;
+      width: 520px;
+      height: 520px;
+      background: var(--support);
+      border-radius: 50%;
+      opacity: .9;
+      z-index: 0;
     }
     .hero-grid{
+      position: relative;
+      z-index: 1;
       display:grid;
-      grid-template-columns:1.1fr .9fr;
-      gap:40px;
-      align-items:center;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 28px;
+      align-items: center;
     }
     .hero h1{
-      font-size:42px;
-      line-height:1.1;
-      margin:0 0 14px;
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: clamp(34px, 4vw, 48px);
+      line-height: 1.1;
+      margin: 0 0 10px;
+      letter-spacing: -0.6px;
     }
     .hero p{
-      font-size:18px;
-      color:var(--muted);
-      max-width:52ch;
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 54ch;
     }
     .hero-actions{
       display:flex;
-      gap:14px;
-      margin-top:22px;
-      flex-wrap:wrap;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
     }
-    .btnPrimary{
-      background:var(--accent);
-      color:#fff;
-      padding:14px 20px;
-      border-radius:999px;
-      font-weight:800;
+    .chips{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
     }
-    .btnOutline{
-      border:2px solid var(--accent);
-      color:var(--accent);
-      padding:12px 20px;
-      border-radius:999px;
-      font-weight:800;
-      background:#fff;
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: var(--radius-pill);
+      background: rgba(255,255,255,.7);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
     }
-    .hero-img{
-      border-radius:18px;
-      overflow:hidden;
-      border:1px solid var(--border);
-      box-shadow:0 10px 30px rgba(0,0,0,.08);
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      border: 1px solid rgba(0,0,0,.05);
     }
 
-    /* ===== SECTIONS ===== */
-    section{padding:64px 0}
+    .hero-media{
+      background: rgba(255,255,255,.7);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 10px;
+      box-shadow: var(--shadow-card);
+    }
+    .hero-media img{
+      border-radius: 14px;
+      aspect-ratio: 16/10;
+      object-fit: cover;
+      background: #e9eef3;
+    }
+
+    /* Section titles */
     .section-title{
-      text-align:center;
-      margin-bottom:36px;
+      text-align: center;
+      margin-bottom: 22px;
     }
     .section-title h2{
-      font-size:32px;
-      margin:0 0 10px;
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: 28px;
+      margin: 0 0 6px;
+      letter-spacing: -0.2px;
     }
     .section-title p{
-      color:var(--muted);
-      max-width:60ch;
-      margin:0 auto;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
     }
 
-    /* ===== SERVICES ===== */
-    .services{
+    /* Cards grid */
+    .grid-3{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:20px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
     }
-    .service{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:20px;
-      text-align:center;
+    .card{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
     }
-    .service h3{
-      margin:10px 0 6px;
+    .service-card{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      padding: 16px 18px;
+      min-height: 78px;
     }
-    .service p{
-      color:var(--muted);
-      font-size:14px;
+    .icon{
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: rgba(36,107,120,.10);
+      display:grid;
+      place-items:center;
+      border: 1px solid rgba(36,107,120,.15);
+      color: var(--primary);
+      font-family: "DM Sans", Inter, sans-serif;
+      font-weight: 700;
+    }
+    .service-card strong{ display:block; font-size: 15px; }
+    .service-card span{ color: var(--muted); font-size: 13px; }
+
+    /* Steps */
+    .steps{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+    .step{
+      position: relative;
+      padding: 18px;
+    }
+    .step-top{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .step-num{
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      display:grid;
+      place-items:center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-weight: 700;
+      color: var(--primary);
+      position: relative;
+      overflow: hidden;
+    }
+    .step-num::before{
+      content:"";
+      position:absolute;
+      inset: 9px 8px 9px 8px;
+      background: var(--accent);
+      border-radius: 10px;
+      opacity: .75;
+      z-index: 0;
+    }
+    .step-num b{ position: relative; z-index: 1; }
+    .step h3{
+      margin: 0;
+      font-size: 16px;
+      font-family: "DM Sans", Inter, sans-serif;
+    }
+    .step p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .center-cta{
+      display:flex;
+      justify-content:center;
+      margin-top: 18px;
     }
 
-    /* ===== CTA ===== */
-    .cta{
-      background:var(--accent);
-      color:#fff;
-      text-align:center;
-      padding:64px 20px;
-      border-radius:24px;
-      margin:0 20px;
+    /* Gallery strip */
+    .thumbs{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
     }
-    .cta h2{
-      margin:0 0 12px;
-      font-size:34px;
+    .thumb{
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      overflow:hidden;
+      background: #e9eef3;
+      aspect-ratio: 16/10;
     }
-    .cta a{
-      display:inline-block;
-      margin-top:18px;
-      background:#fff;
-      color:var(--accent);
-      padding:14px 22px;
-      border-radius:999px;
-      font-weight:900;
+    .thumb img{ width:100%; height:100%; object-fit: cover; }
+
+    /* Reviews */
+    .reviews-grid{
+      display:grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 14px;
+      align-items:start;
+    }
+    .rating{
+      padding: 16px;
+    }
+    .stars{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .stars-badge{
+      background: var(--accent);
+      border-radius: 12px;
+      padding: 6px 10px;
+      font-weight: 700;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+    .rating small{ color: var(--muted); }
+
+    .snippets{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .snippet{
+      padding: 14px 14px;
+      font-size: 14px;
+      color: var(--muted);
+      position: relative;
+    }
+    .snippet::before{
+      content:"“";
+      position:absolute;
+      top: 6px;
+      left: 10px;
+      font-size: 22px;
+      color: rgba(36,107,120,.35);
+      font-family: "DM Sans", Inter, sans-serif;
     }
 
-    /* ===== FOOTER ===== */
+    /* About teaser */
+    .about-grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      align-items:center;
+    }
+    .about h2{ text-align:left; margin-bottom: 8px; }
+    .about p{ margin:0 0 14px; color: var(--muted); max-width: 60ch; }
+    .about-media{
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      overflow:hidden;
+      background: #e9eef3;
+      box-shadow: var(--shadow-card);
+      aspect-ratio: 16/11;
+    }
+    .about-media img{ width:100%; height:100%; object-fit: cover; }
+
+    /* Footer */
     footer{
-      background:#173028;
-      color:#d8efe4;
-      padding:48px 0 32px;
-      margin-top:64px;
+      background: var(--text);
+      color: rgba(255,255,255,.92);
+      padding: 44px 0 26px;
     }
     .footer-grid{
       display:grid;
-      grid-template-columns:1.2fr 1fr;
-      gap:24px;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 18px;
       align-items:start;
     }
-    footer strong{color:#fff}
-    footer a{color:#bde5cf}
+    footer a{ color: var(--support); }
+    .footer-card{
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(217,238,246,.25);
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .footer-card h3{
+      margin: 0 0 8px;
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: 16px;
+    }
+    .footer-bottom{
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(217,238,246,.18);
+      font-size: 13px;
+      color: rgba(255,255,255,.72);
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
 
-    @media (max-width: 900px){
-      nav{display:none}
-      .hero-grid{grid-template-columns:1fr}
-      .hero h1{font-size:36px}
+    /* Sticky Quote Button (mobile only) */
+    .mobile-quote-bar{
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 60;
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(255,255,255,.92);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      display: none;
+    }
+    .mobile-quote-bar .btn{
+      width: 100%;
+      padding: 14px 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .hero-grid{ grid-template-columns: 1fr; }
+      .grid-3{ grid-template-columns: 1fr 1fr; }
+      .steps{ grid-template-columns: 1fr; }
+      .thumbs{ grid-template-columns: 1fr 1fr 1fr; }
+      .reviews-grid{ grid-template-columns: 1fr; }
+      .snippets{ grid-template-columns: 1fr; }
+      .about-grid{ grid-template-columns: 1fr; }
+      .nav{ display:none; } /* simple: hide nav on small screens (add hamburger later if you want) */
+      .brand{ min-width: unset; }
+      .mobile-quote-bar{ display:block; }
+      body{ padding-bottom: 70px; } /* space for sticky bar */
+    }
+    @media (max-width: 520px){
+      .grid-3{ grid-template-columns: 1fr; }
+      .thumbs{ grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 
 <body>
 
-<header>
-  <div class="container">
-    <div class="header-inner">
-      <a class="brand" href="index.html">
-        <img src="logo.png" alt="My Shirt Printing logo">
-      </a>
+  <!-- Sticky Header -->
+  <header class="site-header" role="banner">
+    <div class="container">
+      <div class="header-inner">
+        <a class="brand" href="#top" aria-label="Go to homepage">
+          <div class="logo" aria-hidden="true">PS</div>
+          <div class="brand-name">Print Shop Name</div>
+        </a>
 
-      <nav>
-        <a class="active" href="index.html">Home</a>
-        <a href="quote.html">Quote</a>
-        <a href="gallery.html">Gallery</a>
-        <a href="about.html">About Us</a>
-        <a href="contact.html">Contact</a>
-      </nav>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="#top">Home</a>
 
-      <a class="btnTop" href="quote.html">Get a Quote</a>
+          <!-- UPDATED: Quote dropdown in header nav -->
+          <details class="dd navdd" id="ddNavQuote">
+            <summary>Quote <span class="caret" aria-hidden="true">▼</span></summary>
+            <div class="ddmenu" role="menu" aria-label="Quote menu">
+              <a href="quote.html">Garment Printing Quote</a>
+              <a href="embroidery-quote.html">Embroidery Quote</a>
+              <a href="other-quote.html">Other (Print)</a>
+            </div>
+          </details>
+
+          <a href="#gallery">Gallery</a>
+          <a href="#reviews">Yelp Reviews</a>
+          <a href="#about">About</a>
+          <a href="#contact">Contact</a>
+        </nav>
+
+        <div class="header-cta">
+          <!-- UPDATED: Header CTA as dropdown -->
+          <details class="dd btndd" id="ddHeaderBtn">
+            <summary class="btn btn-primary">Get a Quote <span class="caret" aria-hidden="true">▼</span></summary>
+            <div class="ddmenu" role="menu" aria-label="Get a Quote menu">
+              <a href="quote.html">Garment Printing Quote</a>
+              <a href="embroidery-quote.html">Embroidery Quote</a>
+              <a href="other-quote.html">Other (Print)</a>
+            </div>
+          </details>
+        </div>
+      </div>
     </div>
-  </div>
-</header>
+  </header>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="container">
-    <div class="hero-grid">
-      <div>
-        <h1>Custom screen printing & signage made easy</h1>
-        <p>
-          Family-owned printing shop serving Santa Clara and the Bay Area.
-          Fast turnaround, honest pricing, and quality you can trust.
-        </p>
+  <main id="top">
 
-        <div class="hero-actions">
-          <a class="btnPrimary" href="quote.html">Get a Quote</a>
-          <a class="btnOutline" href="gallery.html">View Our Work</a>
+    <!-- HERO -->
+    <section class="section sky hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div>
+            <h1>Local printing made easy.</h1>
+            <p>Family-owned service, quick turnaround, and quality prints for businesses, events, and everyday needs.</p>
+
+            <div class="hero-actions">
+              <!-- UPDATED: Hero Get a Quote as dropdown -->
+              <details class="dd btndd" id="ddHeroBtn">
+                <summary class="btn btn-primary">Get a Quote <span class="caret" aria-hidden="true">▼</span></summary>
+                <div class="ddmenu" role="menu" aria-label="Get a Quote menu">
+                  <a href="quote.html">Garment Printing Quote</a>
+                  <a href="embroidery-quote.html">Embroidery Quote</a>
+                  <a href="other-quote.html">Other (Print)</a>
+                </div>
+              </details>
+
+              <a class="btn btn-outline" href="#gallery">View Gallery</a>
+            </div>
+
+            <div class="chips" aria-label="Highlights">
+              <span class="chip"><span class="dot"></span> Family-owned</span>
+              <span class="chip"><span class="dot"></span> Fast turnaround</span>
+              <span class="chip"><span class="dot"></span> Friendly help</span>
+            </div>
+          </div>
+
+          <div class="hero-media" aria-label="Featured print work image">
+            <img alt="Printed materials on a light desk" src="https://images.unsplash.com/photo-1526481280695-3c687fd5432c?auto=format&fit=crop&w=1400&q=80">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>What we print</h2>
+          <p>Popular products, plus custom orders — we’ll help you choose the right options.</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="card service-card">
+            <div class="icon">BC</div>
+            <div><strong>Business Cards</strong><span>Clean, premium, and fast.</span></div>
+          </div>
+          <div class="card service-card">
+            <div class="icon">FB</div>
+            <div><strong>Flyers &amp; Brochures</strong><span>Great for promos &amp; menus.</span></div>
+          </div>
+          <div class="card service-card">
+            <div class="icon">BS</div>
+            <div><strong>Banners &amp; Signs</strong><span>Events, storefronts, more.</span></div>
+          </div>
+          <div class="card service-card">
+            <div class="icon">SL</div>
+            <div><strong>Stickers &amp; Labels</strong><span>Custom shapes &amp; finishes.</span></div>
+          </div>
+          <div class="card service-card">
+            <div class="icon">IN</div>
+            <div><strong>Invitations</strong><span>Weddings, parties, announcements.</span></div>
+          </div>
+          <div class="card service-card">
+            <div class="icon">CO</div>
+            <div><strong>Custom Orders</strong><span>Tell us what you’re making.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section sky">
+      <div class="container">
+        <div class="section-title">
+          <h2>Fast from idea to print</h2>
+          <p>Simple steps, clear pricing, helpful guidance.</p>
+        </div>
+
+        <div class="steps">
+          <div class="card step">
+            <div class="step-top">
+              <div class="step-num"><b>1</b></div>
+              <h3>Tell us what you need</h3>
+            </div>
+            <p>Share size, quantity, and your deadline — even a rough idea is fine.</p>
+          </div>
+
+          <div class="card step">
+            <div class="step-top">
+              <div class="step-num"><b>2</b></div>
+              <h3>We reply with options</h3>
+            </div>
+            <p>We’ll suggest materials/finishes and send pricing you can understand.</p>
+          </div>
+
+          <div class="card step">
+            <div class="step-top">
+              <div class="step-num"><b>3</b></div>
+              <h3>Approve &amp; we print</h3>
+            </div>
+            <p>Once you approve, we’ll produce your order — ready for pickup or delivery.</p>
+          </div>
+        </div>
+
+        <div class="center-cta">
+          <a class="btn btn-primary" href="#gallery">See the full gallery</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- GALLERY PREVIEW -->
+    <section class="section" id="gallery">
+      <div class="container">
+        <div class="section-title">
+          <h2>Recent work</h2>
+          <p>A few examples — more in our gallery.</p>
+        </div>
+
+        <div class="thumbs" aria-label="Recent work thumbnails">
+          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=900&q=70"></div>
+          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1526481280695-3c687fd5432c?auto=format&fit=crop&w=900&q=70"></div>
+          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1457305237443-44c3d5a30b89?auto=format&fit=crop&w=900&q=70"></div>
+          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=70"></div>
+          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=70"></div>
+        </div>
+
+        <div class="center-cta">
+          <a class="btn btn-outline" href="#gallery">View Gallery</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section class="section sky" id="reviews">
+      <div class="container">
+        <div class="section-title">
+          <h2>Customers love working with us</h2>
+          <p>Friendly service, quality results, and reliable turnaround.</p>
+        </div>
+
+        <div class="reviews-grid">
+          <div class="card rating">
+            <div class="stars">
+              <span class="stars-badge">★★★★★</span>
+              <strong>4.9</strong>
+            </div>
+            <small>Read more on Yelp</small>
+            <div style="margin-top:12px;">
+              <a class="btn btn-outline" href="#reviews" aria-label="Open Yelp reviews">Open Yelp</a>
+            </div>
+          </div>
+
+          <div class="snippets" aria-label="Review snippets">
+            <div class="card snippet">Excellent service and quick turnaround!</div>
+            <div class="card snippet">High-quality prints at great prices.</div>
+            <div class="card snippet">So helpful and friendly — made it easy.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT TEASER -->
+    <section class="section about" id="about">
+      <div class="container">
+        <div class="about-grid">
+          <div>
+            <div class="section-title" style="text-align:left; margin-bottom:10px;">
+              <h2>A family print shop you can count on</h2>
+              <p>We’ll guide you through paper, finishes, and sizing — no stress.</p>
+            </div>
+
+            <p>We’re a small, family-run business focused on quality, speed, and making printing simple.
+              Whether you know exactly what you want or need a little help, we’re here for you.</p>
+
+            <a class="btn btn-primary" href="#about">Meet the Team</a>
+          </div>
+
+          <div class="about-media" aria-label="Photo of the team or shop">
+            <img alt="Friendly team photo" src="https://images.unsplash.com/photo-1520975958225-9d15976b2bcd?auto=format&fit=crop&w=1200&q=80">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUOTE / CONTACT placeholders -->
+    <section class="section sky" id="quote">
+      <div class="container">
+        <div class="section-title">
+          <h2>Get a quote</h2>
+          <p>Next we’ll build the quote form page/section.</p>
+        </div>
+        <div class="center-cta">
+          <a class="btn btn-primary" href="#contact">Contact us</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="container">
+        <div class="section-title">
+          <h2>Contact</h2>
+          <p>Next we’ll add your real shop info and a contact form.</p>
+        </div>
+        <div class="card" style="max-width: 720px; margin: 0 auto;">
+          <p style="margin:0; color: var(--muted);">
+            <strong>Phone:</strong> (123) 456-7890<br>
+            <strong>Email:</strong> info@printshop.com<br>
+            <strong>Hours:</strong> Mon–Fri 9am–5pm
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div style="font-family:'DM Sans', Inter, sans-serif; font-weight:700; font-size:18px; margin-bottom:8px;">
+            Print Shop Name
+          </div>
+          <div style="color: rgba(255,255,255,.75);">
+            123 Main St, Your City, ST<br>
+            Mon–Fri 9am–5pm
+          </div>
+        </div>
+
+        <div>
+          <div style="font-weight:700; margin-bottom:8px; font-family:'DM Sans', Inter, sans-serif;">Quick Links</div>
+          <div style="display:grid; gap:8px;">
+            <a href="quote.html">Garment Printing Quote</a>
+            <a href="embroidery-quote.html">Embroidery Quote</a>
+            <a href="other-quote.html">Other (Print)</a>
+            <a href="#gallery">Gallery</a>
+            <a href="#contact">Contact</a>
+          </div>
+        </div>
+
+        <div class="footer-card">
+          <h3>Get a Quote in Minutes</h3>
+          <div style="color: rgba(255,255,255,.78); margin-bottom: 12px;">
+            Choose what you need — we’ll reply with options and pricing.
+          </div>
+
+          <!-- UPDATED: Footer Get a Quote as dropdown -->
+          <details class="dd btndd" id="ddFooterBtn">
+            <summary class="btn btn-primary">Get a Quote <span class="caret" aria-hidden="true">▼</span></summary>
+            <div class="ddmenu" role="menu" aria-label="Get a Quote menu">
+              <a href="quote.html">Garment Printing Quote</a>
+              <a href="embroidery-quote.html">Embroidery Quote</a>
+              <a href="other-quote.html">Other (Print)</a>
+            </div>
+          </details>
         </div>
       </div>
 
-      <div class="hero-img">
-        <img src="Images/gallery-1.jpg" alt="My Shirt Printing work">
+      <div class="footer-bottom">
+        <div>© <span id="year"></span> Print Shop Name. All rights reserved.</div>
+        <div>Made with care.</div>
       </div>
     </div>
+  </footer>
+
+  <!-- Mobile sticky quote button -->
+  <div class="mobile-quote-bar" aria-label="Quick quote button">
+    <details class="dd btndd" id="ddMobileBtn" style="width:100%;">
+      <summary class="btn btn-primary" style="width:100%;">Get a Quote <span class="caret" aria-hidden="true">▼</span></summary>
+      <div class="ddmenu" role="menu" aria-label="Get a Quote menu" style="left:0; right:0; min-width:unset;">
+        <a href="quote.html">Garment Printing Quote</a>
+        <a href="embroidery-quote.html">Embroidery Quote</a>
+        <a href="other-quote.html">Other (Print)</a>
+      </div>
+    </details>
   </div>
-</section>
 
-<!-- SERVICES -->
-<section>
-  <div class="container">
-    <div class="section-title">
-      <h2>What we do</h2>
-      <p>From small batches to large runs — we’ll guide you through every step.</p>
-    </div>
+  <script>
+    // Set footer year
+    document.getElementById("year").textContent = new Date().getFullYear();
 
-    <div class="services">
-      <div class="service">
-        <h3>Screen Printing</h3>
-        <p>T-shirts, hoodies, tote bags, uniforms.</p>
-      </div>
-      <div class="service">
-        <h3>Signs & Banners</h3>
-        <p>Storefronts, events, promotions.</p>
-      </div>
-      <div class="service">
-        <h3>Vinyl & Decals</h3>
-        <p>Logos, window graphics, custom decals.</p>
-      </div>
-      <div class="service">
-        <h3>Fast Turnaround</h3>
-        <p>Rush options available when you need it now.</p>
-      </div>
-    </div>
-  </div>
-</section>
+    // Close dropdowns when clicking outside
+    const dropdownIds = ["ddNavQuote","ddHeaderBtn","ddHeroBtn","ddFooterBtn","ddMobileBtn"];
 
-<!-- CTA -->
-<section>
-  <div class="cta">
-    <h2>Ready to get started?</h2>
-    <p>Tell us what you need and we’ll take care of the rest.</p>
-    <a href="quote.html">Get Your Quote</a>
-  </div>
-</section>
+    document.addEventListener("click", (e) => {
+      dropdownIds.forEach(id => {
+        const dd = document.getElementById(id);
+        if (!dd) return;
+        if (!dd.contains(e.target)) dd.removeAttribute("open");
+      });
+    });
 
-<!-- FOOTER -->
-<footer>
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <strong>My Shirt Printing</strong><br>
-        Santa Clara, CA<br><br>
-        <strong>Phone:</strong> (123) 456-7890<br>
-        <strong>Email:</strong> info@myshirtprinting.com
-      </div>
-
-      <div>
-        <strong>Hours</strong><br>
-        Mon–Fri: 9am – 5pm<br>
-        Sat–Sun: Closed
-      </div>
-    </div>
-  </div>
-</footer>
-
+    // Optional: only allow one dropdown open at a time
+    dropdownIds.forEach(id => {
+      const dd = document.getElementById(id);
+      if (!dd) return;
+      dd.addEventListener("toggle", () => {
+        if (!dd.open) return;
+        dropdownIds.forEach(otherId => {
+          if (otherId === id) return;
+          const other = document.getElementById(otherId);
+          if (other) other.removeAttribute("open");
+        });
+      });
+    });
+  </script>
 </body>
 </html>
