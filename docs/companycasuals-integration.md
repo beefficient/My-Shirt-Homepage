@@ -176,7 +176,7 @@ CompanyCasuals Team
      }
      
      // Extract structured data
-     const inquiryId = extractInquiryId(emailSubject); // Extract #CC-YYYY-NNNNNN
+     const inquiryId = extractInquiryId(emailSubject); // Extract #CC-YYYY-NNNNNN (year-sequential number, e.g. 4-digit year + 6-digit number)
      if (!inquiryId) {
        return { error: 'Inquiry ID not found in subject' };
      }
