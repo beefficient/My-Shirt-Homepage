@@ -427,7 +427,7 @@ www.companycasuals.com
 
 **Inquiry ID Pattern:**
 ```regex
-\b#CC-\d{4}-\d{6}\b
+(?:^|\s)#CC-\d{4}-\d{6}(?:\s|$)
 ```
 
 **Product Detail Section:**
@@ -437,7 +437,7 @@ Product Details:[\s\S]*?(?=Your inquiry reference|Best regards|$)
 
 **Customer Name Pattern:**
 ```regex
-Dear ([A-Za-z\s'\.\-]+),
+Dear ([A-Za-z\s'.\-]+),
 ```
 
 ---
