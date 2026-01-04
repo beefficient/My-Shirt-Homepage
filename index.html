@@ -3,673 +3,674 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Shirt Printing — Quote</title>
+  <title>My Shirt Printing — Local printing made easy</title>
 
-  <!-- Fonts (match index.html) -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --surface:#ffffff;
-      --bg:#f6faf7;
-      --border:#d8e5db;
-      --text:#173028;
-      --muted:#456057;
-      --accent:#2f7a5a;
-      --accent2:#e8f6ee;
-      --danger:#a63a3a;
-      --container:1100px;
-
-      /* header */
-      --navBlue:#0c3b5a;
-      --navHover:#eef7f1;
+      --bg: #f6fbff;
+      --sky: #eaf4ff;
+      --card: #ffffff;
+      --text: #0f2a33;
+      --muted: #47606a;
+      --border: #d7e7f7;
+      --primary: #0e4f73;
+      --primary-2: #0b3f5b;
+      --pill: 999px;
+      --radius: 16px;
+      --shadow: 0 10px 24px rgba(10,35,45,.08);
+      --max: 1120px;
     }
     *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
     body{
-      margin:0;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:var(--bg);
-      color:var(--text);
+      color: var(--text);
+      background: linear-gradient(#ffffff, #ffffff);
+      line-height: 1.55;
     }
     a{color:inherit;text-decoration:none}
-    .container{max-width:var(--container);margin:0 auto;padding:0 20px}
+    img{max-width:100%;display:block}
 
-    /* ===== Header / Menu (MATCHES index-style + fonts) ===== */
+    .container{max-width:var(--max);margin:0 auto;padding:0 20px}
+
+    /* Top Nav */
     header{
-      background:var(--surface);
-      border-bottom:1px solid var(--border);
-      position:sticky; top:0; z-index:50;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
     }
-    .header-inner{
+    .navwrap{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:18px;
+      gap:16px;
       padding:14px 0;
     }
     .brand{
       display:flex;
       align-items:center;
-      gap:14px;
-      min-width: 320px;
+      gap:12px;
+      min-width: 220px;
     }
-    .brand img{height:44px;width:auto;display:block}
-    .brand .title{
+    .brand img{
+      height: 42px;          /* adjust logo size here */
+      width: auto;
+      object-fit: contain;
+    }
+    .brand .name{
       font-family: "DM Sans", Inter, sans-serif;
-      font-size:22px;
-      font-weight:700;
-      color:var(--text);
-      line-height:1.1;
-      white-space:nowrap;
-      letter-spacing:.2px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: .2px;
+      white-space: nowrap;
     }
 
     nav{
       display:flex;
-      align-items:center;
       gap:18px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
+      align-items:center;
+      justify-content:center;
+      flex-wrap: wrap;
     }
+    nav a{
+      font-size: 14px;
+      color: var(--primary-2);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    nav a:hover{background: var(--sky)}
+    nav a.active{border-bottom: 2px solid var(--primary); border-radius: 0; padding-bottom: 6px}
 
-    nav a.link,
-    nav details.navdrop > summary{
-      font-weight:600;
-      font-size:16px;
-      color:var(--navBlue);
-      padding:10px 12px;
-      border-radius:12px;
+    /* ===== Quote dropdown (header) ===== */
+    details.quoteDrop{
+      position: relative;
+      display: inline-block;
+    }
+    details.quoteDrop > summary{
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+      font-size: 14px;
+      color: var(--primary-2);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    details.quoteDrop > summary:hover{ background: var(--sky); }
+    details.quoteDrop > summary::-webkit-details-marker{ display:none; }
+
+    .qMenu{
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 220px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 6px;
+      z-index: 9999; /* ensure not behind sections */
+    }
+    .qMenu a{
+      display: block;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary-2);
+      white-space: nowrap;
+    }
+    .qMenu a:hover{ background: var(--sky); }
+
+    /* Buttons */
+    .btn{
       display:inline-flex;
       align-items:center;
-      gap:8px;
+      justify-content:center;
+      padding: 11px 16px;
+      border-radius: var(--pill);
+      font-weight: 700;
+      border: 1px solid transparent;
       cursor:pointer;
       user-select:none;
+      white-space:nowrap;
     }
-    nav a.link:hover,
-    nav details.navdrop > summary:hover{
-      background: var(--navHover);
-    }
+    .btn.primary{background: var(--primary); color:#fff; box-shadow: var(--shadow)}
+    .btn.primary:hover{filter: brightness(.98)}
+    .btn.ghost{background:#fff;border-color: var(--border); color: var(--primary-2)}
+    .btn.ghost:hover{background: var(--sky)}
 
-    /* underline for active tab like index */
-    nav a.link.active{
-      border-bottom:3px solid var(--navBlue);
-      border-radius:0;
-      padding-bottom:8px;
+    /* ===== Quote dropdown (button style) ===== */
+    details.quoteBtn{
+      position: relative;
+      display: inline-block;
     }
-    nav details.navdrop.active > summary{
-      border-bottom:3px solid var(--navBlue);
-      border-radius:0;
-      padding-bottom:8px;
-      background: transparent;
+    details.quoteBtn > summary{
+      list-style:none;
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
     }
+    details.quoteBtn > summary::-webkit-details-marker{display:none;}
 
-    details.navdrop{
-      position:relative;
-      display:inline-block;
-    }
-    details.navdrop > summary{ list-style:none; }
-    details.navdrop > summary::-webkit-details-marker{ display:none; }
-    .caret{font-size:12px; transform: translateY(1px);}
-
-    .dropmenu{
+    .btnMenu{
       position:absolute;
       top: calc(100% + 10px);
       left: 0;
-      min-width: 240px;
+      min-width: 260px;
       background:#fff;
       border:1px solid var(--border);
-      border-radius:14px;
-      box-shadow:0 14px 30px rgba(0,0,0,.10);
-      padding:8px;
-      z-index:200;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 6px;
+      z-index: 9999; /* ensure not behind sections */
     }
-    .dropmenu a{
+    .btnMenu a{
       display:block;
-      padding:10px 12px;
-      border-radius:12px;
-      font-weight:600;
-      color:var(--text);
-      font-size:15px;
-      white-space:nowrap;
+      padding: 12px 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      color: var(--primary-2);
     }
-    .dropmenu a:hover{ background: var(--navHover); }
-    .dropmenu a.activeItem{ background: var(--navHover); }
+    .btnMenu a:hover{ background: var(--sky); }
 
-    @media (max-width: 900px){
-      .brand .title{font-size:18px}
-      nav{gap:10px}
-      nav a.link, nav details.navdrop > summary{font-size:15px;padding:9px 10px}
+    /* HERO */
+    .hero{
+      background: linear-gradient(180deg, #dfeeff 0%, #f6fbff 70%, #ffffff 100%);
+      padding: 34px 0 26px;
+      position: relative;
+      overflow: hidden;
     }
-
-    /* ===== Quote layout ===== */
-    .wrap{max-width:980px;margin:22px auto 28px;padding:0 16px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-    .card{
-      background:#fff;border:1px solid var(--border);
-      border-radius:14px;padding:16px;
-      box-shadow:0 8px 20px rgba(0,0,0,.04);
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-260px;
+      top: -80px;
+      width: 760px;
+      height: 760px;
+      background: rgba(120,180,255,.18);
+      border-radius: 50%;
+    }
+    .hero .grid{
+      position: relative;
+      z-index: 1;
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 28px;
+      align-items:center;
+      padding: 24px 0 6px;
     }
     h1{
-      margin:0 0 6px;
-      font-size:22px;
       font-family: "DM Sans", Inter, sans-serif;
-      font-weight:700;
+      font-size: clamp(34px, 4.2vw, 54px);
+      line-height: 1.06;
+      margin: 0 0 12px;
+      color: var(--primary-2);
+      letter-spacing: -.6px;
     }
-    p{margin:0 0 14px;color:var(--muted)}
-    label{display:block;font-weight:600;margin:12px 0 6px}
-    input,select{
-      width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);font-size:14px;background:#fff;
-      font-family: inherit;
+    .lead{
+      margin: 0 0 18px;
+      color: #36515c;
+      max-width: 56ch;
+      font-size: 16px;
+      font-weight: 500;
     }
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .choices{display:grid;gap:10px;margin-top:8px}
-    .choice{
-      display:flex;align-items:flex-start;gap:10px;
-      padding:10px;border:1px solid var(--border);
-      border-radius:12px;background:var(--accent2);
-    }
-    .choice input[type="checkbox"]{width:auto;margin-top:2px}
-    .choice .inline{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:6px 10px;border-radius:999px;border:1px solid var(--border);
-      background:#fff;font-size:13px;color:var(--muted);
-    }
-    .pill select, .pill input{
-      width:auto; padding:6px 8px; border-radius:10px;
-      border:1px solid var(--border); font-size:13px;
-    }
-    .btn{
-      margin-top:14px;width:100%;
-      padding:12px 14px;border:none;border-radius:12px;
-      background:var(--accent);color:#fff;font-weight:800;cursor:pointer;font-size:15px;
-      font-family: inherit;
-    }
-    .error{color:var(--danger);font-weight:600;margin-top:10px;white-space:pre-line}
-    .summary{
-      background:#eaf7ef;border:1px solid #bfe2cc;border-radius:14px;padding:14px;
-    }
-    .summary .line{
-      display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);
-    }
-    .summary .line:last-child{border-bottom:none}
-    .summary .k{color:#1a3a2f}
-    .summary .v{font-weight:800}
-    .divider{height:1px;background:rgba(0,0,0,.08);margin:14px 0}
-    .section-title{font-weight:900;margin:0 0 8px;font-size:18px}
-    .loc{margin:12px 0;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06)}
-    .loc:last-child{border-bottom:none}
-    .muted{color:var(--muted);font-weight:500}
-    .emptyBox{
-      border:1px dashed rgba(0,0,0,.2);
-      border-radius:12px;
-      padding:12px;
-      color:var(--muted);
+    .hero-actions{display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 14px}
+    .chips{display:flex; gap:10px; flex-wrap:wrap}
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
       background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--pill);
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color:#36515c;
+    }
+    .dot{width:10px;height:10px;border-radius:50%;background:#ffd77a;border:1px solid rgba(0,0,0,.06)}
+    .hero-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: 18px;
+      padding: 10px;
+      box-shadow: var(--shadow);
+    }
+    .hero-card img{
+      border-radius: 14px;
+      aspect-ratio: 16/10;
+      object-fit: cover;
+      background:#e9eef3;
     }
 
-    /* Discount message */
-    .discMsg{
-      margin-top:8px;
-      font-weight:600;
-      color:var(--muted);
-      white-space:pre-line;
+    /* Sections */
+    .section{padding: 34px 0}
+    .title{
+      text-align:center;
+      margin-bottom: 18px;
     }
-    .discMsg.bad{ color: var(--danger); }
+    .title h2{
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: 28px;
+      margin:0 0 6px;
+      color: var(--primary-2);
+    }
+    .title p{margin:0;color:var(--muted);font-weight:500}
 
-    @media (max-width: 860px){.grid{grid-template-columns:1fr}}
+    /* Service tiles */
+    .tiles{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .tile{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 8px 18px rgba(10,35,45,.06);
+      display:flex;
+      gap: 12px;
+      align-items:center;
+      justify-content:center;
+      min-height: 86px;
+      text-align:center;
+      font-weight: 700;
+      color: var(--primary-2);
+    }
+    .tile span{display:block;font-size:14px}
+    .tile small{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-top:4px}
+
+    /* Steps */
+    .steps{
+      background: linear-gradient(180deg, #ffffff 0%, #eef6ff 50%, #dfeeff 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .step-row{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      align-items:center;
+      margin-top: 8px;
+    }
+    .step{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      box-shadow: 0 8px 18px rgba(10,35,45,.06);
+    }
+    .badge{
+      width: 38px; height: 38px;
+      border-radius: 14px;
+      background: #ffe7a6;
+      display:grid;
+      place-items:center;
+      font-weight: 800;
+      color: var(--primary-2);
+      border:1px solid rgba(0,0,0,.06);
+      flex: 0 0 auto;
+    }
+    .step strong{display:block}
+    .step p{margin:4px 0 0; color: var(--muted); font-size: 14px; font-weight: 500}
+
+    /* Reviews */
+    .reviews{
+      background: #eef6ff;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .review-bar{
+      display:grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 14px;
+      align-items:center;
+      margin-top: 8px;
+    }
+    .rating{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 8px 18px rgba(10,35,45,.06);
+      display:flex;
+      align-items:center;
+      gap: 12px;
+    }
+    .stars{
+      background:#ffe7a6;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-weight: 900;
+      border:1px solid rgba(0,0,0,.06);
+      white-space:nowrap;
+    }
+    .snips{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-start;
+    }
+    .bubble{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 8px 18px rgba(10,35,45,.05);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* About */
+    .about-grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      align-items:center;
+      margin-top: 10px;
+    }
+    .about-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 10px 22px rgba(10,35,45,.06);
+    }
+    .about-card h3{
+      font-family: "DM Sans", Inter, sans-serif;
+      margin: 0 0 8px;
+      color: var(--primary-2);
+      font-size: 22px;
+    }
+    .about-card p{margin:0 0 12px;color:var(--muted);font-weight:500}
+
+    /* Footer */
+    footer{
+      background: #0b2e3d;
+      color: rgba(255,255,255,.92);
+      margin-top: 18px;
+    }
+    .foot{
+      padding: 26px 0;
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 16px;
+      align-items:start;
+    }
+    footer a{color: #cde8ff}
+    .foot h4{margin:0 0 8px; font-family:"DM Sans", Inter, sans-serif}
+    .foot p{margin:0; color: rgba(255,255,255,.76)}
+    .footbox{
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .bottom{
+      border-top: 1px solid rgba(255,255,255,.12);
+      padding: 14px 0;
+      font-size: 13px;
+      color: rgba(255,255,255,.72);
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .hero .grid{grid-template-columns: 1fr}
+      nav{display:none}
+      .tiles{grid-template-columns: 1fr 1fr}
+      .step-row{grid-template-columns: 1fr}
+      .review-bar{grid-template-columns: 1fr}
+      .about-grid{grid-template-columns: 1fr}
+      .brand .name{display:none}
+    }
+    @media (max-width: 560px){
+      .tiles{grid-template-columns: 1fr}
+      .brand img{height: 38px}
+    }
   </style>
 </head>
 
 <body>
+  <!-- NAV -->
   <header>
     <div class="container">
-      <div class="header-inner">
-        <a class="brand" href="index.html" aria-label="My Shirt Printing Home">
-          <img src="logo.png" alt="My Shirt Printing logo">
-          <div class="title">My Shirt Printing and Embroidery</div>
+      <div class="navwrap">
+        <a class="brand" href="index.html" aria-label="Go to homepage">
+          <img src="logo.png" alt="My Shirt Printing logo" />
+          <div class="name">My Shirt Printing</div>
         </a>
 
-        <nav aria-label="Main navigation">
-          <a class="link" href="index.html">Home</a>
+        <nav aria-label="Main menu">
+          <a class="active" href="index.html">Home</a>
 
-          <details class="navdrop active" id="quoteDropdown">
-            <summary>Quote <span class="caret">▼</span></summary>
-            <div class="dropmenu" role="menu" aria-label="Quote menu">
-              <a class="activeItem" href="quote.html">Garment Printing Quote</a>
+          <!-- Quote dropdown in header -->
+          <details class="quoteDrop" id="quoteDropNav">
+            <summary>Quote <span aria-hidden="true">▾</span></summary>
+            <div class="qMenu" role="menu" aria-label="Quote menu">
+              <a href="quote.html">Garment Printing Quote</a>
               <a href="embroidery-quote.html">Embroidery Quote</a>
               <a href="other-quote.html">Other (Print)</a>
             </div>
           </details>
 
-          <a class="link" href="gallery.html">Gallery</a>
-          <a class="link" href="about.html">About Us</a>
-          <a class="link" href="contact.html">Contact</a>
+          <a href="gallery.html">Gallery</a>
+          <a href="about.html">About Us</a>
+          <a href="contact.html">Contact</a>
         </nav>
+
+        <!-- (Keeping original right side empty, like your version where you removed header button) -->
       </div>
     </div>
   </header>
 
-  <div class="wrap">
-    <h1>Garment Printing Quote</h1>
-    <p>Fill out the form to generate an estimate. This page clears automatically for the next customer.</p>
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="container">
+      <div class="grid">
+        <div>
+          <h1>Local printing made easy.</h1>
+          <p class="lead">
+            Family-owned service, quick turnaround, and quality prints for businesses, events and everyday needs.
+          </p>
 
-    <div class="grid">
-      <!-- INPUTS -->
-      <div class="card">
-        <div class="row">
-          <div>
-            <label for="qty">Quantity</label>
-            <input id="qty" type="number" min="1" step="1" autocomplete="off" />
+          <div class="hero-actions">
+            <!-- Quote dropdown button in hero -->
+            <details class="quoteBtn" id="quoteBtnHero">
+              <summary class="btn primary">Get a Quote <span aria-hidden="true">▼</span></summary>
+              <div class="btnMenu" role="menu" aria-label="Get a Quote menu">
+                <a href="quote.html">Garment Printing Quote</a>
+                <a href="embroidery-quote.html">Embroidery Quote</a>
+                <a href="other-quote.html">Other (Print)</a>
+              </div>
+            </details>
+
+            <a class="btn ghost" href="gallery.html">View Gallery</a>
           </div>
-          <div>
-            <label for="garmentTone">Garments</label>
-            <select id="garmentTone" autocomplete="off">
-              <option value="" selected disabled>Select one</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
+
+          <div class="chips" aria-label="Highlights">
+            <span class="chip"><span class="dot"></span> Family-Owned</span>
+            <span class="chip"><span class="dot"></span> Fast Turnaround</span>
+            <span class="chip"><span class="dot"></span> Friendly Help</span>
           </div>
         </div>
 
-        <div class="row">
-          <div>
-            <label for="reorder">Reorder?</label>
-            <select id="reorder" autocomplete="off">
-              <option value="" selected disabled>Select one</option>
-              <option value="new">New order</option>
-              <option value="reorder">Reorder</option>
-            </select>
-          </div>
-          <div>
-            <label for="rush">Rush</label>
-            <select id="rush" autocomplete="off">
-              <option value="" selected disabled>Select one</option>
-              <option value="standard">Standard</option>
-              <option value="3-5">3–5 business days (+25%)</option>
-              <option value="2-3">2–3 business days (+35%)</option>
-              <option value="1day">1 business day (+50%)</option>
-            </select>
-          </div>
-        </div>
-
-        <label for="discountCode">Discount code</label>
-        <input id="discountCode" type="text" autocomplete="off" placeholder="" />
-        <div class="discMsg" id="discMsg"></div>
-
-        <label>Print Locations</label>
-        <div class="choices" id="locations">
-          <div class="choice">
-            <input type="checkbox" class="locCheck" data-loc="Front Center">
-            <div class="meta">
-              <strong>Front Center</strong>
-              <div class="inline">
-                <span class="pill">Colors:
-                  <select class="colors" data-loc="Front Center">
-                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
-                    <option>5</option><option>6</option><option>7</option><option>8</option>
-                  </select>
-                </span>
-                <span class="pill">Ink colors:
-                  <input class="inkNotes" data-loc="Front Center" placeholder="ex: black, red, pink" autocomplete="off" />
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="choice">
-            <input type="checkbox" class="locCheck" data-loc="Back Center">
-            <div class="meta">
-              <strong>Back Center</strong>
-              <div class="inline">
-                <span class="pill">Colors:
-                  <select class="colors" data-loc="Back Center">
-                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
-                    <option>5</option><option>6</option><option>7</option><option>8</option>
-                  </select>
-                </span>
-                <span class="pill">Ink colors:
-                  <input class="inkNotes" data-loc="Back Center" placeholder="ex: black" autocomplete="off" />
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="choice">
-            <input type="checkbox" class="locCheck" data-loc="Left Sleeve">
-            <div class="meta">
-              <strong>Left Sleeve</strong>
-              <div class="inline">
-                <span class="pill">Colors:
-                  <select class="colors" data-loc="Left Sleeve">
-                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
-                    <option>5</option><option>6</option><option>7</option><option>8</option>
-                  </select>
-                </span>
-                <span class="pill">Ink colors:
-                  <input class="inkNotes" data-loc="Left Sleeve" placeholder="ex: white" autocomplete="off" />
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="choice">
-            <input type="checkbox" class="locCheck" data-loc="Right Sleeve">
-            <div class="meta">
-              <strong>Right Sleeve</strong>
-              <div class="inline">
-                <span class="pill">Colors:
-                  <select class="colors" data-loc="Right Sleeve">
-                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
-                    <option>5</option><option>6</option><option>7</option><option>8</option>
-                  </select>
-                </span>
-                <span class="pill">Ink colors:
-                  <input class="inkNotes" data-loc="Right Sleeve" placeholder="ex: white" autocomplete="off" />
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button class="btn" id="calc">Calculate Quote</button>
-        <div class="error" id="error"></div>
-      </div>
-
-      <!-- OUTPUT -->
-      <div class="card">
-        <div class="emptyBox" id="emptyState">
-          Your quote will appear here after you click <b>Calculate Quote</b>.
-        </div>
-
-        <div class="summary" id="summary" style="display:none"></div>
-
-        <div class="divider" id="div1" style="display:none"></div>
-
-        <div class="section-title" id="bdTitle" style="display:none">Location breakdown</div>
-        <div id="breakdown"></div>
-
-        <div class="divider" id="div2" style="display:none"></div>
-
-        <div class="summary" id="totalBox" style="display:none">
-          <div class="line">
-            <div class="k section-title" style="margin:0">Total estimate</div>
-            <div class="v" id="totalEstimate">$0.00</div>
-          </div>
-          <div class="muted">Estimate only. Final price may change after review.</div>
+        <div class="hero-card" aria-label="Featured print work image">
+          <img
+            alt="Printed materials"
+            src="https://images.unsplash.com/photo-1526481280695-3c687fd5432c?auto=format&fit=crop&w=1400&q=80">
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-<script>
-  // Close dropdown if clicking outside
-  document.addEventListener("click", (e) => {
-    const dd = document.getElementById("quoteDropdown");
-    if (!dd) return;
-    if (!dd.contains(e.target)) dd.removeAttribute("open");
-  });
+  <!-- WHAT WE PRINT -->
+  <section class="section">
+    <div class="container">
+      <div class="title">
+        <h2>What we print</h2>
+        <p>Popular products, plus custom orders — we’ll help you choose the right options.</p>
+      </div>
 
-  // === EDIT PRICING HERE (example values) ===
-  const PRICING_TIERS = [
-    { qty: 24,  c1: 3.55, c2: 3.70, c3: 3.95, c4: 4.20, c5: 4.45, c6: 4.70, c7: 4.95, c8: 5.20, df: 1.70 },
-    { qty: 48,  c1: 3.35, c2: 3.60, c3: 3.85, c4: 4.10, c5: 4.35, c6: 4.60, c7: 4.85, c8: 5.10, df: 1.70 },
-    { qty: 72,  c1: 3.15, c2: 3.40, c3: 3.65, c4: 3.90, c5: 4.15, c6: 4.40, c7: 4.65, c8: 4.90, df: 1.60 },
-    { qty: 100, c1: 2.95, c2: 3.20, c3: 3.45, c4: 3.70, c5: 3.95, c6: 4.20, c7: 4.45, c8: 4.70, df: 1.50 },
-  ];
+      <div class="tiles">
+        <div class="tile"><div><span>Business Cards</span><small>Clean, premium, and fast.</small></div></div>
+        <div class="tile"><div><span>Flyers &amp; Brochures</span><small>Great for promos &amp; menus.</small></div></div>
+        <div class="tile"><div><span>Banners &amp; Signs</span><small>Events, storefronts, more.</small></div></div>
+        <div class="tile"><div><span>Stickers &amp; Labels</span><small>Custom shapes &amp; finishes.</small></div></div>
+        <div class="tile"><div><span>Invitations</span><small>Weddings, parties, announcements.</small></div></div>
+        <div class="tile"><div><span>Custom Orders</span><small>Tell us what you’re making.</small></div></div>
+      </div>
+    </div>
+  </section>
 
-  const SCREEN_SETUP_FEE_NEW = 25;
-  const SCREEN_SETUP_FEE_REORDER = 20;
-  const FILM_FEE = 15;
+  <!-- STEPS -->
+  <section class="section steps">
+    <div class="container">
+      <div class="title">
+        <h2>Fast from idea to print</h2>
+        <p>Simple steps, clear pricing, helpful guidance.</p>
+      </div>
 
-  const DISCOUNTS_PAUSED_KEY = "myshirt_discounts_paused";
-  const DISCOUNT_RULES = {
-    "WELCOME10": { type: "percent_printing", value: 10 },
-    "SAVE25":    { type: "fixed_printing", value: 25, minPrinting: 300 },
-    "RUSHFREE":  { type: "rush_free" }
-  };
-
-  function normalizeCode(s){ return String(s || "").trim().toUpperCase(); }
-  function areDiscountsPaused(){ return localStorage.getItem(DISCOUNTS_PAUSED_KEY) === "true"; }
-  function setDiscountsPaused(paused){ localStorage.setItem(DISCOUNTS_PAUSED_KEY, paused ? "true" : "false"); }
-
-  function handlePauseGoCodes(raw){
-    const v = String(raw || "").trim().toLowerCase();
-    if (v === "pause discounts"){ setDiscountsPaused(true); return {handled:true, msg:"Discount codes are currently PAUSED."}; }
-    if (v === "go codes"){ setDiscountsPaused(false); return {handled:true, msg:"Discount codes are now ENABLED."}; }
-    return {handled:false, msg:""};
-  }
-
-  function applyDiscount(codeRaw, printingAmount){
-    if (areDiscountsPaused()){
-      return { discountAmount: 0, rushOverride: null, label: "Discounts paused" , ok:false };
-    }
-    const code = normalizeCode(codeRaw);
-    if (!code) return { discountAmount: 0, rushOverride: null, label: "" , ok:true };
-
-    const rule = DISCOUNT_RULES[code];
-    if (!rule) return { discountAmount: 0, rushOverride: null, label: "Invalid code" , ok:false };
-
-    if (rule.type === "percent_printing"){
-      const amt = printingAmount * (rule.value / 100);
-      return { discountAmount: amt, rushOverride: null, label: `${code} (-${rule.value}% printing)` , ok:true };
-    }
-    if (rule.type === "fixed_printing"){
-      if (typeof rule.minPrinting === "number" && printingAmount < rule.minPrinting){
-        return { discountAmount: 0, rushOverride: null, label: `${code} requires ${money(rule.minPrinting)} printing` , ok:false };
-      }
-      return { discountAmount: Math.min(rule.value, printingAmount), rushOverride: null, label: `${code} (-${money(rule.value)} printing)` , ok:true };
-    }
-    if (rule.type === "rush_free"){
-      return { discountAmount: 0, rushOverride: 0, label: `${code} (rush removed)` , ok:true };
-    }
-    return { discountAmount: 0, rushOverride: null, label: "Invalid code" , ok:false };
-  }
-
-  function getTier(qty){
-    const tiers = [...PRICING_TIERS].sort((a,b)=>a.qty-b.qty);
-    let tier = tiers.find(t => Number(t.qty) >= qty);
-    if(!tier) tier = tiers[tiers.length - 1];
-    return tier;
-  }
-  function money(n){ return `$${Number(n).toFixed(2)}`; }
-
-  function showResults(){
-    document.getElementById("emptyState").style.display = "none";
-    document.getElementById("summary").style.display = "block";
-    document.getElementById("div1").style.display = "block";
-    document.getElementById("bdTitle").style.display = "block";
-    document.getElementById("div2").style.display = "block";
-    document.getElementById("totalBox").style.display = "block";
-  }
-
-  function hideResults(){
-    document.getElementById("emptyState").style.display = "block";
-    document.getElementById("summary").style.display = "none";
-    document.getElementById("div1").style.display = "none";
-    document.getElementById("bdTitle").style.display = "none";
-    document.getElementById("breakdown").innerHTML = "";
-    document.getElementById("div2").style.display = "none";
-    document.getElementById("totalBox").style.display = "none";
-    document.getElementById("totalEstimate").textContent = "$0.00";
-  }
-
-  function renderSummary({qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,perGarmentTotalAllLocations,garmentsPrintCost,discountLine,rushRate,rushFee}){
-    const summary = document.getElementById("summary");
-    summary.innerHTML = `
-      <div class="line"><div class="k">Quantity</div><div class="v">${qty} <span class="muted">(uses ${tierQty}-tier pricing)</span></div></div>
-      <div class="line"><div class="k">Garments</div><div class="v">${isDark ? "Dark" : "Light"}</div></div>
-      <div class="line"><div class="k">Total screens</div><div class="v">${totalScreens}</div></div>
-      <div class="line"><div class="k">Setup fee</div><div class="v">${money(setupFee)} <span class="muted">(${money(setupRate)} per screen)</span></div></div>
-      <div class="line"><div class="k">Film fee</div><div class="v">${money(filmFee)} <span class="muted">(${totalScreens} film${totalScreens!==1?"s":""} @ ${money(FILM_FEE)})</span></div></div>
-      <div class="line"><div class="k">Per garment print total (all locations)</div><div class="v">${money(perGarmentTotalAllLocations)}</div></div>
-      <div class="line"><div class="k">Garments print cost</div><div class="v">${money(garmentsPrintCost)}</div></div>
-      ${discountLine ? `<div class="line"><div class="k">Discount</div><div class="v">${discountLine}</div></div>` : ""}
-      ${rushRate > 0 ? `<div class="line"><div class="k">Rush</div><div class="v">${money(rushFee)} <span class="muted">(+${Math.round(rushRate*100)}%)</span></div></div>` : ""}
-    `;
-  }
-
-  function calc(){
-    const errorEl = document.getElementById("error");
-    const discMsgEl = document.getElementById("discMsg");
-    errorEl.textContent = "";
-    discMsgEl.textContent = "";
-    discMsgEl.classList.remove("bad");
-
-    const qtyRaw = document.getElementById("qty").value;
-    const qty = Number(qtyRaw);
-    const garmentTone = document.getElementById("garmentTone").value;
-    const reorder = document.getElementById("reorder").value;
-    const rush = document.getElementById("rush").value;
-    const discountCode = document.getElementById("discountCode").value;
-
-    const pg = handlePauseGoCodes(discountCode);
-    if (pg.handled){ discMsgEl.textContent = pg.msg; }
-
-    if(!qtyRaw || !qty || qty <= 0){ errorEl.textContent = "Please enter a valid quantity."; hideResults(); return; }
-    if(!garmentTone){ errorEl.textContent = "Please select Light or Dark garments."; hideResults(); return; }
-    if(!reorder){ errorEl.textContent = "Please select New order or Reorder."; hideResults(); return; }
-    if(!rush){ errorEl.textContent = "Please select a Rush option."; hideResults(); return; }
-
-    const isDark = garmentTone === "dark";
-
-    const selected = [...document.querySelectorAll(".locCheck")]
-      .filter(cb => cb.checked)
-      .map(cb => cb.dataset.loc);
-
-    if(selected.length === 0){ errorEl.textContent = "Please select at least one print location."; hideResults(); return; }
-
-    const tier = getTier(qty);
-    const tierQty = Number(tier.qty);
-
-    let colorScreensTotal = 0;
-    let underbaseScreensTotal = 0;
-    let perGarmentTotalAllLocations = 0;
-
-    const breakdownLines = [];
-
-    for(const loc of selected){
-      const colorsEl = document.querySelector(`.colors[data-loc="${CSS.escape(loc)}"]`);
-      const colors = Number(colorsEl?.value || 1);
-
-      const perGarmentBase = Number(tier[`c${colors}`]);
-      if(!perGarmentBase || perGarmentBase <= 0){
-        errorEl.textContent = `Missing pricing for ${colors} colors at tier ${tierQty}. Update PRICING_TIERS.`;
-        hideResults();
-        return;
-      }
-
-      colorScreensTotal += colors;
-
-      const underbaseScreensForLoc = isDark ? 1 : 0;
-      underbaseScreensTotal += underbaseScreensForLoc;
-
-      const dfBase = Number(tier.df) || 0;
-      const isPrimaryLoc = (loc === "Front Center" || loc === "Back Center");
-      const dfMultiplier = isDark ? (isPrimaryLoc ? 1 : 2) : 0;
-      const dfForLoc = dfBase * dfMultiplier;
-
-      const perGarmentLocTotal = perGarmentBase + dfForLoc;
-      perGarmentTotalAllLocations += perGarmentLocTotal;
-
-      const inkNotes = (document.querySelector(`.inkNotes[data-loc="${CSS.escape(loc)}"]`)?.value || "").trim();
-      const labelInk = inkNotes ? `: ${inkNotes}` : "";
-      const dfText = dfMultiplier === 0 ? "" : (dfMultiplier === 1 ? ` + D.F ${money(dfBase)}` : ` + D.F ${money(dfBase)} × 2`);
-
-      breakdownLines.push(`
-        <div class="loc">
-          <strong>${loc}</strong> <span class="muted">(${colors} color${colors>1?"s":""})${labelInk}</span>
-          <div class="muted">
-            Per garment: ${money(perGarmentBase)}${dfText} = <b>${money(perGarmentLocTotal)}</b>
+      <div class="step-row">
+        <div class="step">
+          <div class="badge">1</div>
+          <div>
+            <strong>Tell us what you need</strong>
+            <p>Share size, quantity, and your deadline — even a rough idea is fine.</p>
           </div>
-          ${isDark ? `<div class="muted">Underbase included for this location.</div>` : `<div class="muted">No underbase needed (light garment).</div>`}
         </div>
-      `);
-    }
+        <div class="step">
+          <div class="badge">2</div>
+          <div>
+            <strong>We reply with options &amp; pricing</strong>
+            <p>We’ll suggest materials/finishes and send pricing you can understand.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="badge">3</div>
+          <div>
+            <strong>Approve &amp; we print!</strong>
+            <p>Once you approve, we’ll produce your order — ready for pickup or delivery.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    const totalScreens = colorScreensTotal + underbaseScreensTotal;
+  <!-- REVIEWS -->
+  <section class="section reviews">
+    <div class="container">
+      <div class="title">
+        <h2>Customers love working with us</h2>
+        <p>Friendly service, quality results, and reliable turnaround.</p>
+      </div>
 
-    const setupRate = (reorder === "reorder") ? SCREEN_SETUP_FEE_REORDER : SCREEN_SETUP_FEE_NEW;
-    const setupFee = totalScreens * setupRate;
+      <div class="review-bar">
+        <div class="rating">
+          <div class="stars">★★★★★</div>
+          <div>
+            <div style="font-weight:900; color: var(--primary-2);">4.9</div>
+            <div style="font-size:13px; color: var(--muted); font-weight:600;">Read on Yelp</div>
+          </div>
+        </div>
+        <div class="snips">
+          <div class="bubble">“Excellent service and quick turnaround!”</div>
+          <div class="bubble">“High-quality prints at great prices.”</div>
+          <div class="bubble">“So helpful and friendly!”</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    const filmFee = (reorder === "reorder") ? 0 : totalScreens * FILM_FEE;
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="foot">
+        <div>
+          <h4>My Shirt Printing</h4>
+          <p>3331 Edward Avenue</p>
+          <p>Santa Clara, CA<br>Mon–Fri 9am–5pm</p>
+        </div>
 
-    const printingOnlyTotal = qty * perGarmentTotalAllLocations;
-    let subtotal = printingOnlyTotal + setupFee + filmFee;
+        <div></div>
 
-    let rushRate = 0;
-    if(rush === "3-5") rushRate = 0.25;
-    if(rush === "2-3") rushRate = 0.35;
-    if(rush === "1day") rushRate = 0.50;
+        <div class="footbox">
+          <h4>Get a Quote</h4>
+          <p style="margin-bottom:12px">Tell us what you need and your deadline — we’ll reply with options and pricing.</p>
 
-    let rushFee = subtotal * rushRate;
+          <!-- Quote dropdown button in footer -->
+          <details class="quoteBtn" id="quoteBtnFooter">
+            <summary class="btn primary">Get a Quote <span aria-hidden="true">▼</span></summary>
+            <div class="btnMenu" role="menu" aria-label="Get a Quote menu">
+              <a href="quote.html">Garment Printing Quote</a>
+              <a href="embroidery-quote.html">Embroidery Quote</a>
+              <a href="other-quote.html">Other (Print)</a>
+            </div>
+          </details>
+        </div>
+      </div>
 
-    const disc = applyDiscount(discountCode, printingOnlyTotal);
-    if (discountCode && disc.label){
-      if (!disc.ok){ discMsgEl.textContent = disc.label; discMsgEl.classList.add("bad"); }
-      else { discMsgEl.textContent = disc.label; }
-    }
-    if (disc.rushOverride === 0) rushFee = 0;
+      <div class="bottom">
+        <div>© <span id="year"></span> My Shirt Printing. All rights reserved.</div>
+        <div>Made with care.</div>
+      </div>
+    </div>
+  </footer>
 
-    const discountAmount = Math.max(0, Number(disc.discountAmount || 0));
-    const total = (subtotal + rushFee) - discountAmount;
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
 
-    const discountLine = discountCode
-      ? (discountAmount > 0 ? `-${money(discountAmount)} <span class="muted">(${disc.label})</span>` : `<span class="muted">${disc.label || "—"}</span>`)
-      : "";
+    // Close any open dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      const navDD = document.getElementById("quoteDropNav");
+      const heroDD = document.getElementById("quoteBtnHero");
+      const footDD = document.getElementById("quoteBtnFooter");
 
-    renderSummary({
-      qty,
-      isDark,
-      tierQty,
-      totalScreens,
-      setupFee,
-      setupRate,
-      filmFee,
-      perGarmentTotalAllLocations,
-      garmentsPrintCost: printingOnlyTotal,
-      discountLine,
-      rushRate,
-      rushFee
+      [navDD, heroDD, footDD].forEach(dd => {
+        if (!dd) return;
+        if (!dd.contains(e.target)) dd.removeAttribute("open");
+      });
     });
 
-    document.getElementById("breakdown").innerHTML = breakdownLines.join("");
-    document.getElementById("totalEstimate").textContent = money(total);
+    // Extra: prevent multiple dropdowns open at the same time
+    function closeOthers(openId){
+      const all = ["quoteDropNav","quoteBtnHero","quoteBtnFooter"]
+        .map(id => document.getElementById(id))
+        .filter(Boolean);
 
-    showResults();
-  }
+      all.forEach(dd => {
+        if (dd.id !== openId) dd.removeAttribute("open");
+      });
+    }
 
-  function resetQuoteForm(){
-    document.getElementById("qty").value = "";
-    document.getElementById("garmentTone").value = "";
-    document.getElementById("reorder").value = "";
-    document.getElementById("rush").value = "";
-    document.getElementById("discountCode").value = "";
-    document.getElementById("discMsg").textContent = "";
-    document.getElementById("discMsg").classList.remove("bad");
-
-    document.querySelectorAll(".locCheck").forEach(cb => cb.checked = false);
-    document.querySelectorAll(".colors").forEach(sel => sel.value = "1");
-    document.querySelectorAll(".inkNotes").forEach(inp => inp.value = "");
-
-    document.getElementById("error").textContent = "";
-    document.getElementById("summary").innerHTML = "";
-    document.getElementById("breakdown").innerHTML = "";
-    document.getElementById("totalEstimate").textContent = "$0.00";
-
-    hideResults();
-  }
-
-  window.addEventListener("pageshow", () => { resetQuoteForm(); });
-
-  document.getElementById("calc").addEventListener("click", (e) => {
-    e.preventDefault();
-    calc();
-  });
-
-  hideResults();
-</script>
+    ["quoteDropNav","quoteBtnHero","quoteBtnFooter"].forEach(id => {
+      const dd = document.getElementById(id);
+      if (!dd) return;
+      dd.addEventListener("toggle", () => {
+        if (dd.open) closeOthers(id);
+      });
+    });
+  </script>
 </body>
 </html>
