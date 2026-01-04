@@ -429,7 +429,11 @@ www.companycasuals.com
 ```regex
 #CC-\d{4}-\d{6}
 ```
-Note: When implementing, use context-aware matching. The `#` character is not a word character, so standard word boundaries won't work. In practice, search for the pattern within the email text and validate the match.
+JavaScript implementation:
+```javascript
+const inquiryIdMatch = emailText.match(/#CC-\d{4}-\d{6}/);
+const inquiryId = inquiryIdMatch ? inquiryIdMatch[0] : null;
+```
 
 **Product Detail Section:**
 ```regex
@@ -438,8 +442,9 @@ Product Details:[\s\S]*?(?=Your inquiry reference|Best regards|$)
 
 **Customer Name Pattern:**
 ```regex
-Dear ([A-Za-z\s'.-]+),
+Dear ([A-Za-z\s'-]+\.?),
 ```
+Note: Matches names with letters, spaces, apostrophes, hyphens, and optional trailing period before comma.
 
 ---
 
