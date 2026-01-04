@@ -437,7 +437,7 @@ Product Details:[\s\S]*?(?=Your inquiry reference|Best regards|$)
 
 **Customer Name Pattern:**
 ```regex
-Dear ([A-Za-z\s\-\'\.]+),
+Dear ([A-Za-z\s'\.\-]+),
 ```
 
 ---
