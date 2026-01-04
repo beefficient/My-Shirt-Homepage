@@ -197,7 +197,7 @@ CompanyCasuals Team
    ```
 
 3. **Email Template Matching:**
-   - Parse email subject for inquiry ID pattern: `/CompanyCasuals Inquiry Confirmation.*#CC-\d{4}-\d{6}/i`
+   - Parse email subject for inquiry ID pattern: `/#(CC-\d{4}-\d{6})/`
    - Extract product details from structured sections
    - Handle variations in email formatting
 
