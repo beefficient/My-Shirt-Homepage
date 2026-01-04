@@ -170,11 +170,23 @@ CompanyCasuals Team
    ```javascript
    // Pseudo-code for email parser
    function parseCompanyCasualsEmail(emailBody, emailSubject) {
+     // Input validation
+     if (!emailBody || !emailSubject) {
+       return { error: 'Missing required email data' };
+     }
+     
+     // Extract structured data
      const inquiryId = extractInquiryId(emailSubject); // Extract #CC-YYYY-NNNNNN
+     if (!inquiryId) {
+       return { error: 'Inquiry ID not found in subject' };
+     }
+     
      const productDetails = extractProductDetails(emailBody);
      const customerInfo = extractCustomerInfo(emailBody);
      
+     // Return structured result
      return {
+       success: true,
        inquiryId,
        products: productDetails,
        customer: customerInfo,
@@ -185,7 +197,7 @@ CompanyCasuals Team
    ```
 
 3. **Email Template Matching:**
-   - Parse email subject for inquiry ID pattern: `/Inquiry Confirmation.*#CC-\d{4}-\d{6}/`
+   - Parse email subject for inquiry ID pattern: `/CompanyCasuals Inquiry Confirmation.*#CC-\d{4}-\d{6}/i`
    - Extract product details from structured sections
    - Handle variations in email formatting
 
@@ -442,9 +454,9 @@ Product Details:[\s\S]*?(?=Your inquiry reference|Best regards|$)
 
 **Customer Name Pattern:**
 ```regex
-Dear ([A-Za-z\s'-]+\.?),
+Dear ([A-Za-z\s'-]+),
 ```
-Note: Matches names with letters, spaces, apostrophes, hyphens, and optional trailing period before comma.
+Note: Matches names with letters, spaces, apostrophes, and hyphens. Extend pattern if names with periods (e.g., "Dr.") are encountered.
 
 ---
 
