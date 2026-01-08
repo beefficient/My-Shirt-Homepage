@@ -11,11 +11,13 @@
       --accent: #e6f1fb;
       --text: #1b2a3a;
       --container: 1200px;
+
+      /* dropdown */
+      --border: #dbe7f3;
+      --shadow: 0 10px 24px rgba(10,35,45,.08);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -29,8 +31,9 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: #fff;
-      border-bottom: 1px solid #dbe7f3;
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
     }
 
     .nav-container {
@@ -40,12 +43,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 16px;
     }
 
     .logo {
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 220px;
     }
 
     .logo img {
@@ -53,17 +58,27 @@
       width: auto;
     }
 
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
     nav a {
-      margin-left: 20px;
       text-decoration: none;
       color: var(--text);
       font-weight: 500;
+      padding: 8px 10px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    nav a:hover {
-      color: var(--primary);
-    }
+    nav a:hover { color: var(--primary); background: #f2f7ff; }
 
+    /* Keep existing quote button styling */
     .btn-quote {
       background: var(--primary);
       color: #fff;
@@ -71,6 +86,56 @@
       border-radius: 20px;
       font-weight: 600;
     }
+    .btn-quote:hover { filter: brightness(.98); }
+
+    /* ===== Quote dropdown (replaces plain Quote link) ===== */
+    details.quoteDrop {
+      position: relative;
+      display: inline-block;
+    }
+
+    details.quoteDrop > summary {
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 500;
+      padding: 8px 10px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text);
+    }
+
+    details.quoteDrop > summary:hover {
+      color: var(--primary);
+      background: #f2f7ff;
+    }
+
+    details.quoteDrop > summary::-webkit-details-marker { display: none; }
+
+    .qMenu {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      min-width: 240px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 6px;
+      z-index: 3000; /* above content */
+    }
+
+    .qMenu a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .qMenu a:hover { background: #f2f7ff; color: var(--primary); }
 
     /* ===== PAGE ===== */
     main {
@@ -145,15 +210,26 @@
       <div class="logo">
         <img src="logo.png" alt="My Shirt Printing Logo">
       </div>
-      <nav>
+
+      <nav aria-label="Main menu">
         <a href="index.html">Home</a>
-        <a href="quote.html">Quote</a>
+
+        <!-- Quote dropdown (same options, no extra buttons added) -->
+        <details class="quoteDrop" id="quoteDrop">
+          <summary>Quote <span aria-hidden="true">▾</span></summary>
+          <div class="qMenu" role="menu" aria-label="Quote menu">
+            <a href="quote.html">Garment Printing Quote</a>
+            <a href="embroidery-quote.html">Embroidery Quote</a>
+            <a href="other-printing.html">Other (Print)</a>
+
+          </div>
+        </details>
+
         <a href="gallery.html">Gallery</a>
         <a href="index.html#about">About Us</a>
         <a href="index.html#contact">Contact</a>
-        <a class="btn-quote" href="quote.html">Get a Quote</a>
-      </nav>
-    </div>
+
+       
   </header>
 
   <!-- ===== CONTENT ===== -->
@@ -187,6 +263,15 @@
   <div id="img10" class="lightbox"><a class="close" href="#">×</a><img src="Images/gallery-10.jpg"></div>
   <div id="img11" class="lightbox"><a class="close" href="#">×</a><img src="Images/gallery-11.jpg"></div>
   <div id="img12" class="lightbox"><a class="close" href="#">×</a><img src="Images/gallery-12.jpg"></div>
+
+  <script>
+    // Close quote dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      const dd = document.getElementById("quoteDrop");
+      if (!dd) return;
+      if (!dd.contains(e.target)) dd.removeAttribute("open");
+    });
+  </script>
 
 </body>
 </html>

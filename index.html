@@ -3,898 +3,801 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Print Shop Name — Local printing made easy</title>
+  <title>My Shirt Printing — Local printing and embroidery made easy</title>
 
-  <!-- Google Fonts (OK to remove if you want system fonts only) -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      /* Direction B palette */
-      --bg-sky: #F2F8FF;
-      --surface: #FFFFFF;
-      --primary: #246B78;   /* navy-teal */
-      --accent: #F6E7A6;    /* soft butter (sparingly) */
-      --support: #D9EEF6;   /* light aqua */
-      --text: #18313A;
-      --muted: #3A4F57;
-      --border: #D7E6F2;
-
-      --radius-card: 16px;
-      --radius-pill: 999px;
-
-      --shadow-soft: 0 10px 30px rgba(24,49,58,.06);
-      --shadow-card: 0 8px 20px rgba(24,49,58,.06);
-
-      --container: 1120px;
+      --bg: #f6fbff;
+      --sky: #eaf4ff;
+      --card: #ffffff;
+      --text: #0f2a33;
+      --muted: #47606a;
+      --border: #d7e7f7;
+      --primary: #032d44;
+      --primary-2: #0b3f5b;
+      --pill: 999px;
+      --radius: 16px;
+      --shadow: 0 10px 24px rgba(10,35,45,.08);
+      --max: 1120px;
     }
-
-    *{ box-sizing:border-box; }
-    html,body{ margin:0; padding:0; }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
     body{
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--text);
-      background: #fff;
-      line-height: 1.6;
+      background: linear-gradient(#ffffff, #ffffff);
+      line-height: 1.55;
     }
-    a{ color: inherit; text-decoration: none; }
-    img{ max-width: 100%; display:block; }
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
 
-    .container{
-      max-width: var(--container);
-      margin: 0 auto;
-      padding: 0 20px;
-    }
+    .container{max-width:var(--max);margin:0 auto;padding:0 20px}
 
-    /* Header */
-    .site-header{
+    /* Top Nav */
+    header{
       position: sticky;
       top: 0;
       z-index: 50;
-      background: var(--surface);
+      background: rgba(255,255,255,.9);
+      backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(8px);
     }
-    .header-inner{
+    .navwrap{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap: 16px;
-      padding: 14px 0;
+      gap:16px;
+      padding:14px 0;
     }
     .brand{
       display:flex;
       align-items:center;
-      gap: 10px;
+      gap:12px;
       min-width: 220px;
     }
-    .logo{
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      background: var(--support);
-      display:grid;
-      place-items:center;
-      border: 1px solid var(--border);
-      font-weight: 700;
-      color: var(--primary);
-      font-family: "DM Sans", Inter, sans-serif;
+    .brand img{
+      height: 42px;
+      width: auto;
+      object-fit: contain;
     }
-    .brand-name{
+    .brand .name{
       font-family: "DM Sans", Inter, sans-serif;
       font-weight: 700;
+      font-size: 16px;
       letter-spacing: .2px;
+      white-space: nowrap;
+      color: var(--primary-2);
     }
 
-    .nav{
+    nav{
       display:flex;
+      gap:18px;
       align-items:center;
-      gap: 16px;
+      justify-content:center;
       flex-wrap: wrap;
-      justify-content: center;
     }
-    .nav a{
+    nav a{
       font-size: 14px;
-      color: var(--muted);
+      color: var(--primary-2);
       padding: 8px 10px;
       border-radius: 10px;
+      font-weight: 600;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
     }
-    .nav a:hover{ background: var(--bg-sky); color: var(--text); }
+    nav a:hover{background: var(--sky)}
+    nav a.active{border-bottom: 2px solid var(--primary); border-radius: 0; padding-bottom: 6px}
 
     .btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap: 8px;
-      border-radius: var(--radius-pill);
-      padding: 12px 16px;
-      font-weight: 600;
+      padding: 11px 16px;
+      border-radius: var(--pill);
+      font-weight: 700;
       border: 1px solid transparent;
-      cursor: pointer;
-      transition: transform .06s ease, background .15s ease, border-color .15s ease;
-      white-space: nowrap;
+      cursor:pointer;
       user-select:none;
+      white-space:nowrap;
+      gap: 8px;
     }
-    .btn:active{ transform: translateY(1px); }
+    .btn.primary{background: var(--primary); color:#fff; box-shadow: var(--shadow)}
+    .btn.primary:hover{filter: brightness(.98)}
+    .btn.ghost{background:#fff;border-color: var(--border); color: var(--primary-2)}
+    .btn.ghost:hover{background: var(--sky)}
 
-    .btn-primary{
-      background: var(--primary);
-      color: #fff;
-      box-shadow: var(--shadow-soft);
-    }
-    .btn-primary:hover{ filter: brightness(.98); }
-
-    .btn-outline{
-      background: transparent;
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .btn-outline:hover{ background: rgba(36,107,120,.08); }
-
-    .header-cta{ display:flex; gap: 10px; align-items:center; }
-
-    /* ===== Dropdown (shared for nav + buttons) ===== */
-    details.dd{
+    /* Quote dropdowns */
+    details.quoteDrop,
+    details.quoteBtn{
       position: relative;
       display: inline-block;
     }
-    details.dd > summary{
+    details.quoteDrop > summary{
       list-style:none;
       cursor:pointer;
       user-select:none;
-    }
-    details.dd > summary::-webkit-details-marker{ display:none; }
-
-    /* make nav dropdown look like other nav links */
-    details.dd.navdd > summary{
       font-size: 14px;
-      color: var(--muted);
+      color: var(--primary-2);
       padding: 8px 10px;
       border-radius: 10px;
+      font-weight: 600;
       display:inline-flex;
       align-items:center;
       gap: 6px;
     }
-    details.dd.navdd > summary:hover{
-      background: var(--bg-sky);
-      color: var(--text);
-    }
+    details.quoteDrop > summary:hover{ background: var(--sky); }
+    details.quoteDrop > summary::-webkit-details-marker{ display:none; }
 
-    /* make button dropdown use the same .btn styles */
-    details.dd.btndd > summary{
+    details.quoteBtn > summary{
+      list-style:none;
+      cursor:pointer;
+      user-select:none;
       display:inline-flex;
       align-items:center;
+      justify-content:center;
+      padding: 11px 16px;
+      border-radius: var(--pill);
+      font-weight: 700;
+      border: 1px solid transparent;
+      background: var(--primary);
+      color:#fff;
+      box-shadow: var(--shadow);
       gap: 8px;
+      white-space:nowrap;
     }
+    details.quoteBtn > summary:hover{ filter: brightness(.98); }
+    details.quoteBtn > summary::-webkit-details-marker{ display:none; }
 
-    .caret{
-      font-size: 12px;
-      transform: translateY(1px);
-      opacity: .9;
-    }
-
-    .ddmenu{
+    .qMenu{
       position: absolute;
       top: calc(100% + 10px);
       left: 0;
       min-width: 240px;
       background: #fff;
       border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow-soft);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
       padding: 6px;
-      z-index: 9999; /* avoid being hidden behind sections */
+      z-index: 9999;
     }
-    .ddmenu a{
+    .qMenu a{
       display:block;
       padding: 10px 12px;
-      border-radius: 12px;
+      border-radius: 10px;
       font-size: 14px;
       font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
+      color: var(--primary-2);
+      white-space:nowrap;
     }
-    .ddmenu a:hover{ background: var(--bg-sky); }
+    .qMenu a:hover{ background: var(--sky); }
 
-    /* Hero */
-    .section{ padding: 56px 0; }
-    .section.sky{ background: var(--bg-sky); }
+    /* Right-side button dropdown should open aligned to the right */
+    details.quoteBtn .qMenu{ right:0; left:auto; }
 
+    /* HERO (image removed) */
     .hero{
+      background: linear-gradient(180deg, #dfeeff 0%, #f6fbff 70%, #ffffff 100%);
+      padding: 34px 0 26px;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
     }
     .hero::after{
       content:"";
       position:absolute;
-      right:-140px;
-      top: 70px;
-      width: 520px;
-      height: 520px;
-      background: var(--support);
+      right:-260px;
+      top: -80px;
+      width: 760px;
+      height: 760px;
+      background: rgba(120,180,255,.18);
       border-radius: 50%;
-      opacity: .9;
-      z-index: 0;
     }
-    .hero-grid{
+    .hero .grid{
       position: relative;
       z-index: 1;
       display:grid;
-      grid-template-columns: 1.05fr .95fr;
-      gap: 28px;
-      align-items: center;
-    }
-    .hero h1{
-      font-family: "DM Sans", Inter, sans-serif;
-      font-size: clamp(34px, 4vw, 48px);
-      line-height: 1.1;
-      margin: 0 0 10px;
-      letter-spacing: -0.6px;
-    }
-    .hero p{
-      margin: 0 0 18px;
-      color: var(--muted);
-      font-size: 16px;
-      max-width: 54ch;
-    }
-    .hero-actions{
-      display:flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-    .chips{
-      display:flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .chip{
-      display:inline-flex;
+      grid-template-columns: 1fr;
+      gap: 0;
       align-items:center;
-      gap: 8px;
+      padding: 24px 0 6px;
+    }
+    h1{
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: clamp(34px, 4.2vw, 54px);
+      line-height: 1.06;
+      margin: 0 0 12px;
+      color: var(--primary-2);
+      letter-spacing: -.6px;
+    }
+    .lead{
+      margin: 0 0 18px;
+      color: #36515c;
+      max-width: 56ch;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .hero-actions{display:flex; gap:12px; flex-wrap:wrap; margin-bottom: 14px}
+    .chips{display:flex; gap:10px; flex-wrap:wrap}
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--pill);
       padding: 8px 12px;
-      border-radius: var(--radius-pill);
-      background: rgba(255,255,255,.7);
-      border: 1px solid var(--border);
       font-size: 13px;
-      color: var(--muted);
+      font-weight: 600;
+      color:#36515c;
     }
-    .dot{
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: var(--accent);
-      border: 1px solid rgba(0,0,0,.05);
-    }
+    .dot{width:10px;height:10px;border-radius:50%;background:#ffd77a;border:1px solid rgba(0,0,0,.06)}
 
-    .hero-media{
-      background: rgba(255,255,255,.7);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 10px;
-      box-shadow: var(--shadow-card);
+    /* Sections */
+    .section{padding: 34px 0}
+    .section.sky{ background: var(--sky); }
+    .title{
+      text-align:center;
+      margin-bottom: 18px;
     }
-    .hero-media img{
-      border-radius: 14px;
-      aspect-ratio: 16/10;
-      object-fit: cover;
-      background: #e9eef3;
-    }
-
-    /* Section titles */
-    .section-title{
-      text-align: center;
-      margin-bottom: 22px;
-    }
-    .section-title h2{
+    .title h2{
       font-family: "DM Sans", Inter, sans-serif;
       font-size: 28px;
-      margin: 0 0 6px;
-      letter-spacing: -0.2px;
+      margin:0 0 6px;
+      color: var(--primary-2);
     }
-    .section-title p{
-      margin: 0;
-      color: var(--muted);
-      font-size: 15px;
+    .title p{margin:0;color:var(--muted);font-weight:500}
+
+    /* Cards */
+    .card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 10px 22px rgba(10,35,45,.06);
     }
 
-    /* Cards grid */
-    .grid-3{
+    /* Service tiles */
+    .tiles{
       display:grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 14px;
     }
-    .card{
-      background: var(--surface);
+    .tile{
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-card);
-      padding: 16px;
-      box-shadow: var(--shadow-card);
-    }
-    .service-card{
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 8px 18px rgba(10,35,45,.06);
       display:flex;
-      align-items:center;
       gap: 12px;
-      padding: 16px 18px;
-      min-height: 78px;
-    }
-    .icon{
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      background: rgba(36,107,120,.10);
-      display:grid;
-      place-items:center;
-      border: 1px solid rgba(36,107,120,.15);
-      color: var(--primary);
-      font-family: "DM Sans", Inter, sans-serif;
+      align-items:center;
+      justify-content:center;
+      min-height: 86px;
+      text-align:center;
       font-weight: 700;
+      color: var(--primary-2);
     }
-    .service-card strong{ display:block; font-size: 15px; }
-    .service-card span{ color: var(--muted); font-size: 13px; }
+    .tile span{display:block;font-size:14px}
+    .tile small{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-top:4px}
 
     /* Steps */
     .steps{
+      background: linear-gradient(180deg, #ffffff 0%, #eef6ff 50%, #dfeeff 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .step-row{
       display:grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 14px;
-      align-items: stretch;
+      align-items:center;
+      margin-top: 8px;
     }
     .step{
-      position: relative;
-      padding: 18px;
-    }
-    .step-top{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
       display:flex;
-      align-items:center;
-      gap: 10px;
-      margin-bottom: 8px;
+      gap:12px;
+      align-items:flex-start;
+      box-shadow: 0 8px 18px rgba(10,35,45,.06);
     }
-    .step-num{
-      width: 38px;
-      height: 38px;
+    .badge{
+      width: 38px; height: 38px;
       border-radius: 14px;
+      background: #ffe7a6;
       display:grid;
       place-items:center;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      font-weight: 700;
-      color: var(--primary);
-      position: relative;
-      overflow: hidden;
+      font-weight: 800;
+      color: var(--primary-2);
+      border:1px solid rgba(0,0,0,.06);
+      flex: 0 0 auto;
     }
-    .step-num::before{
-      content:"";
-      position:absolute;
-      inset: 9px 8px 9px 8px;
-      background: var(--accent);
-      border-radius: 10px;
-      opacity: .75;
-      z-index: 0;
-    }
-    .step-num b{ position: relative; z-index: 1; }
-    .step h3{
-      margin: 0;
-      font-size: 16px;
-      font-family: "DM Sans", Inter, sans-serif;
-    }
-    .step p{
-      margin: 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .center-cta{
-      display:flex;
-      justify-content:center;
-      margin-top: 18px;
-    }
+    .step strong{display:block}
+    .step p{margin:4px 0 0; color: var(--muted); font-size: 14px; font-weight: 500}
 
-    /* Gallery strip */
-    .thumbs{
+    /* Recent work */
+    .strip{
       display:grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 10px;
+      align-items:stretch;
     }
     .thumb{
       border-radius: 14px;
-      border: 1px solid var(--border);
       overflow:hidden;
-      background: #e9eef3;
+      border:1px solid var(--border);
+      background:#e9eef3;
       aspect-ratio: 16/10;
     }
-    .thumb img{ width:100%; height:100%; object-fit: cover; }
+    .thumb img{width:100%; height:100%; object-fit:cover}
 
     /* Reviews */
-    .reviews-grid{
+    .reviews{
+      background: #eef6ff;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .review-bar{
       display:grid;
       grid-template-columns: 1fr 2fr;
       gap: 14px;
-      align-items:start;
+      align-items:center;
+      margin-top: 8px;
     }
     .rating{
-      padding: 16px;
-    }
-    .stars{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 8px 18px rgba(10,35,45,.06);
       display:flex;
       align-items:center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .stars-badge{
-      background: var(--accent);
-      border-radius: 12px;
-      padding: 6px 10px;
-      font-weight: 700;
-      border: 1px solid rgba(0,0,0,.06);
-    }
-    .rating small{ color: var(--muted); }
-
-    .snippets{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
     }
-    .snippet{
-      padding: 14px 14px;
-      font-size: 14px;
-      color: var(--muted);
-      position: relative;
+    .stars{
+      background:#ffe7a6;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-weight: 900;
+      border:1px solid rgba(0,0,0,.06);
+      white-space:nowrap;
     }
-    .snippet::before{
-      content:"“";
-      position:absolute;
-      top: 6px;
-      left: 10px;
-      font-size: 22px;
-      color: rgba(36,107,120,.35);
-      font-family: "DM Sans", Inter, sans-serif;
+    .snips{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-start;
+    }
+    .bubble{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 8px 18px rgba(10,35,45,.05);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
     }
 
-    /* About teaser */
-    .about-grid{
-      display:grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap: 16px;
-      align-items:center;
+    /* Yelp box layout (NEW) */
+    .yelpBox{
+      max-width: 900px;
+      margin: 0 auto;
+      display:flex;
+      gap:16px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
     }
-    .about h2{ text-align:left; margin-bottom: 8px; }
-    .about p{ margin:0 0 14px; color: var(--muted); max-width: 60ch; }
-    .about-media{
-      border-radius: 18px;
-      border: 1px solid var(--border);
-      overflow:hidden;
-      background: #e9eef3;
-      box-shadow: var(--shadow-card);
-      aspect-ratio: 16/11;
+    .yelpLeft{flex:1 1 380px; min-width:260px;}
+    .yelpRight{flex:0 0 auto; display:flex; align-items:flex-start;}
+    .yelpBubbles{
+      margin-top: 12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
     }
-    .about-media img{ width:100%; height:100%; object-fit: cover; }
+    .yelpCard{
+  max-width: 980px;
+  margin: 0 auto;
+  display:flex;
+  align-items:stretch;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px;
+}
+.yelpLeft{flex:1 1 560px; min-width:260px;}
+.yelpRight{
+  flex:0 0 200px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:center;
+  gap:10px;
+}
+.yelpTop{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+/* REVIEWS + YELP combined card */
+.yelpCard{
+  max-width: 980px;
+  margin: 0 auto;
+  display:flex;
+  align-items:stretch;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px;
+}
+
+.yelpLeft{flex:1 1 560px; min-width:260px;}
+
+.yelpRight{
+  flex:0 0 220px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:center;
+  gap:10px;
+  text-align:right;
+}
+
+.yelpTop{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+
+.yelpName{font-weight:900; font-size:18px; color:var(--primary-2);}
+.yelpLoc{color:var(--muted); font-weight:600; margin-top:2px;}
+
+.yelpRating{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.starsBadge{
+  background:#ffe7a6;
+  border:1px solid rgba(0,0,0,.06);
+  border-radius:12px;
+  padding:8px 10px;
+  font-weight:900;
+  color:var(--primary-2);
+  white-space:nowrap;
+}
+.ratingNum{font-weight:900; color:var(--primary-2);}
+.ratingMeta{color:var(--muted); font-weight:600; font-size:13px;}
+
+.yelpSnips{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+
+.snip{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:14px;
+  padding:10px 12px;
+  box-shadow: 0 8px 18px rgba(10,35,45,.05);
+  color:var(--muted);
+  font-weight:600;
+  font-size:13px;
+}
+
+.yelpTiny{color:var(--muted); font-weight:600; font-size:13px; max-width: 220px;}
+
+/* Responsive */
+@media (max-width: 860px){
+  .yelpCard{flex-direction:column; align-items:stretch;}
+  .yelpRight{align-items:flex-start; text-align:left;}
+  .yelpSnips{grid-template-columns: 1fr;}
+  .yelpTiny{max-width:none;}
+}
+
+}
+.ratingNum{font-weight:900; color:var(--primary-2);}
+.ratingMeta{color:var(--muted); font-weight:600; font-size:13px;}
+.yelpSnips{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+.snip{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:14px;
+  padding:10px 12px;
+  box-shadow: 0 8px 18px rgba(10,35,45,.05);
+  color:var(--muted);
+  font-weight:600;
+  font-size:13px;
+}
+.yelpTiny{color:var(--muted); font-weight:600; font-size:13px; text-align:right;}
+
+@media (max-width: 860px){
+  .yelpCard{flex-direction:column; align-items:stretch;}
+  .yelpRight{align-items:flex-start;}
+  .yelpSnips{grid-template-columns: 1fr;}
+  .yelpTiny{text-align:left;}
+}
+
 
     /* Footer */
     footer{
-      background: var(--text);
+      background: #0b2e3d;
       color: rgba(255,255,255,.92);
-      padding: 44px 0 26px;
+      margin-top: 18px;
     }
-    .footer-grid{
+    .foot{
+      padding: 26px 0;
       display:grid;
-      grid-template-columns: 1.2fr 1fr 1fr;
-      gap: 18px;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
       align-items:start;
     }
-    footer a{ color: var(--support); }
-    .footer-card{
+    footer a{color: #cde8ff}
+    .foot h4{margin:0 0 8px; font-family:"DM Sans", Inter, sans-serif}
+    .foot p{margin:0; color: rgba(255,255,255,.76)}
+    .footbox{
       background: rgba(255,255,255,.08);
-      border: 1px solid rgba(217,238,246,.25);
-      border-radius: 18px;
-      padding: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      padding: 14px;
     }
-    .footer-card h3{
-      margin: 0 0 8px;
-      font-family: "DM Sans", Inter, sans-serif;
-      font-size: 16px;
-    }
-    .footer-bottom{
-      margin-top: 18px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(217,238,246,.18);
+    .bottom{
+      border-top: 1px solid rgba(255,255,255,.12);
+      padding: 14px 0;
       font-size: 13px;
       color: rgba(255,255,255,.72);
       display:flex;
       justify-content:space-between;
       gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    /* Sticky Quote Button (mobile only) */
-    .mobile-quote-bar{
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 60;
-      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
-      background: rgba(255,255,255,.92);
-      border-top: 1px solid var(--border);
-      backdrop-filter: blur(8px);
-      display: none;
-    }
-    .mobile-quote-bar .btn{
-      width: 100%;
-      padding: 14px 16px;
+      flex-wrap:wrap;
     }
 
     /* Responsive */
     @media (max-width: 980px){
-      .hero-grid{ grid-template-columns: 1fr; }
-      .grid-3{ grid-template-columns: 1fr 1fr; }
-      .steps{ grid-template-columns: 1fr; }
-      .thumbs{ grid-template-columns: 1fr 1fr 1fr; }
-      .reviews-grid{ grid-template-columns: 1fr; }
-      .snippets{ grid-template-columns: 1fr; }
-      .about-grid{ grid-template-columns: 1fr; }
-      .nav{ display:none; } /* simple: hide nav on small screens (add hamburger later if you want) */
-      .brand{ min-width: unset; }
-      .mobile-quote-bar{ display:block; }
-      body{ padding-bottom: 70px; } /* space for sticky bar */
+      nav{display:none}
+      details.quoteBtn{display:none}
+      .tiles{grid-template-columns: 1fr 1fr}
+      .step-row{grid-template-columns: 1fr}
+      .strip{grid-template-columns: 1fr 1fr 1fr}
+      .review-bar{grid-template-columns: 1fr}
+      .brand .name{display:none}
     }
-    @media (max-width: 520px){
-      .grid-3{ grid-template-columns: 1fr; }
-      .thumbs{ grid-template-columns: 1fr 1fr; }
+    @media (max-width: 560px){
+      .tiles{grid-template-columns: 1fr}
+      .strip{grid-template-columns: 1fr 1fr}
+      .brand img{height: 38px}
     }
   </style>
 </head>
 
 <body>
-
-  <!-- Sticky Header -->
-  <header class="site-header" role="banner">
+  <!-- NAV -->
+  <header>
     <div class="container">
-      <div class="header-inner">
-        <a class="brand" href="#top" aria-label="Go to homepage">
-          <div class="logo" aria-hidden="true">PS</div>
-          <div class="brand-name">Print Shop Name</div>
+      <div class="navwrap">
+        <a class="brand" href="index.html" aria-label="Go to homepage">
+          <img src="logo.png" alt="My Shirt Printing logo" />
+          <div class="name">My Shirt Printing and embroidery</div>
         </a>
 
-        <nav class="nav" aria-label="Main navigation">
-          <a href="#top">Home</a>
+        <nav aria-label="Main menu">
+          <a class="active" href="index.html">Home</a>
 
-          <!-- UPDATED: Quote dropdown in header nav -->
-          <details class="dd navdd" id="ddNavQuote">
-            <summary>Quote <span class="caret" aria-hidden="true">▼</span></summary>
-            <div class="ddmenu" role="menu" aria-label="Quote menu">
+          <details class="quoteDrop" id="quoteNavDrop">
+            <summary>Quote <span aria-hidden="true">▾</span></summary>
+            <div class="qMenu" role="menu" aria-label="Quote menu">
               <a href="quote.html">Garment Printing Quote</a>
               <a href="embroidery-quote.html">Embroidery Quote</a>
-              <a href="other-quote.html">Other (Print)</a>
+              <a href="other-printing.html">Other (Print)</a>
             </div>
           </details>
 
-          <a href="#gallery">Gallery</a>
-          <a href="#reviews">Yelp Reviews</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
+          <a href="gallery.html">Gallery</a>
+          <a href="about.html">About Us</a>
+          <a href="contact.html">Contact</a>
         </nav>
-
-        <div class="header-cta">
-          <!-- UPDATED: Header CTA as dropdown -->
-          <details class="dd btndd" id="ddHeaderBtn">
-            <summary class="btn btn-primary">Get a Quote <span class="caret" aria-hidden="true">▼</span></summary>
-            <div class="ddmenu" role="menu" aria-label="Get a Quote menu">
-              <a href="quote.html">Garment Printing Quote</a>
-              <a href="embroidery-quote.html">Embroidery Quote</a>
-              <a href="other-quote.html">Other (Print)</a>
-            </div>
-          </details>
-        </div>
       </div>
     </div>
   </header>
 
-  <main id="top">
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="container">
+      <div class="grid">
+        <div>
+          <h1>Local printing and embroidery made easy.</h1>
+          <p class="lead">
+            Family-owned service, quick turnaround, and quality prints for businesses, events and everyday needs.
+          </p>
 
-    <!-- HERO -->
-    <section class="section sky hero">
-      <div class="container">
-        <div class="hero-grid">
+          <div class="hero-actions">
+            <details class="quoteBtn" id="quoteHeroBtn">
+              <summary>Get a Quote <span aria-hidden="true">▾</span></summary>
+              <div class="qMenu" role="menu" aria-label="Get a Quote menu">
+                <a href="quote.html">Garment Printing Quote</a>
+                <a href="embroidery-quote.html">Embroidery Quote</a>
+                <a href="other-printing.html">Other (Print)</a>
+              </div>
+            </details>
+
+            <a class="btn ghost" href="gallery.html">View Gallery</a>
+          </div>
+
+          <div class="chips" aria-label="Highlights">
+            <span class="chip"><span class="dot"></span> Family-Owned</span>
+            <span class="chip"><span class="dot"></span> Fast Turnaround</span>
+            <span class="chip"><span class="dot"></span> Friendly Help</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT WE PRINT -->
+  <section class="section">
+    <div class="container">
+      <div class="title">
+        <h2>What we offer</h2>
+        <p>Popular products, plus custom orders — we’ll help you choose the right options.</p>
+      </div>
+
+      <div class="tiles">
+        <div class="tile"><div><span>Business Cards</span><small>Clean, premium, and fast.</small></div></div>
+        <div class="tile"><div><span>Flyers &amp; Brochures</span><small>Great for promos &amp; menus.</small></div></div>
+        <div class="tile"><div><span>Banners &amp; Signs</span><small>Events, storefronts, more.</small></div></div>
+        <div class="tile"><div><span>Stickers &amp; Labels</span><small>Custom shapes &amp; finishes.</small></div></div>
+        <div class="tile"><div><span>Invitations</span><small>Weddings, parties, announcements.</small></div></div>
+        <div class="tile"><div><span>Custom Orders</span><small>Tell us what you’re making.</small></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAST FROM IDEA TO PRINT -->
+  <section class="section steps">
+    <div class="container">
+      <div class="title">
+        <h2>Fast from idea to print</h2>
+        <p>Simple steps, clear pricing, helpful guidance.</p>
+      </div>
+
+      <div class="step-row">
+        <div class="step">
+          <div class="badge">1</div>
           <div>
-            <h1>Local printing made easy.</h1>
-            <p>Family-owned service, quick turnaround, and quality prints for businesses, events, and everyday needs.</p>
-
-            <div class="hero-actions">
-              <!-- UPDATED: Hero Get a Quote as dropdown -->
-              <details class="dd btndd" id="ddHeroBtn">
-                <summary class="btn btn-primary">Get a Quote <span class="caret" aria-hidden="true">▼</span></summary>
-                <div class="ddmenu" role="menu" aria-label="Get a Quote menu">
-                  <a href="quote.html">Garment Printing Quote</a>
-                  <a href="embroidery-quote.html">Embroidery Quote</a>
-                  <a href="other-quote.html">Other (Print)</a>
-                </div>
-              </details>
-
-              <a class="btn btn-outline" href="#gallery">View Gallery</a>
-            </div>
-
-            <div class="chips" aria-label="Highlights">
-              <span class="chip"><span class="dot"></span> Family-owned</span>
-              <span class="chip"><span class="dot"></span> Fast turnaround</span>
-              <span class="chip"><span class="dot"></span> Friendly help</span>
-            </div>
-          </div>
-
-          <div class="hero-media" aria-label="Featured print work image">
-            <img alt="Printed materials on a light desk" src="https://images.unsplash.com/photo-1526481280695-3c687fd5432c?auto=format&fit=crop&w=1400&q=80">
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SERVICES -->
-    <section class="section">
-      <div class="container">
-        <div class="section-title">
-          <h2>What we print</h2>
-          <p>Popular products, plus custom orders — we’ll help you choose the right options.</p>
-        </div>
-
-        <div class="grid-3">
-          <div class="card service-card">
-            <div class="icon">BC</div>
-            <div><strong>Business Cards</strong><span>Clean, premium, and fast.</span></div>
-          </div>
-          <div class="card service-card">
-            <div class="icon">FB</div>
-            <div><strong>Flyers &amp; Brochures</strong><span>Great for promos &amp; menus.</span></div>
-          </div>
-          <div class="card service-card">
-            <div class="icon">BS</div>
-            <div><strong>Banners &amp; Signs</strong><span>Events, storefronts, more.</span></div>
-          </div>
-          <div class="card service-card">
-            <div class="icon">SL</div>
-            <div><strong>Stickers &amp; Labels</strong><span>Custom shapes &amp; finishes.</span></div>
-          </div>
-          <div class="card service-card">
-            <div class="icon">IN</div>
-            <div><strong>Invitations</strong><span>Weddings, parties, announcements.</span></div>
-          </div>
-          <div class="card service-card">
-            <div class="icon">CO</div>
-            <div><strong>Custom Orders</strong><span>Tell us what you’re making.</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- HOW IT WORKS -->
-    <section class="section sky">
-      <div class="container">
-        <div class="section-title">
-          <h2>Fast from idea to print</h2>
-          <p>Simple steps, clear pricing, helpful guidance.</p>
-        </div>
-
-        <div class="steps">
-          <div class="card step">
-            <div class="step-top">
-              <div class="step-num"><b>1</b></div>
-              <h3>Tell us what you need</h3>
-            </div>
+            <strong>Tell us what you need</strong>
             <p>Share size, quantity, and your deadline — even a rough idea is fine.</p>
           </div>
-
-          <div class="card step">
-            <div class="step-top">
-              <div class="step-num"><b>2</b></div>
-              <h3>We reply with options</h3>
-            </div>
+        </div>
+        <div class="step">
+          <div class="badge">2</div>
+          <div>
+            <strong>We reply with options &amp; pricing</strong>
             <p>We’ll suggest materials/finishes and send pricing you can understand.</p>
           </div>
-
-          <div class="card step">
-            <div class="step-top">
-              <div class="step-num"><b>3</b></div>
-              <h3>Approve &amp; we print</h3>
-            </div>
+        </div>
+        <div class="step">
+          <div class="badge">3</div>
+          <div>
+            <strong>Approve &amp; we print!</strong>
             <p>Once you approve, we’ll produce your order — ready for pickup or delivery.</p>
           </div>
         </div>
-
-        <div class="center-cta">
-          <a class="btn btn-primary" href="#gallery">See the full gallery</a>
-        </div>
       </div>
-    </section>
 
-    <!-- GALLERY PREVIEW -->
-    <section class="section" id="gallery">
-      <div class="container">
-        <div class="section-title">
-          <h2>Recent work</h2>
-          <p>A few examples — more in our gallery.</p>
-        </div>
-
-        <div class="thumbs" aria-label="Recent work thumbnails">
-          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=900&q=70"></div>
-          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1526481280695-3c687fd5432c?auto=format&fit=crop&w=900&q=70"></div>
-          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1457305237443-44c3d5a30b89?auto=format&fit=crop&w=900&q=70"></div>
-          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=70"></div>
-          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=70"></div>
-        </div>
-
-        <div class="center-cta">
-          <a class="btn btn-outline" href="#gallery">View Gallery</a>
-        </div>
+      <div style="display:flex; justify-content:center; margin-top:16px;">
+        <a class="btn primary" href="gallery.html">See the full gallery</a>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- REVIEWS -->
-    <section class="section sky" id="reviews">
-      <div class="container">
-        <div class="section-title">
-          <h2>Customers love working with us</h2>
-          <p>Friendly service, quality results, and reliable turnaround.</p>
-        </div>
+  
 
-        <div class="reviews-grid">
-          <div class="card rating">
-            <div class="stars">
-              <span class="stars-badge">★★★★★</span>
-              <strong>4.9</strong>
-            </div>
-            <small>Read more on Yelp</small>
-            <div style="margin-top:12px;">
-              <a class="btn btn-outline" href="#reviews" aria-label="Open Yelp reviews">Open Yelp</a>
-            </div>
-          </div>
+      <
 
-          <div class="snippets" aria-label="Review snippets">
-            <div class="card snippet">Excellent service and quick turnaround!</div>
-            <div class="card snippet">High-quality prints at great prices.</div>
-            <div class="card snippet">So helpful and friendly — made it easy.</div>
-          </div>
-        </div>
+        <!-- kept empty on purpose (bubbles moved to Yelp section) -->
+        <div></div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ABOUT TEASER -->
-    <section class="section about" id="about">
-      <div class="container">
-        <div class="about-grid">
+  <!-- YELP SECTION (UPDATED: bubbles moved into this white card) -->
+ <!-- REVIEWS + YELP (COMBINED) -->
+<section id="reviews" class="section sky">
+  <div class="container">
+    <div class="title">
+      <h2>Customers love working with us</h2>
+      <p>Friendly service, quality results, and reliable turnaround — read more on Yelp.</p>
+    </div>
+
+    <div class="card yelpCard">
+      <!-- Left: business info + quotes -->
+      <div class="yelpLeft">
+        <div class="yelpTop">
           <div>
-            <div class="section-title" style="text-align:left; margin-bottom:10px;">
-              <h2>A family print shop you can count on</h2>
-              <p>We’ll guide you through paper, finishes, and sizing — no stress.</p>
-            </div>
-
-            <p>We’re a small, family-run business focused on quality, speed, and making printing simple.
-              Whether you know exactly what you want or need a little help, we’re here for you.</p>
-
-            <a class="btn btn-primary" href="#about">Meet the Team</a>
+            <div class="yelpName">My Shirt &amp; Signs</div>
+            <div class="yelpLoc">Santa Clara, CA</div>
           </div>
 
-          <div class="about-media" aria-label="Photo of the team or shop">
-            <img alt="Friendly team photo" src="https://images.unsplash.com/photo-1520975958225-9d15976b2bcd?auto=format&fit=crop&w=1200&q=80">
+          <div class="yelpRating" aria-label="Yelp rating">
+            <span class="starsBadge">★★★★★</span>
+            <span class="ratingNum">4.9</span>
+            <span class="ratingMeta">on Yelp</span>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- QUOTE / CONTACT placeholders -->
-    <section class="section sky" id="quote">
-      <div class="container">
-        <div class="section-title">
-          <h2>Get a quote</h2>
-          <p>Next we’ll build the quote form page/section.</p>
-        </div>
-        <div class="center-cta">
-          <a class="btn btn-primary" href="#contact">Contact us</a>
+        <div class="yelpSnips" aria-label="Review highlights">
+          <div class="snip">“Excellent service and quick turnaround!”</div>
+          <div class="snip">“High-quality prints at great prices.”</div>
+          <div class="snip">“So helpful and friendly!”</div>
         </div>
       </div>
-    </section>
 
-    <section class="section" id="contact">
-      <div class="container">
-        <div class="section-title">
-          <h2>Contact</h2>
-          <p>Next we’ll add your real shop info and a contact form.</p>
-        </div>
-        <div class="card" style="max-width: 720px; margin: 0 auto;">
-          <p style="margin:0; color: var(--muted);">
-            <strong>Phone:</strong> (123) 456-7890<br>
-            <strong>Email:</strong> info@printshop.com<br>
-            <strong>Hours:</strong> Mon–Fri 9am–5pm
-          </p>
-        </div>
+      <!-- Right: CTA -->
+      <div class="yelpRight">
+        <a class="btn primary"
+           href="https://www.yelp.com/biz/my-shirt-and-signs-santa-clara"
+           target="_blank" rel="noopener">
+          Open Yelp
+        </a>
+        <div class="yelpTiny">Read more reviews &amp; see photos.</div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-  </main>
+
 
   <!-- FOOTER -->
   <footer>
     <div class="container">
-      <div class="footer-grid">
+      <div class="foot">
         <div>
-          <div style="font-family:'DM Sans', Inter, sans-serif; font-weight:700; font-size:18px; margin-bottom:8px;">
-            Print Shop Name
-          </div>
-          <div style="color: rgba(255,255,255,.75);">
-            123 Main St, Your City, ST<br>
-            Mon–Fri 9am–5pm
-          </div>
-        </div>
-
-        <div>
-          <div style="font-weight:700; margin-bottom:8px; font-family:'DM Sans', Inter, sans-serif;">Quick Links</div>
-          <div style="display:grid; gap:8px;">
-            <a href="quote.html">Garment Printing Quote</a>
-            <a href="embroidery-quote.html">Embroidery Quote</a>
-            <a href="other-quote.html">Other (Print)</a>
-            <a href="#gallery">Gallery</a>
-            <a href="#contact">Contact</a>
-          </div>
-        </div>
-
-        <div class="footer-card">
-          <h3>Get a Quote in Minutes</h3>
-          <div style="color: rgba(255,255,255,.78); margin-bottom: 12px;">
-            Choose what you need — we’ll reply with options and pricing.
-          </div>
-
-          <!-- UPDATED: Footer Get a Quote as dropdown -->
-          <details class="dd btndd" id="ddFooterBtn">
-            <summary class="btn btn-primary">Get a Quote <span class="caret" aria-hidden="true">▼</span></summary>
-            <div class="ddmenu" role="menu" aria-label="Get a Quote menu">
-              <a href="quote.html">Garment Printing Quote</a>
-              <a href="embroidery-quote.html">Embroidery Quote</a>
-              <a href="other-quote.html">Other (Print)</a>
-            </div>
-          </details>
+          <h4>My Shirt & Signs</h4>
+          <p>3331 Edward Avenue</p>
+          <p>Santa Clara, CA 95054<br>Mon–Fri 9am–5pm</p>
+          <p>Email: <a href="mailto:myshirtcustomerservice@gmail.com">myshirtcustomerservice@gmail.com</a></p>
+          <p>Phone: 669-231-9059</p>
         </div>
       </div>
 
-      <div class="footer-bottom">
-        <div>© <span id="year"></span> Print Shop Name. All rights reserved.</div>
+      <div class="bottom">
+        <div>© <span id="year"></span> My Shirt Printing. All rights reserved.</div>
         <div>Made with care.</div>
       </div>
     </div>
   </footer>
 
-  <!-- Mobile sticky quote button -->
-  <div class="mobile-quote-bar" aria-label="Quick quote button">
-    <details class="dd btndd" id="ddMobileBtn" style="width:100%;">
-      <summary class="btn btn-primary" style="width:100%;">Get a Quote <span class="caret" aria-hidden="true">▼</span></summary>
-      <div class="ddmenu" role="menu" aria-label="Get a Quote menu" style="left:0; right:0; min-width:unset;">
-        <a href="quote.html">Garment Printing Quote</a>
-        <a href="embroidery-quote.html">Embroidery Quote</a>
-        <a href="other-quote.html">Other (Print)</a>
-      </div>
-    </details>
-  </div>
-
   <script>
-    // Set footer year
+    // footer year
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    // Close dropdowns when clicking outside
-    const dropdownIds = ["ddNavQuote","ddHeaderBtn","ddHeroBtn","ddFooterBtn","ddMobileBtn"];
-
+    // Close dropdowns on outside click
     document.addEventListener("click", (e) => {
-      dropdownIds.forEach(id => {
-        const dd = document.getElementById(id);
-        if (!dd) return;
-        if (!dd.contains(e.target)) dd.removeAttribute("open");
+      const ids = ["quoteNavDrop", "quoteHeroBtn"];
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el && !el.contains(e.target)) el.removeAttribute("open");
       });
     });
 
-    // Optional: only allow one dropdown open at a time
-    dropdownIds.forEach(id => {
-      const dd = document.getElementById(id);
-      if (!dd) return;
-      dd.addEventListener("toggle", () => {
-        if (!dd.open) return;
-        dropdownIds.forEach(otherId => {
+    // Only keep one open at a time
+    const ddIds = ["quoteNavDrop", "quoteHeroBtn"];
+    ddIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("toggle", () => {
+        if (!el.open) return;
+        ddIds.forEach((otherId) => {
           if (otherId === id) return;
           const other = document.getElementById(otherId);
           if (other) other.removeAttribute("open");
