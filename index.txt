@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Print Shop Name — Local printing made easy</title>
+
+  <!-- Google Fonts (OK to remove if you want system fonts only) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      /* Direction B palette */
+      --bg-sky: #F2F8FF;
+      --surface: #FFFFFF;
+      --primary: #246B78;   /* navy-teal */
+      --accent: #F6E7A6;    /* soft butter (sparingly) */
+      --support: #D9EEF6;   /* light aqua */
+      --text: #18313A;
+      --muted: #3A4F57;
+      --border: #D7E6F2;
+
+      --radius-card: 16px;
+      --radius-pill: 999px;
+
+      --shadow-soft: 0 10px 30px rgba(24,49,58,.06);
+      --shadow-card: 0 8px 20px rgba(24,49,58,.06);
+
+      --container: 1120px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; }
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: #fff;
+      line-height: 1.6;
+    }
+    a{ color: inherit; text-decoration: none; }
+    img{ max-width: 100%; display:block; }
+
+    .container{
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header */
+    .site-header{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+    .header-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 16px;
+      padding: 14px 0;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 220px;
+    }
+    .logo{
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--support);
+      display:grid;
+      place-items:center;
+      border: 1px solid var(--border);
+      font-weight: 700;
+      color: var(--primary);
+      font-family: "DM Sans", Inter, sans-serif;
+    }
+    .brand-name{
+      font-family: "DM Sans", Inter, sans-serif;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .nav{
+      display:flex;
+      align-items:center;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .nav a{
+      font-size: 14px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
+    .nav a:hover{ background: var(--bg-sky); color: var(--text); }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      border-radius: var(--radius-pill);
+      padding: 12px 16px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      white-space: nowrap;
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn-primary{
+      background: var(--primary);
+      color: #fff;
+      box-shadow: var(--shadow-soft);
+    }
+    .btn-primary:hover{ filter: brightness(.98); }
+
+    .btn-outline{
+      background: transparent;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .btn-outline:hover{ background: rgba(36,107,120,.08); }
+
+    .header-cta{ display:flex; gap: 10px; align-items:center; }
+
+    /* Hero */
+    .section{ padding: 56px 0; }
+    .section.sky{ background: var(--bg-sky); }
+
+    .hero{
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-140px;
+      top: 70px;
+      width: 520px;
+      height: 520px;
+      background: var(--support);
+      border-radius: 50%;
+      opacity: .9;
+      z-index: 0;
+    }
+    .hero-grid{
+      position: relative;
+      z-index: 1;
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 28px;
+      align-items: center;
+    }
+    .hero h1{
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: clamp(34px, 4vw, 48px);
+      line-height: 1.1;
+      margin: 0 0 10px;
+      letter-spacing: -0.6px;
+    }
+    .hero p{
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 54ch;
+    }
+    .hero-actions{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .chips{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: var(--radius-pill);
+      background: rgba(255,255,255,.7);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      border: 1px solid rgba(0,0,0,.05);
+    }
+
+    .hero-media{
+      background: rgba(255,255,255,.7);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 10px;
+      box-shadow: var(--shadow-card);
+    }
+    .hero-media img{
+      border-radius: 14px;
+      aspect-ratio: 16/10;
+      object-fit: cover;
+      background: #e9eef3;
+    }
+
+    /* Section titles */
+    .section-title{
+      text-align: center;
+      margin-bottom: 22px;
+    }
+    .section-title h2{
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: 28px;
+      margin: 0 0 6px;
+      letter-spacing: -0.2px;
+    }
+    .section-title p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    /* Cards grid */
+    .grid-3{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .card{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+    }
+    .service-card{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      padding: 16px 18px;
+      min-height: 78px;
+    }
+    .icon{
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: rgba(36,107,120,.10);
+      display:grid;
+      place-items:center;
+      border: 1px solid rgba(36,107,120,.15);
+      color: var(--primary);
+      font-family: "DM Sans", Inter, sans-serif;
+      font-weight: 700;
+    }
+    .service-card strong{ display:block; font-size: 15px; }
+    .service-card span{ color: var(--muted); font-size: 13px; }
+
+    /* Steps */
+    .steps{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+    .step{
+      position: relative;
+      padding: 18px;
+    }
+    .step-top{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .step-num{
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      display:grid;
+      place-items:center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-weight: 700;
+      color: var(--primary);
+      position: relative;
+      overflow: hidden;
+    }
+    .step-num::before{
+      content:"";
+      position:absolute;
+      inset: 9px 8px 9px 8px;
+      background: var(--accent);
+      border-radius: 10px;
+      opacity: .75;
+      z-index: 0;
+    }
+    .step-num b{ position: relative; z-index: 1; }
+    .step h3{
+      margin: 0;
+      font-size: 16px;
+      font-family: "DM Sans", Inter, sans-serif;
+    }
+    .step p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .center-cta{
+      display:flex;
+      justify-content:center;
+      margin-top: 18px;
+    }
+
+    /* Gallery strip */
+    .thumbs{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .thumb{
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      overflow:hidden;
+      background: #e9eef3;
+      aspect-ratio: 16/10;
+    }
+    .thumb img{ width:100%; height:100%; object-fit: cover; }
+
+    /* Reviews */
+    .reviews-grid{
+      display:grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 14px;
+      align-items:start;
+    }
+    .rating{
+      padding: 16px;
+    }
+    .stars{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .stars-badge{
+      background: var(--accent);
+      border-radius: 12px;
+      padding: 6px 10px;
+      font-weight: 700;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+    .rating small{ color: var(--muted); }
+
+    .snippets{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .snippet{
+      padding: 14px 14px;
+      font-size: 14px;
+      color: var(--muted);
+      position: relative;
+    }
+    .snippet::before{
+      content:"“";
+      position:absolute;
+      top: 6px;
+      left: 10px;
+      font-size: 22px;
+      color: rgba(36,107,120,.35);
+      font-family: "DM Sans", Inter, sans-serif;
+    }
+
+    /* About teaser */
+    .about-grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      align-items:center;
+    }
+    .about h2{ text-align:left; margin-bottom: 8px; }
+    .about p{ margin:0 0 14px; color: var(--muted); max-width: 60ch; }
+    .about-media{
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      overflow:hidden;
+      background: #e9eef3;
+      box-shadow: var(--shadow-card);
+      aspect-ratio: 16/11;
+    }
+    .about-media img{ width:100%; height:100%; object-fit: cover; }
+
+    /* Footer */
+    footer{
+      background: var(--text);
+      color: rgba(255,255,255,.92);
+      padding: 44px 0 26px;
+    }
+    .footer-grid{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 18px;
+      align-items:start;
+    }
+    footer a{ color: var(--support); }
+    .footer-card{
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(217,238,246,.25);
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .footer-card h3{
+      margin: 0 0 8px;
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: 16px;
+    }
+    .footer-bottom{
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(217,238,246,.18);
+      font-size: 13px;
+      color: rgba(255,255,255,.72);
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Sticky Quote Button (mobile only) */
+    .mobile-quote-bar{
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 60;
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(255,255,255,.92);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      display: none;
+    }
+    .mobile-quote-bar .btn{
+      width: 100%;
+      padding: 14px 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .hero-grid{ grid-template-columns: 1fr; }
+      .grid-3{ grid-template-columns: 1fr 1fr; }
+      .steps{ grid-template-columns: 1fr; }
+      .thumbs{ grid-template-columns: 1fr 1fr 1fr; }
+      .reviews-grid{ grid-template-columns: 1fr; }
+      .snippets{ grid-template-columns: 1fr; }
+      .about-grid{ grid-template-columns: 1fr; }
+      .nav{ display:none; } /* simple: hide nav on small screens (add hamburger later if you want) */
+      .brand{ min-width: unset; }
+      .mobile-quote-bar{ display:block; }
+      body{ padding-bottom: 70px; } /* space for sticky bar */
+    }
+    @media (max-width: 520px){
+      .grid-3{ grid-template-columns: 1fr; }
+      .thumbs{ grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Sticky Header -->
+  <header class="site-header" role="banner">
+    <div class="container">
+      <div class="header-inner">
+        <a class="brand" href="#top" aria-label="Go to homepage">
+          <div class="logo" aria-hidden="true">PS</div>
+          <div class="brand-name">Print Shop Name</div>
+        </a>
+
+        <nav class="nav" aria-label="Main navigation">
+          <a href="#top">Home</a>
+          <a href="#quote">Get a Quote</a>
+          <a href="#gallery">Gallery</a>
+          <a href="#reviews">Yelp Reviews</a>
+          <a href="#about">About</a>
+          <a href="#contact">Contact</a>
+        </nav>
+
+        <div class="header-cta">
+          <a class="btn btn-primary" href="#quote">Get a Quote</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- HERO -->
+    <section class="section sky hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div>
+            <h1>Local printing made easy.</h1>
+            <p>Family-owned service, quick turnaround, and quality prints for businesses, events, and everyday needs.</p>
+
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#quote">Get a Quote</a>
+              <a class="btn btn-outline" href="#gallery">View Gallery</a>
+            </div>
+
+            <div class="chips" aria-label="Highlights">
+              <span class="chip"><span class="dot"></span> Family-owned</span>
+              <span class="chip"><span class="dot"></span> Fast turnaround</span>
+              <span class="chip"><span class="dot"></span> Friendly help</span>
+            </div>
+          </div>
+
+          <div class="hero-media" aria-label="Featured print work image">
+            <!-- Replace with a real image -->
+            <img alt="Printed materials on a light desk" src="https://images.unsplash.com/photo-1526481280695-3c687fd5432c?auto=format&fit=crop&w=1400&q=80">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>What we print</h2>
+          <p>Popular products, plus custom orders — we’ll help you choose the right options.</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="card service-card">
+            <div class="icon">BC</div>
+            <div><strong>Business Cards</strong><span>Clean, premium, and fast.</span></div>
+          </div>
+          <div class="card service-card">
+            <div class="icon">FB</div>
+            <div><strong>Flyers &amp; Brochures</strong><span>Great for promos &amp; menus.</span></div>
+          </div>
+          <div class="card service-card">
+            <div class="icon">BS</div>
+            <div><strong>Banners &amp; Signs</strong><span>Events, storefronts, more.</span></div>
+          </div>
+          <div class="card service-card">
+            <div class="icon">SL</div>
+            <div><strong>Stickers &amp; Labels</strong><span>Custom shapes &amp; finishes.</span></div>
+          </div>
+          <div class="card service-card">
+            <div class="icon">IN</div>
+            <div><strong>Invitations</strong><span>Weddings, parties, announcements.</span></div>
+          </div>
+          <div class="card service-card">
+            <div class="icon">CO</div>
+            <div><strong>Custom Orders</strong><span>Tell us what you’re making.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section sky">
+      <div class="container">
+        <div class="section-title">
+          <h2>Fast from idea to print</h2>
+          <p>Simple steps, clear pricing, helpful guidance.</p>
+        </div>
+
+        <div class="steps">
+          <div class="card step">
+            <div class="step-top">
+              <div class="step-num"><b>1</b></div>
+              <h3>Tell us what you need</h3>
+            </div>
+            <p>Share size, quantity, and your deadline — even a rough idea is fine.</p>
+          </div>
+
+          <div class="card step">
+            <div class="step-top">
+              <div class="step-num"><b>2</b></div>
+              <h3>We reply with options</h3>
+            </div>
+            <p>We’ll suggest materials/finishes and send pricing you can understand.</p>
+          </div>
+
+          <div class="card step">
+            <div class="step-top">
+              <div class="step-num"><b>3</b></div>
+              <h3>Approve &amp; we print</h3>
+            </div>
+            <p>Once you approve, we’ll produce your order — ready for pickup or delivery.</p>
+          </div>
+        </div>
+
+        <div class="center-cta">
+          <a class="btn btn-primary" href="#gallery">See the full gallery</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- GALLERY PREVIEW -->
+    <section class="section" id="gallery">
+      <div class="container">
+        <div class="section-title">
+          <h2>Recent work</h2>
+          <p>A few examples — more in our gallery.</p>
+        </div>
+
+        <div class="thumbs" aria-label="Recent work thumbnails">
+          <!-- Replace images with real gallery photos -->
+          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=900&q=70"></div>
+          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1526481280695-3c687fd5432c?auto=format&fit=crop&w=900&q=70"></div>
+          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1457305237443-44c3d5a30b89?auto=format&fit=crop&w=900&q=70"></div>
+          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=70"></div>
+          <div class="thumb"><img alt="" src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=70"></div>
+        </div>
+
+        <div class="center-cta">
+          <a class="btn btn-outline" href="#gallery">View Gallery</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section class="section sky" id="reviews">
+      <div class="container">
+        <div class="section-title">
+          <h2>Customers love working with us</h2>
+          <p>Friendly service, quality results, and reliable turnaround.</p>
+        </div>
+
+        <div class="reviews-grid">
+          <div class="card rating">
+            <div class="stars">
+              <span class="stars-badge">★★★★★</span>
+              <strong>4.9</strong>
+            </div>
+            <small>Read more on Yelp</small>
+            <div style="margin-top:12px;">
+              <a class="btn btn-outline" href="#reviews" aria-label="Open Yelp reviews">Open Yelp</a>
+            </div>
+          </div>
+
+          <div class="snippets" aria-label="Review snippets">
+            <div class="card snippet">Excellent service and quick turnaround!</div>
+            <div class="card snippet">High-quality prints at great prices.</div>
+            <div class="card snippet">So helpful and friendly — made it easy.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT TEASER -->
+    <section class="section about" id="about">
+      <div class="container">
+        <div class="about-grid">
+          <div>
+            <div class="section-title" style="text-align:left; margin-bottom:10px;">
+              <h2>A family print shop you can count on</h2>
+              <p>We’ll guide you through paper, finishes, and sizing — no stress.</p>
+            </div>
+
+            <p>We’re a small, family-run business focused on quality, speed, and making printing simple.
+              Whether you know exactly what you want or need a little help, we’re here for you.</p>
+
+            <a class="btn btn-primary" href="#about">Meet the Team</a>
+          </div>
+
+          <div class="about-media" aria-label="Photo of the team or shop">
+            <!-- Replace with real photo -->
+            <img alt="Friendly team photo" src="https://images.unsplash.com/photo-1520975958225-9d15976b2bcd?auto=format&fit=crop&w=1200&q=80">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT / QUOTE ANCHORS (placeholders for later pages/sections) -->
+    <section class="section sky" id="quote">
+      <div class="container">
+        <div class="section-title">
+          <h2>Get a quote</h2>
+          <p>Next we’ll build the quote form page/section.</p>
+        </div>
+        <div class="center-cta">
+          <a class="btn btn-primary" href="#contact">Contact us</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="container">
+        <div class="section-title">
+          <h2>Contact</h2>
+          <p>Next we’ll add your real shop info and a contact form.</p>
+        </div>
+        <div class="card" style="max-width: 720px; margin: 0 auto;">
+          <p style="margin:0; color: var(--muted);">
+            <strong>Phone:</strong> (123) 456-7890<br>
+            <strong>Email:</strong> info@printshop.com<br>
+            <strong>Hours:</strong> Mon–Fri 9am–5pm
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div style="font-family:'DM Sans', Inter, sans-serif; font-weight:700; font-size:18px; margin-bottom:8px;">
+            Print Shop Name
+          </div>
+          <div style="color: rgba(255,255,255,.75);">
+            123 Main St, Your City, ST<br>
+            Mon–Fri 9am–5pm
+          </div>
+        </div>
+
+        <div>
+          <div style="font-weight:700; margin-bottom:8px; font-family:'DM Sans', Inter, sans-serif;">Quick Links</div>
+          <div style="display:grid; gap:8px;">
+            <a href="#quote">Get a Quote</a>
+            <a href="#gallery">Gallery</a>
+            <a href="#reviews">Yelp Reviews</a>
+            <a href="#contact">Contact</a>
+          </div>
+        </div>
+
+        <div class="footer-card">
+          <h3>Get a Quote in Minutes</h3>
+          <div style="color: rgba(255,255,255,.78); margin-bottom: 12px;">
+            Tell us what you need and your deadline — we’ll reply with options and pricing.
+          </div>
+          <a class="btn btn-primary" href="#quote">Get a Quote</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© <span id="year"></span> Print Shop Name. All rights reserved.</div>
+        <div>Made with care.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mobile sticky quote button -->
+  <div class="mobile-quote-bar" aria-label="Quick quote button">
+    <a class="btn btn-primary" href="#quote">Get a Quote</a>
+  </div>
+
+  <script>
+    // Set footer year
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

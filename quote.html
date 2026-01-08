@@ -223,14 +223,15 @@
       background:#fff;
     }
 
-    /* Garment supply box (from embroidery page) */
+    /* Garment supply box (ALWAYS visible now) */
     .garmentBox{
       margin-top:12px;
       background:#fff8e9;
       border:1px solid #f0d8b0;
       border-radius:12px;
       padding:12px;
-      display:none;
+      display:flex;
+      flex-direction:column;
       gap:12px;
     }
     .garmentBox .txt{color:var(--muted);font-weight:600;margin-bottom:8px}
@@ -274,7 +275,8 @@
             <div class="qMenu" role="menu" aria-label="Quote menu">
               <a class="activeItem" href="quote.html">Garment Printing Quote</a>
               <a href="embroidery-quote.html">Embroidery Quote</a>
-              <a href="other-quote.html">Other (Print)</a>
+              <a href="other-printing.html">Other (Print)</a>
+
             </div>
           </details>
 
@@ -287,7 +289,7 @@
   </header>
 
   <div class="wrap">
-    <h1>Quote Calculator</h1>
+    <h1>Garment printing quote</h1>
     <p>Fill out the form to generate an estimate. This page clears automatically for the next customer.</p>
 
     <div class="grid">
@@ -454,7 +456,7 @@
       <!-- OUTPUT -->
       <div class="card">
         <div class="emptyBox" id="emptyState">
-          Your quote will appear here after you click <b>Calculate Quote</b>.
+          Your quote will appear here after you click <b>Calculate Quote.</b>You wil get a separate quote for the garments  by hitting quote button below. We will then combine the quotes, review everything and contact you with a final quote.
         </div>
 
         <div class="summary" id="summary" style="display:none"></div>
@@ -474,11 +476,11 @@
           <div class="muted">Estimate only. Final price may change after review.</div>
         </div>
 
-        <!-- Garment supply box (added from embroidery page) -->
-        <div id="garmentBox" class="garmentBox" aria-hidden="true">
+        <!-- Garment supply box (ALWAYS visible now) -->
+        <div id="garmentBox" class="garmentBox">
           <div class="txt">Would you like us to supply the garments for this order?</div>
           <div class="actions">
-            <div class="muted" style="font-weight:500">Click the button to start a garments quote on our partner site.</div>
+            <div class="muted" style="font-weight:500">Click the button to start a garments quote.</div>
             <a id="garmentQuoteBtn" class="linkBtn" href="#" role="button" target="_blank" rel="noopener noreferrer">Start garments quote</a>
           </div>
           <div class="note">Prices may change after review. Some items may be on sale or out of stock. All quotes will be confirmed after review.</div>
@@ -579,10 +581,7 @@
     document.getElementById("bdTitle").style.display = "block";
     document.getElementById("div2").style.display = "block";
     document.getElementById("totalBox").style.display = "block";
-
-    // show garment box when results are visible
-    const g = document.getElementById("garmentBox");
-    if (g){ g.style.display = "flex"; g.style.flexDirection = "column"; g.setAttribute("aria-hidden","false"); }
+    // garmentBox now always visible; no JS needed
   }
 
   function hideResults(){
@@ -594,9 +593,7 @@
     document.getElementById("div2").style.display = "none";
     document.getElementById("totalBox").style.display = "none";
     document.getElementById("totalEstimate").textContent = "$0.00";
-
-    const g = document.getElementById("garmentBox");
-    if (g){ g.style.display = "none"; g.setAttribute("aria-hidden","true"); }
+    // garmentBox stays visible; do not hide it
   }
 
   function renderSummary({qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,perGarmentTotalAllLocations,garmentsPrintCost,discountLine,rushRate,rushFee}){

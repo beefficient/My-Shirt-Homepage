@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Work Order Builder (MVP)</title>
+
+  <style>
+    :root{
+      --bg:#f6faf7;
+      --surface:#ffffff;
+      --border:#d8e5db;
+      --text:#173028;
+      --muted:#456057;
+      --accent:#2f7a5a;
+      --accent2:#e8f6ee;
+      --danger:#a63a3a;
+      --shadow: 0 10px 24px rgba(10,35,45,.08);
+      --radius:14px;
+      --container:1100px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+    .container{max-width:var(--container);margin:0 auto;padding:18px}
+    h1{margin:0 0 6px;font-size:24px}
+    .muted{color:var(--muted)}
+    .topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:13px}
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:start;margin-top:14px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 20px rgba(0,0,0,.04)}
+    .cardHeader{padding:14px 14px 0}
+    .cardTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800}
+    .cardBody{padding:14px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 720px){ .row{grid-template-columns:1fr} }
+    label{display:block;font-weight:700;margin:10px 0 6px}
+    input,select,textarea{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);font-size:14px;background:#fff}
+    textarea{min-height:92px;resize:vertical}
+    .btnRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{border:1px solid transparent;background:var(--accent);color:#fff;font-weight:800;padding:10px 14px;border-radius:12px;cursor:pointer}
+    .btn.secondary{background:#fff;color:var(--text);border-color:var(--border)}
+    .btn.ghost{background:transparent;color:var(--text);border-color:transparent}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .tab{padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:700;font-size:13px}
+    .tab.active{background:var(--accent2)}
+    .hidden{display:none !important}
+    hr{border:none;border-top:1px solid rgba(0,0,0,.08);margin:14px 0}
+    .itemCard{border:1px solid var(--border);border-radius:14px;padding:12px;background:#fff}
+    .itemTop{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:12px;font-weight:800}
+    .help{font-size:12px;color:var(--muted)}
+    .sizeBox{border:1px solid var(--border);border-radius:14px;padding:10px;background:var(--accent2)}
+    .sizeRow{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+    .sizeRow .sizeLbl{width:54px;font-weight:800}
+    .sizeRow input[type="number"]{max-width:140px}
+    .inline2{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+    .inline3{display:grid;grid-template-columns:1fr 2fr;gap:12px}
+    @media (max-width: 820px){ .inline2,.inline3{grid-template-columns:1fr} }
+    .imgPreview{width:100%;max-height:240px;object-fit:contain;border:1px solid var(--border);border-radius:14px;background:#fff}
+    .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#fff;border:1px solid var(--border);border-radius:999px;padding:10px 14px;box-shadow:var(--shadow);font-weight:700;z-index:1000}
+    .toast.error{border-color:var(--danger);color:var(--danger)}
+    .modalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:16px;z-index:999}
+    .modal{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);max-width:900px;width:100%}
+    .modalHeader{padding:14px;border-bottom:1px solid rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .modalBody{padding:14px;max-height:75vh;overflow:auto}
+    .modalFooter{padding:14px;border-top:1px solid rgba(0,0,0,.08);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+
+    /* Required field highlighting */
+    .reqMark{color:var(--danger);font-weight:900;margin-left:4px}
+    .invalid{border-color:var(--danger) !important; box-shadow:0 0 0 3px rgba(166,58,58,.14) !important}
+
+    /* Print */
+    @media print{
+      .noPrint{display:none !important}
+      body{background:#fff}
+      .printOnly{display:block !important}
+      .printCard{border:1px solid #bbb;border-radius:10px;padding:12px;margin-bottom:10px}
+      a{color:inherit;text-decoration:none}
+    }
+    .printOnly{display:none}
+  </style>
+</head>
+
+<body>
+  <div class="container noPrint">
+    <div class="topbar">
+      <div>
+        <h1>Work Order Builder</h1>
+        <div class="muted">Create a clear, shop-ready work order and get customer approval.</div>
+      </div>
+
+      <div class="btnRow">
+        <span class="pill"><b>Status:</b> <span id="statusPill">Draft</span></span>
+        <button class="btn secondary" id="newWO">New Work Order</button>
+        <button class="btn secondary" id="previewCustomer">Preview Customer View</button>
+        <button class="btn" id="printBtn">Print / Save PDF</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="cardHeader">
+          <div class="cardTitle">
+            <span>Work Order Details</span>
+            <span class="muted" id="woNumber"></span>
+          </div>
+        </div>
+
+        <div class="cardBody">
+          <div class="row">
+            <div>
+              <label>Created Date <span class="reqMark">*</span></label>
+              <input type="date" id="createdDate" required>
+            </div>
+            <div>
+              <label>Due Date <span class="reqMark">*</span></label>
+              <input type="date" id="dueDate" required>
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="row">
+            <div>
+              <label>Customer Name <span class="reqMark">*</span></label>
+              <input id="customerName" placeholder="Full name" required>
+            </div>
+            <div>
+              <label>Company</label>
+              <input id="company" placeholder="Optional">
+            </div>
+            <div>
+              <label>Email <span class="reqMark">*</span></label>
+              <input id="email" placeholder="customer@email.com" required>
+            </div>
+            <div>
+              <label>Phone <span class="reqMark">*</span></label>
+              <input id="phone" placeholder="(555) 555-5555" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>Billing Address <span class="reqMark">*</span></label>
+              <textarea id="billingAddress" placeholder="Street, City, State, ZIP" required></textarea>
+            </div>
+            <div>
+              <label>Shipping / Pickup Notes <span class="reqMark">*</span></label>
+              <textarea id="shippingAddress" placeholder="Pickup / ship to..." required></textarea>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <button class="tab active" data-tab="items">Items</button>
+            <button class="tab" data-tab="notes">Notes</button>
+            <button class="tab" data-tab="approval">Customer Approval</button>
+          </div>
+
+          <!-- ITEMS TAB -->
+          <div id="tab-items" style="margin-top:10px">
+            <div class="btnRow" style="justify-content:space-between">
+              <div class="muted">Add each product/service line so production has everything they need.</div>
+              <button class="btn" id="addItem">Add Item</button>
+            </div>
+
+            <div id="itemsWrap" style="margin-top:12px;display:grid;gap:12px"></div>
+          </div>
+
+          <!-- NOTES TAB -->
+          <div id="tab-notes" class="hidden" style="margin-top:10px">
+            <div class="row">
+              <div>
+                <label>Notes (Customer will see) <span class="reqMark">*</span></label>
+                <textarea id="notesCustomer" placeholder="Customer-facing instructions, pickup details, etc." required></textarea>
+              </div>
+              <div>
+                <label>Internal Notes (Shop only) <span class="reqMark">*</span></label>
+                <textarea id="notesInternal" placeholder="Press notes, special handling, vendor notes, etc." required></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- APPROVAL TAB -->
+          <div id="tab-approval" class="hidden" style="margin-top:10px">
+            <div class="itemCard">
+              <div class="itemTop">
+                <div>
+                  <div style="font-weight:900">Customer Approval</div>
+                  <div class="muted">Customer approves details before production begins.</div>
+                </div>
+                <span class="badge" id="approvalBadge">Awaiting approval</span>
+              </div>
+
+              <div style="margin-top:10px">
+                <label style="margin-top:0">Terms <span class="reqMark">*</span></label>
+                <div style="display:flex;gap:10px;align-items:flex-start">
+                  <input type="checkbox" id="termsAccepted" style="width:auto;margin-top:3px">
+                  <div class="muted">
+                    I confirm the details above are correct and authorize production to begin.
+                    I understand changes after approval may affect due dates.
+                  </div>
+                </div>
+
+                <div class="row" style="margin-top:10px">
+                  <div>
+                    <label>Type your name to approve <span class="reqMark">*</span></label>
+                    <input id="approvedName" placeholder="Customer name" required>
+                  </div>
+                  <div>
+                    <label>Approval Date</label>
+                    <input id="approvedDate" placeholder="Set on approval" disabled>
+                  </div>
+                </div>
+
+                <div class="btnRow" style="margin-top:10px">
+                  <button class="btn" id="markApproved">Mark Approved</button>
+                  <button class="btn secondary" id="clearApproval">Clear Approval</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div style="display:grid;gap:14px">
+        <div class="card">
+          <div class="cardHeader"><div class="cardTitle">Quick Summary</div></div>
+          <div class="cardBody" style="display:grid;gap:10px">
+            <div class="itemCard">
+              <div class="help">Items</div>
+              <div style="font-size:22px;font-weight:900" id="summaryItems">1</div>
+            </div>
+            <div class="itemCard">
+              <div class="help">Due date</div>
+              <div><b>Due:</b> <span id="summaryDueDate">-</span></div>
+            </div>
+            <div class="itemCard">
+              <div class="help">Approval</div>
+              <div><b>Status:</b> <span id="summaryStatus">Draft</span></div>
+              <div class="help" id="summaryApprovedDate"></div>
+            </div>
+            <div class="help">Drafts auto-save on this device.</div>
+          </div>
+        </div>
+
+        
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PRINT VIEW -->
+  <div class="printOnly" id="printView"></div>
+
+  <!-- CUSTOMER PREVIEW MODAL -->
+  <div class="modalBackdrop hidden noPrint" id="modalBackdrop" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHeader">
+        <div style="font-weight:900">Customer Preview</div>
+        <button class="btn ghost" id="closeModal">✕</button>
+      </div>
+      <div class="modalBody" id="modalBody"></div>
+      <div class="modalFooter">
+        <button class="btn secondary" id="modalPrint">Print Preview</button>
+        <button class="btn" id="modalClose2">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden noPrint"></div>
+
+<script>
+(function(){
+  // ====== CONFIG ======
+  const SERVICE_TYPES = [
+    "Screen Printing",
+    "Heat Transfers",
+    "Embroidery",
+    "Sublimation",
+    "Banners",
+    "Stickers/Decals",
+    "Business Cards",
+    "Flyers",
+    "Other",
+  ];
+  const GARMENT_SERVICES = new Set([
+    "Screen Printing",
+    "Heat Transfers",
+    "Embroidery",
+    "Sublimation",
+  ]);
+  const DEFAULT_SIZES = ["XS","S","M","L","XL","2XL","3XL","4XL"];
+
+  const DRAFT_KEY = "workorder_mvp_html_v4_required_fields";
+
+  // ====== HELPERS ======
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+  const isGarment = (type) => GARMENT_SERVICES.has(String(type||""));
+  const todayISO = () => {
+    const d = new Date();
+    const pad = (v)=>String(v).padStart(2,"0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  };
+  const buildWONumber = () => {
+    const d = new Date();
+    const pad = (v)=>String(v).padStart(2,"0");
+    const ymd = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+    const rand = Math.floor(Math.random()*9000+1000);
+    return `WO-${ymd}-${rand}`;
+  };
+  const toast = (msg, type="success", ms=2500) => {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.remove("hidden","error");
+    if(type==="error") t.classList.add("error");
+    window.clearTimeout(toast._t);
+    toast._t = setTimeout(()=>t.classList.add("hidden"), ms);
+  };
+  const newSizeBreakdown = () => DEFAULT_SIZES.map(s => ({ size:s, enabled:false, qty:0 }));
+  const sizeTotal = (rows) => Array.isArray(rows) ? rows.reduce((sum,r)=>sum + (r.enabled ? Number(r.qty||0) : 0), 0) : 0;
+
+  const readFileAsDataUrl = (file) => new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(String(r.result||""));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+
+  function clearInvalids(){
+    document.querySelectorAll(".invalid").forEach(el => el.classList.remove("invalid"));
+  }
+  function markInvalid(el){
+    if(!el) return;
+    el.classList.add("invalid");
+  }
+  function focusFirstInvalid(){
+    const el = document.querySelector(".invalid");
+    if(el) el.scrollIntoView({ behavior:"smooth", block:"center" });
+    if(el && typeof el.focus === "function") el.focus();
+  }
+
+  // ====== STATE ======
+  let wo = null;
+
+  const defaultItem = () => ({
+    id: crypto.randomUUID(),
+    serviceType: "Screen Printing",
+    product: "",
+    // non-garment items
+    itemSize: "",
+    // garment services optional
+    variantColor: "",
+    sizeBreakdown: newSizeBreakdown(),
+    quantity: 0,
+    location: "",
+    inkColors: "",
+    artNotes: "",   // OPTIONAL
+    image: null,    // OPTIONAL
+  });
+
+  const newWO = () => ({
+    woNumber: buildWONumber(),
+    createdDate: todayISO(),
+    dueDate: "",
+    customerName: "",
+    company: "",          // OPTIONAL
+    email: "",
+    phone: "",
+    billingAddress: "",
+    shippingAddress: "",
+    notesCustomer: "",
+    notesInternal: "",
+    items: [defaultItem()],
+    approval: { approved:false, approvedName:"", approvedDate:"", termsAccepted:false }
+  });
+
+  // ====== LOAD/SAVE ======
+  function loadDraft(){
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if(!raw) return;
+    try{
+      const parsed = JSON.parse(raw);
+
+      if(Array.isArray(parsed.items)){
+        parsed.items = parsed.items.map(it => {
+          const next = {
+            ...defaultItem(),
+            ...it,
+            sizeBreakdown: Array.isArray(it.sizeBreakdown) ? it.sizeBreakdown : newSizeBreakdown(),
+            quantity: typeof it.quantity === "number" ? it.quantity : Number(it.quantity||0)
+          };
+          delete next.dueDate; // ignore old item due dates
+          return next;
+        });
+      }
+
+      wo = { ...newWO(), ...parsed };
+      if(!wo.createdDate) wo.createdDate = todayISO();
+    }catch(e){}
+  }
+  function saveDraft(){
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(wo));
+  }
+
+  // ====== VALIDATION ======
+  function validateAllRequired({ includeApproval = false } = {}){
+    clearInvalids();
+
+    // Top-level required fields (company is optional)
+    const requiredTop = [
+      { id:"createdDate", label:"Created Date" },
+      { id:"dueDate", label:"Due Date" },
+      { id:"customerName", label:"Customer Name" },
+      { id:"email", label:"Email" },
+      { id:"phone", label:"Phone" },
+      { id:"billingAddress", label:"Billing Address" },
+      { id:"shippingAddress", label:"Shipping / Pickup Notes" },
+      { id:"notesCustomer", label:"Customer Notes" },
+      { id:"notesInternal", label:"Internal Notes" },
+    ];
+
+    const missing = [];
+
+    for(const f of requiredTop){
+      const el = $(f.id);
+      const val = (el?.value ?? "").trim();
+      if(!val){
+        missing.push(f.label);
+        markInvalid(el);
+      }
+    }
+
+    // Items required fields (artNotes + image are OPTIONAL)
+    if(!wo.items.length){
+      missing.push("At least one item");
+    }else{
+      wo.items.forEach((it) => {
+        // product required
+        if(!String(it.product||"").trim()){
+          missing.push("Item: Product / Description");
+          const el = document.querySelector(`input[data-field="product"][data-id="${it.id}"]`);
+          markInvalid(el);
+        }
+
+        // location required
+        if(!String(it.location||"").trim()){
+          missing.push("Item: Location / Finish");
+          const el = document.querySelector(`input[data-field="location"][data-id="${it.id}"]`);
+          markInvalid(el);
+        }
+
+        // inkColors required
+        if(!String(it.inkColors||"").trim()){
+          missing.push("Item: Colors / Material");
+          const el = document.querySelector(`input[data-field="inkColors"][data-id="${it.id}"]`);
+          markInvalid(el);
+        }
+
+        if(isGarment(it.serviceType)){
+          const total = sizeTotal(it.sizeBreakdown);
+          if(total <= 0){
+            missing.push("Item: Size breakdown (select sizes + quantities)");
+            // mark first size checkbox as invalid to show where to fix
+            const el = document.querySelector(`input[type="checkbox"][data-sizecheck^="${it.id}:"]`);
+            markInvalid(el);
+          }
+        }else{
+          // itemSize required
+          if(!String(it.itemSize||"").trim()){
+            missing.push("Item: Item Size / Dimensions");
+            const el = document.querySelector(`input[data-field="itemSize"][data-id="${it.id}"]`);
+            markInvalid(el);
+          }
+          // quantity required (>0)
+          if(Number(it.quantity||0) <= 0){
+            missing.push("Item: Quantity");
+            const el = document.querySelector(`input[data-field="quantity"][data-id="${it.id}"]`);
+            markInvalid(el);
+          }
+        }
+      });
+    }
+
+    // Approval-specific required fields
+    if(includeApproval){
+      if(!wo.approval.termsAccepted){
+        missing.push("Approval: Terms checked");
+        markInvalid($("termsAccepted"));
+      }
+      if(!String(wo.approval.approvedName||"").trim()){
+        missing.push("Approval: Name typed");
+        markInvalid($("approvedName"));
+      }
+    }
+
+    if(missing.length){
+      // de-dupe
+      const uniq = [...new Set(missing)];
+      toast("Missing required fields:\n• " + uniq.join("\n• "), "error", 5200);
+      focusFirstInvalid();
+      return false;
+    }
+    return true;
+  }
+
+  // ====== RENDER ======
+  function updateSummary(){
+    $("woNumber").textContent = wo.woNumber;
+    $("createdDate").value = wo.createdDate || todayISO();
+    $("dueDate").value = wo.dueDate || "";
+    $("customerName").value = wo.customerName || "";
+    $("company").value = wo.company || "";
+    $("email").value = wo.email || "";
+    $("phone").value = wo.phone || "";
+    $("billingAddress").value = wo.billingAddress || "";
+    $("shippingAddress").value = wo.shippingAddress || "";
+    $("notesCustomer").value = wo.notesCustomer || "";
+    $("notesInternal").value = wo.notesInternal || "";
+
+    // approval UI
+    $("termsAccepted").checked = !!wo.approval.termsAccepted;
+    $("approvedName").value = wo.approval.approvedName || "";
+    $("approvedDate").value = wo.approval.approvedDate || "";
+    const status = wo.approval.approved ? "Approved" : "Draft";
+    $("statusPill").textContent = status;
+    $("summaryStatus").textContent = status;
+    $("approvalBadge").textContent = wo.approval.approved ? `Approved ${wo.approval.approvedDate||""}` : "Awaiting approval";
+    $("summaryApprovedDate").textContent = wo.approval.approved ? `Approved on ${wo.approval.approvedDate||""}` : "Not approved yet";
+
+    $("summaryItems").textContent = String(wo.items.length);
+    $("summaryDueDate").textContent = wo.dueDate || "-";
+  }
+
+  function sizeFieldLabel(type){
+    return isGarment(type) ? "Sizes / Breakdown" : "Item Size / Dimensions";
+  }
+  function sizeFieldHelp(type){
+    return isGarment(type)
+      ? "Check sizes and enter quantities. Total auto-calculates."
+      : 'Examples: 2ft × 6ft banner, 3" × 3" sticker, 8.5" × 11" flyer.';
+  }
+  function locationLabel(type){
+    return isGarment(type) ? "Print Location" : "Finish / Placement";
+  }
+  function locationPlaceholder(type){
+    return isGarment(type) ? "Front / Back / Sleeve" : "e.g., Grommets, Hem, Laminate, Double-sided, Cut path";
+  }
+  function colorsLabel(type){
+    return isGarment(type) ? "Ink / Thread Colors" : "Colors / Material";
+  }
+  function colorsPlaceholder(type){
+    return isGarment(type) ? "White, Red (2 colors)" : "e.g., Full color, CMYK, Vinyl color, Paper stock";
+  }
+
+  function renderItems(){
+    const wrap = $("itemsWrap");
+    wrap.innerHTML = "";
+
+    wo.items.forEach((it, idx) => {
+      const garment = isGarment(it.serviceType);
+
+      const card = document.createElement("div");
+      card.className = "itemCard";
+
+      card.innerHTML = `
+        <div class="itemTop">
+          <span class="badge">Item ${idx+1}</span>
+          <div class="btnRow">
+            <button class="btn secondary" data-action="dupColor" data-id="${it.id}">
+              Same item, different color
+            </button>
+            <button class="btn ghost" data-action="remove" data-id="${it.id}" ${wo.items.length<=1 ? "disabled" : ""}>🗑 Remove</button>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label>Service Type <span class="reqMark">*</span></label>
+            <select data-field="serviceType" data-id="${it.id}">
+              ${SERVICE_TYPES.map(s => `<option ${s===it.serviceType?"selected":""}>${esc(s)}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label>Product / Description <span class="reqMark">*</span></label>
+            <input data-field="product" data-id="${it.id}" value="${esc(it.product)}" placeholder="e.g., 100x tees + 2-color front print" required>
+          </div>
+        </div>
+
+        <div class="inline2" style="margin-top:6px">
+          <div>
+            <label>${esc(sizeFieldLabel(it.serviceType))} <span class="reqMark">*</span></label>
+            <div data-slot="sizeArea"></div>
+          </div>
+
+          <div>
+            <label>Total Quantity <span class="reqMark">*</span></label>
+            <input type="number" min="0" data-field="quantity" data-id="${it.id}" value="${Number(it.quantity||0)}" ${garment ? "disabled" : ""} ${garment ? "" : "required"}>
+            ${garment ? `<div class="help">Auto-calculated from size breakdown.</div>` : `<div class="help">Manual for non-garment items.</div>`}
+          </div>
+        </div>
+
+        <div class="inline3" style="margin-top:6px">
+          <div>
+            <label>${esc(locationLabel(it.serviceType))} <span class="reqMark">*</span></label>
+            <input data-field="location" data-id="${it.id}" value="${esc(it.location)}" placeholder="${esc(locationPlaceholder(it.serviceType))}" required>
+          </div>
+          <div>
+            <label>${esc(colorsLabel(it.serviceType))} <span class="reqMark">*</span></label>
+            <input data-field="inkColors" data-id="${it.id}" value="${esc(it.inkColors)}" placeholder="${esc(colorsPlaceholder(it.serviceType))}" required>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Artwork / Production Notes</label>
+            <textarea data-field="artNotes" data-id="${it.id}" placeholder="Pantone, underbase, proof notes, finishing notes...">${esc(it.artNotes)}</textarea>
+            <div class="help">Optional</div>
+          </div>
+          <div>
+            <label>Item Image / Mockup</label>
+            <div data-slot="imageArea"></div>
+            <div class="help" style="margin-top:8px">Optional (keep images under 6MB so drafts save reliably).</div>
+          </div>
+        </div>
+      `;
+
+      // size area
+      const sizeArea = card.querySelector('[data-slot="sizeArea"]');
+      if(garment){
+        const box = document.createElement("div");
+        box.className = "sizeBox";
+        box.innerHTML = `
+          <div class="help">${esc(sizeFieldHelp(it.serviceType))}</div>
+
+          <label style="margin-top:10px">Shirt Color (optional)</label>
+          <input data-field="variantColor" data-id="${it.id}" value="${esc(it.variantColor||"")}"
+                 placeholder="Black, Navy, Heather Gray">
+        `;
+
+        it.sizeBreakdown.forEach((r, rIdx) => {
+          const row = document.createElement("div");
+          row.className = "sizeRow";
+          row.innerHTML = `
+            <input type="checkbox" data-sizecheck="${it.id}:${rIdx}" ${r.enabled ? "checked" : ""} style="width:auto">
+            <div class="sizeLbl">${esc(r.size)}</div>
+            <input type="number" min="0" data-sizeqty="${it.id}:${rIdx}" value="${Number(r.qty||0)}" ${r.enabled ? "" : "disabled"}>
+          `;
+          box.appendChild(row);
+        });
+        sizeArea.appendChild(box);
+      }else{
+        const box = document.createElement("div");
+        box.innerHTML = `
+          <input data-field="itemSize" data-id="${it.id}" value="${esc(it.itemSize)}" placeholder='e.g., 2ft × 6ft banner, 3" × 3" sticker' required>
+          <div class="help">${esc(sizeFieldHelp(it.serviceType))}</div>
+        `;
+        sizeArea.appendChild(box);
+      }
+
+      // image area
+      const imageArea = card.querySelector('[data-slot="imageArea"]');
+      if(it.image?.dataUrl){
+        imageArea.innerHTML = `
+          <img class="imgPreview" src="${it.image.dataUrl}" alt="${esc(it.image.name||"mockup")}">
+          <div class="help" style="margin-top:6px">${esc(it.image.name||"")}</div>
+          <div class="btnRow" style="margin-top:8px">
+            <button class="btn secondary" data-action="removeImage" data-id="${it.id}">Remove image</button>
+          </div>
+        `;
+      }else{
+        imageArea.innerHTML = `
+          <input type="file" accept="image/*" data-action="uploadImage" data-id="${it.id}">
+        `;
+      }
+
+      wrap.appendChild(card);
+    });
+  }
+
+  function renderAll(){
+    updateSummary();
+    renderItems();
+    saveDraft();
+  }
+
+  // ====== APPROVAL ======
+  function markApproved(){
+    if(!validateAllRequired({ includeApproval: true })) return;
+
+    wo.approval.approved = true;
+    wo.approval.approvedDate = todayISO();
+    toast("Marked as approved.");
+    renderAll();
+  }
+
+  function clearApproval(){
+    wo.approval.approved = false;
+    wo.approval.approvedDate = "";
+    toast("Approval cleared.");
+    renderAll();
+  }
+
+  // ====== CUSTOMER PREVIEW ======
+  function openPreview(){
+    if(!validateAllRequired({ includeApproval: false })) return;
+
+    const html = `
+      <div class="muted"><b>Work Order:</b> ${esc(wo.woNumber)}</div>
+      <div style="margin-top:6px"><b>Customer:</b> ${esc(wo.customerName || "(missing)")}</div>
+      <div><b>Email:</b> ${esc(wo.email || "(missing)")}</div>
+      <div><b>Due Date:</b> ${esc(wo.dueDate || "-")}</div>
+      <hr>
+      <div style="display:grid;gap:10px">
+        ${wo.items.map(i => `
+          <div class="itemCard">
+            <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+              <div style="font-weight:900">${esc(i.serviceType)}</div>
+              <div class="muted"><b>Qty</b> ${Number(i.quantity||0)}</div>
+            </div>
+            <div style="margin-top:6px">${esc(i.product || "(missing description)")}</div>
+
+            ${isGarment(i.serviceType) && i.variantColor?.trim()
+              ? `<div class="help" style="margin-top:6px"><b>Shirt Color:</b> ${esc(i.variantColor)}</div>`
+              : ``}
+
+            <div class="help" style="margin-top:6px">
+              <b>${esc(sizeFieldLabel(i.serviceType))}:</b>
+              ${
+                isGarment(i.serviceType)
+                  ? (i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).length
+                      ? i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).map(r=>`${esc(r.size)}-${Number(r.qty||0)}`).join(", ")
+                      : "-"
+                    )
+                  : (esc(i.itemSize || "-"))
+              }
+              <br>
+              <b>Location:</b> ${esc(i.location||"-")} &nbsp; · &nbsp;
+              <b>Colors:</b> ${esc(i.inkColors||"-")}
+            </div>
+            ${i.image?.dataUrl ? `<img class="imgPreview" style="margin-top:8px;max-height:320px" src="${i.image.dataUrl}" alt="${esc(i.image.name||"mockup")}">` : ``}
+          </div>
+        `).join("")}
+      </div>
+    `;
+    $("modalBody").innerHTML = html;
+    $("modalBackdrop").classList.remove("hidden");
+  }
+  function closePreview(){
+    $("modalBackdrop").classList.add("hidden");
+  }
+
+  // ====== PRINT VIEW ======
+  function buildPrintView(){
+    const status = wo.approval.approved ? "Approved" : "Draft";
+    const items = wo.items.map((i, idx) => {
+      const sizeText = isGarment(i.serviceType)
+        ? (i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).length
+            ? i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).map(r=>`${esc(r.size)}-${Number(r.qty||0)}`).join(", ")
+            : "-"
+          )
+        : (esc(i.itemSize||"-"));
+
+      return `
+        <div class="printCard">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="flex:1">
+              <div style="font-weight:900">${idx+1}. ${esc(i.serviceType)}</div>
+              <div>${esc(i.product)}</div>
+
+              ${isGarment(i.serviceType) && i.variantColor?.trim()
+                ? `<div style="font-size:12px;color:#555;margin-top:6px"><b>Shirt Color:</b> ${esc(i.variantColor)}</div>`
+                : ``}
+
+              <div style="font-size:12px;color:#555;margin-top:6px">
+                <b>${esc(sizeFieldLabel(i.serviceType))}:</b> ${sizeText}<br>
+                <b>Location:</b> ${esc(i.location||"-")} · <b>Colors:</b> ${esc(i.inkColors||"-")}<br>
+                ${i.artNotes ? `<b>Notes:</b> <span style="white-space:pre-wrap">${esc(i.artNotes)}</span>` : ``}
+              </div>
+            </div>
+            <div style="white-space:nowrap;text-align:right">
+              <div><b>Qty:</b> ${Number(i.quantity||0)}</div>
+            </div>
+          </div>
+          ${i.image?.dataUrl ? `<img style="margin-top:10px;max-height:420px;width:100%;object-fit:contain;border:1px solid #bbb;border-radius:10px" src="${i.image.dataUrl}" alt="">` : ``}
+        </div>
+      `;
+    }).join("");
+
+    $("printView").innerHTML = `
+      <div style="padding:18px">
+        <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:24px;font-weight:900">Work Order</div>
+            <div style="color:#555">${esc(wo.woNumber)}</div>
+          </div>
+          <div style="font-size:13px;color:#333">
+            <div><b>Created:</b> ${esc(wo.createdDate)}</div>
+            <div><b>Due:</b> ${esc(wo.dueDate || "-")}</div>
+            <div><b>Status:</b> ${esc(status)}</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+          <div class="printCard">
+            <div style="font-weight:900">Customer</div>
+            <div>${esc(wo.customerName)}</div>
+            <div>${esc(wo.company)}</div>
+            <div>${esc(wo.email)}</div>
+            <div>${esc(wo.phone)}</div>
+          </div>
+          <div class="printCard">
+            <div style="font-weight:900">Addresses / Delivery</div>
+            <div style="white-space:pre-wrap">${esc(wo.billingAddress||"")}</div>
+            <div style="margin-top:8px;white-space:pre-wrap">${esc(wo.shippingAddress||"")}</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div style="font-weight:900;margin-bottom:6px">Items</div>
+          ${items}
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+          <div class="printCard">
+            <div style="font-weight:900">Customer Notes</div>
+            <div style="white-space:pre-wrap">${esc(wo.notesCustomer||"-")}</div>
+          </div>
+          <div class="printCard">
+            <div style="font-weight:900">Internal Notes</div>
+            <div style="white-space:pre-wrap">${esc(wo.notesInternal||"-")}</div>
+          </div>
+        </div>
+
+        <div class="printCard" style="margin-top:12px">
+          <div style="font-weight:900">Approval</div>
+          <div><b>Approved:</b> ${wo.approval.approved ? "Yes" : "No"}</div>
+          <div><b>Name:</b> ${esc(wo.approval.approvedName||"-")}</div>
+          <div><b>Date:</b> ${esc(wo.approval.approvedDate||"-")}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ====== EVENTS ======
+  function bindTopInputs(){
+    const bind = (id, path) => {
+      $(id).addEventListener("input", (e)=>{ wo[path] = e.target.value; renderAll(); });
+      $(id).addEventListener("change", (e)=>{ wo[path] = e.target.value; renderAll(); });
+    };
+    bind("createdDate","createdDate");
+    bind("dueDate","dueDate");
+    bind("customerName","customerName");
+    bind("company","company");
+    bind("email","email");
+    bind("phone","phone");
+    bind("billingAddress","billingAddress");
+    bind("shippingAddress","shippingAddress");
+    bind("notesCustomer","notesCustomer");
+    bind("notesInternal","notesInternal");
+
+    $("termsAccepted").addEventListener("change",(e)=>{ wo.approval.termsAccepted = !!e.target.checked; renderAll(); });
+    $("approvedName").addEventListener("input",(e)=>{ wo.approval.approvedName = e.target.value; renderAll(); });
+
+    // clear invalid highlight as user types
+    document.querySelectorAll("input,textarea,select").forEach(el=>{
+      el.addEventListener("input", ()=> el.classList.remove("invalid"));
+      el.addEventListener("change", ()=> el.classList.remove("invalid"));
+    });
+  }
+
+  function setTab(name){
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab===name));
+    $("tab-items").classList.toggle("hidden", name!=="items");
+    $("tab-notes").classList.toggle("hidden", name!=="notes");
+    $("tab-approval").classList.toggle("hidden", name!=="approval");
+  }
+
+  function onServiceTypeChange(itemId, nextType){
+    wo.items = wo.items.map(it => {
+      if(it.id !== itemId) return it;
+      const next = { ...it, serviceType: nextType };
+
+      if(isGarment(nextType)){
+        next.sizeBreakdown = newSizeBreakdown();
+        next.quantity = sizeTotal(next.sizeBreakdown);
+        next.itemSize = "";
+      }else{
+        next.sizeBreakdown = newSizeBreakdown();
+        next.quantity = Number(next.quantity || 0);
+        next.variantColor = "";
+      }
+      return next;
+    });
+  }
+
+  function bindItemsEvents(){
+    const wrap = $("itemsWrap");
+
+    wrap.addEventListener("click", async (e)=>{
+      const btn = e.target.closest("[data-action]");
+      if(!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+
+      if(action==="remove"){
+        if(wo.items.length<=1) return;
+        wo.items = wo.items.filter(i=>i.id!==id);
+        toast("Item removed.");
+        renderAll();
+      }
+
+      if(action==="dupColor"){
+        const src = wo.items.find(i => i.id === id);
+        if(!src) return;
+
+        const clone = {
+          ...src,
+          id: crypto.randomUUID(),
+          variantColor: "", // clear color so it's obvious what to change
+          // image: null,     // uncomment if you want a fresh upload per color
+        };
+
+        wo.items.push(clone);
+        toast("Added same item as a new line (different color).");
+        renderAll();
+      }
+
+      if(action==="removeImage"){
+        const it = wo.items.find(i=>i.id===id);
+        if(it){ it.image = null; toast("Image removed."); renderAll(); }
+      }
+    });
+
+    wrap.addEventListener("change", async (e)=>{
+      const el = e.target;
+
+      // upload image (optional)
+      if(el.matches('[data-action="uploadImage"]')){
+        const id = el.dataset.id;
+        const file = el.files && el.files[0];
+        if(!file) return;
+        if(!file.type.startsWith("image/")){ toast("Please upload an image file (PNG/JPG/etc.).","error",3500); return; }
+        const maxBytes = 6 * 1024 * 1024;
+        if(file.size > maxBytes){ toast("Image too large. Please use a file under 6MB.","error",3500); return; }
+        try{
+          const dataUrl = await readFileAsDataUrl(file);
+          const it = wo.items.find(i=>i.id===id);
+          if(it){ it.image = { name:file.name, dataUrl }; toast("Image attached."); renderAll(); }
+        }catch(err){
+          toast("Could not read that image file.","error",3500);
+        }
+        return;
+      }
+
+      // service type
+      if(el.matches('select[data-field="serviceType"]')){
+        onServiceTypeChange(el.dataset.id, el.value);
+        renderAll();
+        return;
+      }
+
+      // checkbox size
+      if(el.matches('input[type="checkbox"][data-sizecheck]')){
+        const [id, idxStr] = el.dataset.sizecheck.split(":");
+        const idx = Number(idxStr);
+        const it = wo.items.find(i=>i.id===id);
+        if(it){
+          it.sizeBreakdown[idx].enabled = !!el.checked;
+          it.quantity = sizeTotal(it.sizeBreakdown);
+          renderAll();
+        }
+        return;
+      }
+
+      // size qty
+      if(el.matches('input[type="number"][data-sizeqty]')){
+        const [id, idxStr] = el.dataset.sizeqty.split(":");
+        const idx = Number(idxStr);
+        const it = wo.items.find(i=>i.id===id);
+        if(it){
+          it.sizeBreakdown[idx].qty = Number(el.value || 0);
+          it.quantity = sizeTotal(it.sizeBreakdown);
+          renderAll();
+        }
+        return;
+      }
+
+      // normal fields
+      const field = el.dataset.field;
+      const id = el.dataset.id;
+      if(field && id){
+        const it = wo.items.find(i=>i.id===id);
+        if(it){
+          it[field] = (el.type==="number") ? Number(el.value||0) : el.value;
+          renderAll();
+        }
+      }
+    });
+
+    wrap.addEventListener("input",(e)=>{
+      const el = e.target;
+      const field = el.dataset.field;
+      const id = el.dataset.id;
+      if(field && id){
+        const it = wo.items.find(i=>i.id===id);
+        if(it){
+          it[field] = el.value;
+          if(field==="quantity") it.quantity = Number(el.value||0);
+          saveDraft();
+          updateSummary();
+        }
+      }
+    });
+  }
+
+  // ====== INIT ======
+  function init(){
+    wo = newWO();
+    loadDraft();
+    if(!wo) wo = newWO();
+
+    document.querySelectorAll(".tab").forEach(t => {
+      t.addEventListener("click", ()=> setTab(t.dataset.tab));
+    });
+
+    $("addItem").addEventListener("click", ()=>{
+      wo.items.push(defaultItem());
+      toast("Item added.");
+      renderAll();
+    });
+
+    $("newWO").addEventListener("click", ()=>{
+      wo = newWO();
+      saveDraft();
+      toast("Started a new work order.");
+      renderAll();
+    });
+
+    $("markApproved").addEventListener("click", markApproved);
+    $("clearApproval").addEventListener("click", clearApproval);
+
+    $("previewCustomer").addEventListener("click", openPreview);
+    $("closeModal").addEventListener("click", closePreview);
+    $("modalClose2").addEventListener("click", closePreview);
+    $("modalBackdrop").addEventListener("click", (e)=>{ if(e.target === $("modalBackdrop")) closePreview(); });
+
+    $("printBtn").addEventListener("click", ()=>{
+      if(!validateAllRequired({ includeApproval: false })) return;
+      buildPrintView();
+      window.print();
+    });
+    $("modalPrint").addEventListener("click", ()=>{
+      if(!validateAllRequired({ includeApproval: false })) return;
+      buildPrintView();
+      closePreview();
+      window.print();
+    });
+
+    bindTopInputs();
+    bindItemsEvents();
+
+    renderAll();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
