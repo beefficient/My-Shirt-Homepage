@@ -658,20 +658,26 @@
   </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
   // Mobile menu toggle
-  var mobileMenuBtn = document.getElementById("mobileMenuBtn");
-  var mainNav = document.getElementById("mainNav");
+  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+  const mainNav = document.getElementById("mainNav");
+  
+  console.log("Mobile menu button:", mobileMenuBtn);
+  console.log("Main nav:", mainNav);
   
   if (mobileMenuBtn && mainNav) {
-    mobileMenuBtn.addEventListener("click", function(e) {
+    mobileMenuBtn.addEventListener("click", (e) => {
+      console.log("Button clicked!");
       e.stopPropagation();
       mainNav.classList.toggle("show");
+      console.log("Nav classes:", mainNav.className);
     });
+  } else {
+    console.log("Mobile menu elements not found!");
   }
 
   // Close menu and dropdown when clicking outside
-  document.addEventListener("click", function(e) {
+  document.addEventListener("click", (e) => {
     // Close mobile menu
     if (mainNav && mobileMenuBtn) {
       if (!mainNav.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
@@ -680,100 +686,95 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     
     // Close quote dropdown
-    var dd = document.getElementById("quoteDrop");
+    const dd = document.getElementById("quoteDrop");
     if (dd && !dd.contains(e.target)) {
       dd.removeAttribute("open");
     }
   });
 
-  var API_ENDPOINT = "/api/send-quote";
-  var ENABLE_MAILTO_FALLBACK = false;
+  const API_ENDPOINT = "/api/send-quote";
+  const ENABLE_MAILTO_FALLBACK = false;
 
-  var GMAIL_MAX_BYTES = 25 * 1024 * 1024;
+  const GMAIL_MAX_BYTES = 25 * 1024 * 1024;
 
-  var artFile = document.getElementById("artFile");
-  var fileError = document.getElementById("fileError");
-  var limitText = document.getElementById("limitText");
-  var errorEl = document.getElementById("error");
-  var successBox = document.getElementById("successBox");
-  var emptyState = document.getElementById("emptyState");
-  var sharingDirectly = document.getElementById("sharingDirectly");
+  const artFile = document.getElementById("artFile");
+  const fileError = document.getElementById("fileError");
+  const limitText = document.getElementById("limitText");
+  const errorEl = document.getElementById("error");
+  const successBox = document.getElementById("successBox");
+  const emptyState = document.getElementById("emptyState");
+  const sharingDirectly = document.getElementById("sharingDirectly");
 
   function formatBytes(bytes){
-    var mb = bytes / (1024 * 1024);
-    var rounded = Math.round(mb);
-    var display = (Math.abs(mb - rounded) < 0.05) ? rounded.toString() : mb.toFixed(1);
-    return display + " MB";
+    const mb = bytes / (1024 * 1024);
+    const rounded = Math.round(mb);
+    const display = (Math.abs(mb - rounded) < 0.05) ? rounded.toString() : mb.toFixed(1);
+    return `${display} MB`;
   }
-  limitText.textContent = "Maximum upload size: " + formatBytes(GMAIL_MAX_BYTES) + ".";
+  limitText.textContent = `Maximum upload size: ${formatBytes(GMAIL_MAX_BYTES)}.`;
 
   function showSuccess(){
     emptyState.style.display = "none";
     successBox.style.display = "block";
     successBox.innerHTML = '<div style="font-weight:900;margin-bottom:6px">Request sent</div><div class="muted" style="font-weight:600">Your request for a quote has been sent, please give us up to 24 hours to respond with a quote! Thank you!</div>';
+    // garment box stays visible; no show/hide needed
   }
 
   function normalizeNum(v){
-    var n = Number(String(v || "").trim());
+    const n = Number(String(v || "").trim());
     return Number.isFinite(n) && n > 0 ? n : null;
   }
 
   function validateFile(){
     fileError.textContent = "";
-    var f = artFile.files && artFile.files[0];
+    const f = artFile.files && artFile.files[0];
     if(!f) return true;
     if (f.size > GMAIL_MAX_BYTES){
-      fileError.textContent = "Your file exceeds the size limit of " + formatBytes(GMAIL_MAX_BYTES) + ".\nPlease make the image smaller, or share the file via Google Drive/Dropbox (or similar) directly to myshirtcustomerservice@gmail.com.";
+      fileError.textContent =
+`Your file exceeds the size limit of ${formatBytes(GMAIL_MAX_BYTES)}.
+Please make the image smaller, or share the file via Google Drive/Dropbox (or similar) directly to myshirtcustomerservice@gmail.com.`;
       return false;
     }
     return true;
   }
 
   function setHeightEnabled(loc, enabled){
-    var h = document.querySelector('.hSize[data-loc="' + CSS.escape(loc) + '"]');
+    const h = document.querySelector('.hSize[data-loc="' + CSS.escape(loc) + '"]');
     if (!h) return;
     h.disabled = !enabled;
     if (!enabled) h.value = "";
     h.style.opacity = enabled ? "1" : ".6";
   }
 
-  var propChecks = document.querySelectorAll(".propCheck");
-  for(var i=0; i<propChecks.length; i++){
-    propChecks[i].addEventListener("change", function() {
-      var loc = this.dataset.loc;
-      setHeightEnabled(loc, !this.checked);
+  document.querySelectorAll(".propCheck").forEach(chk => {
+    chk.addEventListener("change", () => {
+      const loc = chk.dataset.loc;
+      setHeightEnabled(loc, !chk.checked);
     });
-  }
+  });
 
-  artFile.addEventListener("change", function() {
+  artFile.addEventListener("change", () => {
     if (!sharingDirectly.checked) validateFile();
   });
 
-  sharingDirectly.addEventListener("change", function() {
+  sharingDirectly.addEventListener("change", () => {
     if (sharingDirectly.checked) fileError.textContent = "";
     else validateFile();
   });
 
   function getSelectedLocations(){
-    var locChecks = document.querySelectorAll(".locCheck");
-    var selected = [];
-    for(var i=0; i<locChecks.length; i++){
-      if(locChecks[i].checked) selected.push(locChecks[i].dataset.loc);
-    }
+    const selected = [...document.querySelectorAll(".locCheck")]
+      .filter(cb => cb.checked)
+      .map(cb => cb.dataset.loc);
 
-    return selected.map(function(loc) {
-      var tcEl = document.querySelector('.threadColors[data-loc="' + CSS.escape(loc) + '"]');
-      var wEl = document.querySelector('.wSize[data-loc="' + CSS.escape(loc) + '"]');
-      var hEl = document.querySelector('.hSize[data-loc="' + CSS.escape(loc) + '"]');
-      var propEl = document.querySelector('.propCheck[data-loc="' + CSS.escape(loc) + '"]');
-
-      var tc = (tcEl ? tcEl.value : "").trim();
-      var wRaw = (wEl ? wEl.value : "").trim();
-      var hRaw = (hEl ? hEl.value : "").trim();
-      var prop = propEl ? propEl.checked : false;
+    return selected.map(loc => {
+      const tc = (document.querySelector(\`.threadColors[data-loc="\${CSS.escape(loc)}"]\`)?.value || "").trim();
+      const wRaw = (document.querySelector(\`.wSize[data-loc="\${CSS.escape(loc)}"]\`)?.value || "").trim();
+      const hRaw = (document.querySelector(\`.hSize[data-loc="\${CSS.escape(loc)}"]\`)?.value || "").trim();
+      const prop = !!document.querySelector(\`.propCheck[data-loc="\${CSS.escape(loc)}"]\`)?.checked;
 
       return {
-        loc: loc,
+        loc,
         threadColors: tc,
         width: normalizeNum(wRaw),
         height: prop ? null : normalizeNum(hRaw),
@@ -785,13 +786,13 @@ document.addEventListener("DOMContentLoaded", function() {
   function validateForm(){
     errorEl.textContent = "";
 
-    var name = (document.getElementById("custName").value || "").trim();
-    var email = (document.getElementById("custEmail").value || "").trim();
-    var phone = (document.getElementById("custPhone").value || "").trim();
-    var qtyRaw = (document.getElementById("qty").value || "").trim();
-    var qty = Number(qtyRaw);
-    var notes = (document.getElementById("notes").value || "").trim();
-    var website = (document.getElementById("website").value || "").trim();
+    const name = (document.getElementById("custName").value || "").trim();
+    const email = (document.getElementById("custEmail").value || "").trim();
+    const phone = (document.getElementById("custPhone").value || "").trim();
+    const qtyRaw = (document.getElementById("qty").value || "").trim();
+    const qty = Number(qtyRaw);
+    const notes = (document.getElementById("notes").value || "").trim();
+    const website = (document.getElementById("website").value || "").trim();
 
     if(!name){
       errorEl.textContent = "Please enter your name.";
@@ -806,56 +807,54 @@ document.addEventListener("DOMContentLoaded", function() {
       return null;
     }
 
-    var locs = getSelectedLocations();
+    const locs = getSelectedLocations();
     if(locs.length === 0){
       errorEl.textContent = "Please select at least one embroidery location.";
       return null;
     }
 
-    for(var i=0; i<locs.length; i++){
-      var d = locs[i];
+    for(const d of locs){
       if(!d.width){
-        errorEl.textContent = "Please enter a width for: " + d.loc;
+        errorEl.textContent = `Please enter a width for: ${d.loc}`;
         return null;
       }
       if(!d.toProportion && !d.height){
-        errorEl.textContent = "Please enter a height or check \"To proportion\" for: " + d.loc;
+        errorEl.textContent = `Please enter a height or check “To proportion” for: ${d.loc}`;
         return null;
       }
     }
 
     if(!sharingDirectly.checked && !validateFile()){
-      errorEl.textContent = "Please fix the file issue above, or check \"Sharing image directly\".";
+      errorEl.textContent = "Please fix the file issue above, or check “Sharing image directly”.";
       return null;
     }
 
-    return { name: name, email: email, phone: phone, qty: qty, notes: notes, website: website, locs: locs };
+    return { name, email, phone, qty, notes, website, locs };
   }
 
   function buildEmbroideryEmailBody(data){
-    var lines = [];
+    const lines = [];
     lines.push("EMBROIDERY QUOTE REQUEST");
     lines.push("");
-    lines.push("Name: " + data.name);
-    lines.push("Email: " + data.email);
-    if (data.phone) lines.push("Phone: " + data.phone);
-    lines.push("Quantity: " + data.qty);
+    lines.push(`Name: ${data.name}`);
+    lines.push(`Email: ${data.email}`);
+    if (data.phone) lines.push(`Phone: ${data.phone}`);
+    lines.push(`Quantity: ${data.qty}`);
     lines.push("");
     lines.push("Locations:");
-    for(var i=0; i<data.locs.length; i++){
-      var d = data.locs[i];
-      var tc = d.threadColors ? "Thread colors: " + d.threadColors : "Thread colors: (not provided)";
-      var size = d.toProportion
-        ? "Width: " + d.width + " in, Height: (to proportion)"
-        : "Width: " + d.width + " in, Height: " + d.height + " in";
-      lines.push("- " + d.loc + " | " + tc + " | " + size);
-    }
+    data.locs.forEach(d => {
+      const tc = d.threadColors ? `Thread colors: ${d.threadColors}` : "Thread colors: (not provided)";
+      const size = d.toProportion
+        ? `Width: ${d.width} in, Height: (to proportion)`
+        : `Width: ${d.width} in, Height: ${d.height} in`;
+      lines.push(`- ${d.loc} | ${tc} | ${size}`);
+    });
     lines.push("");
-    lines.push("Sharing image directly: " + (sharingDirectly.checked ? "Yes" : "No"));
+    lines.push(`Sharing image directly: ${sharingDirectly.checked ? "Yes" : "No"}`);
 
-    var f = artFile.files && artFile.files[0];
+    const f = artFile.files && artFile.files[0];
     if (!sharingDirectly.checked && f){
-      lines.push("Uploaded file selected (note: sending file requires server upload handling): " + f.name + " (" + formatBytes(f.size) + ")");
+      lines.push(`Uploaded file selected (note: sending file requires server upload handling): ${f.name} (${formatBytes(f.size)})`);
     }
 
     if (data.notes){
@@ -870,62 +869,60 @@ document.addEventListener("DOMContentLoaded", function() {
     return lines.join("\n");
   }
 
-  function sendToServer(payload){
-    return fetch(API_ENDPOINT, {
+  async function sendToServer(payload){
+    const res = await fetch(API_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
-    }).then(function(res){
-      return res.json().catch(function(){ return {}; }).then(function(data){
-        if (!res.ok || !data.ok) throw new Error(data.message || "Server not available yet.");
-        return data;
-      });
     });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.message || "Server not available yet.");
+    return data;
   }
 
   function mailtoFallback(subject, body){
-    var to = "myshirtcustomerservice@gmail.com";
-    var url = "mailto:" + encodeURIComponent(to) + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+    const to = "myshirtcustomerservice@gmail.com";
+    const url = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = url;
   }
 
-  document.getElementById("submitBtn").addEventListener("click", function(e) {
+  document.getElementById("submitBtn").addEventListener("click", async (e) => {
     e.preventDefault();
 
-    var data = validateForm();
+    const data = validateForm();
     if(!data) return;
 
-    var body = buildEmbroideryEmailBody(data);
-    var subject = "Embroidery Quote — " + data.name + " (" + data.qty + " pcs)";
+    const body = buildEmbroideryEmailBody(data);
+    const subject = `Embroidery Quote — ${data.name} (${data.qty} pcs)`;
 
-    var payload = {
+    const payload = {
       type: "embroidery",
       name: data.name,
       customerEmail: data.email,
-      subject: subject,
-      body: body,
+      subject,
+      body,
       website: data.website
     };
 
-    sendToServer(payload).then(function(){
+    try{
+      await sendToServer(payload);
       showSuccess();
-    }).catch(function(err){
+    }catch(err){
       showSuccess();
       if (ENABLE_MAILTO_FALLBACK){
         mailtoFallback(subject, body);
       }
-    });
+    }
   });
 
   // Garment quote button opens partner site in a new window (for embroidery page)
-  var garmentBtn = document.getElementById("garmentQuoteBtn");
+  const garmentBtn = document.getElementById("garmentQuoteBtn");
   if (garmentBtn){
     garmentBtn.addEventListener("click", function(e){
       e.preventDefault();
       window.open("https://www.companycasuals.com/myshirtcompany//start.jsp", "_blank", "noopener,noreferrer");
     });
   }
-});
 </script>
 </body>
 </html>
