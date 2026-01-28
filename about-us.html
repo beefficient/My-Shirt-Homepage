@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Shirt Printing — Local printing and embroidery made easy</title>
+  <title>About Us — My Shirt Printing</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,7 +35,6 @@
     }
     a{color:inherit;text-decoration:none}
     img{max-width:100%;display:block}
-
     .container{max-width:var(--max);margin:0 auto;padding:0 20px}
 
     /* Top Nav */
@@ -95,6 +94,17 @@
     nav a:hover{background: var(--sky)}
     nav a.active{border-bottom: 2px solid var(--primary); border-radius: 0; padding-bottom: 6px}
 
+    /* Mobile menu toggle */
+    .mobile-menu-btn{
+      display:none;
+      background:none;
+      border:none;
+      font-size:28px;
+      cursor:pointer;
+      padding:4px 8px;
+      color:var(--primary-2);
+    }
+
     .btn{
       display:inline-flex;
       align-items:center;
@@ -112,17 +122,6 @@
     .btn.primary:hover{filter: brightness(.98)}
     .btn.ghost{background:#fff;border-color: var(--border); color: var(--primary-2)}
     .btn.ghost:hover{background: var(--sky)}
-
-    /* Mobile menu toggle */
-    .mobile-menu-btn{
-      display:none;
-      background:none;
-      border:none;
-      font-size:28px;
-      cursor:pointer;
-      padding:4px 8px;
-      color:var(--primary-2);
-    }
 
     /* Quote dropdowns */
     details.quoteDrop,
@@ -192,7 +191,7 @@
     /* Right-side button dropdown should open aligned to the right */
     details.quoteBtn .qMenu{ right:0; left:auto; }
 
-    /* HERO (image removed) */
+    /* HERO */
     .hero{
       background: linear-gradient(180deg, #dfeeff 0%, #f6fbff 70%, #ffffff 100%);
       padding: 34px 0 26px;
@@ -229,7 +228,7 @@
     .lead{
       margin: 0 0 18px;
       color: #36515c;
-      max-width: 56ch;
+      max-width: 70ch;
       font-size: 16px;
       font-weight: 500;
     }
@@ -271,7 +270,39 @@
       box-shadow: 0 10px 22px rgba(10,35,45,.06);
     }
 
-    /* Service tiles */
+    /* About layout */
+    .aboutGrid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 14px;
+      align-items: start;
+    }
+    .aboutCard h3{
+      font-family: "DM Sans", Inter, sans-serif;
+      margin: 0 0 8px;
+      color: var(--primary-2);
+      font-size: 20px;
+      letter-spacing: -.2px;
+    }
+    .aboutCard p{margin: 0 0 10px; color: var(--muted); font-weight: 500}
+    .aboutCard p:last-child{margin-bottom:0}
+
+    .facts{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .fact{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 12px;
+      background: #fff;
+      box-shadow: 0 8px 18px rgba(10,35,45,.05);
+    }
+    .fact strong{display:block; color: var(--primary-2); font-weight: 900}
+    .fact span{display:block; color: var(--muted); font-weight: 600; margin-top: 2px; font-size: 13px}
+
+    /* Values tiles */
     .tiles{
       display:grid;
       grid-template-columns: repeat(3, 1fr);
@@ -295,251 +326,55 @@
     .tile span{display:block;font-size:14px}
     .tile small{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-top:4px}
 
-    /* Steps */
-    .steps{
+    /* Team strip (simple placeholders) */
+    .teamRow{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      align-items:stretch;
+    }
+    .person{
+      display:flex;
+      gap: 12px;
+      align-items:center;
+    }
+    .avatar{
+      width: 54px; height: 54px;
+      border-radius: 16px;
+      background: #dfeeff;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 18px rgba(10,35,45,.06);
+      flex: 0 0 auto;
+      display:grid;
+      place-items:center;
+      font-weight: 900;
+      color: var(--primary-2);
+    }
+    .pMeta strong{display:block; color: var(--primary-2)}
+    .pMeta span{display:block; color: var(--muted); font-weight:600; font-size: 13px; margin-top:2px}
+
+    /* CTA band */
+    .ctaBand{
       background: linear-gradient(180deg, #ffffff 0%, #eef6ff 50%, #dfeeff 100%);
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
-    .step-row{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      align-items:center;
-      margin-top: 8px;
-    }
-    .step{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      display:flex;
-      gap:12px;
-      align-items:flex-start;
-      box-shadow: 0 8px 18px rgba(10,35,45,.06);
-    }
-    .badge{
-      width: 38px; height: 38px;
-      border-radius: 14px;
-      background: #ffe7a6;
-      display:grid;
-      place-items:center;
-      font-weight: 800;
-      color: var(--primary-2);
-      border:1px solid rgba(0,0,0,.06);
-      flex: 0 0 auto;
-    }
-    .step strong{display:block}
-    .step p{margin:4px 0 0; color: var(--muted); font-size: 14px; font-weight: 500}
-
-    /* Recent work */
-    .strip{
-      display:grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      align-items:stretch;
-    }
-    .thumb{
-      border-radius: 14px;
-      overflow:hidden;
-      border:1px solid var(--border);
-      background:#e9eef3;
-      aspect-ratio: 16/10;
-    }
-    .thumb img{width:100%; height:100%; object-fit:cover}
-
-    /* Reviews */
-    .reviews{
-      background: #eef6ff;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .review-bar{
-      display:grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 14px;
-      align-items:center;
-      margin-top: 8px;
-    }
-    .rating{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px;
-      box-shadow: 0 8px 18px rgba(10,35,45,.06);
-      display:flex;
-      align-items:center;
-      gap: 12px;
-    }
-    .stars{
-      background:#ffe7a6;
-      border-radius: 12px;
-      padding: 8px 10px;
-      font-weight: 900;
-      border:1px solid rgba(0,0,0,.06);
-      white-space:nowrap;
-    }
-    .snips{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content:flex-start;
-    }
-    .bubble{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius: 14px;
-      padding: 10px 12px;
-      box-shadow: 0 8px 18px rgba(10,35,45,.05);
-      color: var(--muted);
-      font-weight: 600;
-      font-size: 13px;
-    }
-
-    /* Yelp box layout (NEW) */
-    .yelpBox{
-      max-width: 900px;
+    .ctaInner{
+      max-width: 920px;
       margin: 0 auto;
       display:flex;
-      gap:16px;
-      align-items:flex-start;
+      align-items:center;
       justify-content:space-between;
+      gap: 12px;
       flex-wrap:wrap;
     }
-    .yelpLeft{flex:1 1 380px; min-width:260px;}
-    .yelpRight{flex:0 0 auto; display:flex; align-items:flex-start;}
-    .yelpBubbles{
-      margin-top: 12px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
+    .ctaInner h3{
+      margin:0;
+      font-family:"DM Sans", Inter, sans-serif;
+      color: var(--primary-2);
+      font-size: 22px;
     }
-    .yelpCard{
-  max-width: 980px;
-  margin: 0 auto;
-  display:flex;
-  align-items:stretch;
-  justify-content:space-between;
-  gap:18px;
-  padding:18px;
-}
-.yelpLeft{flex:1 1 560px; min-width:260px;}
-.yelpRight{
-  flex:0 0 200px;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  justify-content:center;
-  gap:10px;
-}
-.yelpTop{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
-}
-/* REVIEWS + YELP combined card */
-.yelpCard{
-  max-width: 980px;
-  margin: 0 auto;
-  display:flex;
-  align-items:stretch;
-  justify-content:space-between;
-  gap:18px;
-  padding:18px;
-}
-
-.yelpLeft{flex:1 1 560px; min-width:260px;}
-
-.yelpRight{
-  flex:0 0 220px;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  justify-content:center;
-  gap:10px;
-  text-align:right;
-}
-
-.yelpTop{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
-}
-
-.yelpName{font-weight:900; font-size:18px; color:var(--primary-2);}
-.yelpLoc{color:var(--muted); font-weight:600; margin-top:2px;}
-
-.yelpRating{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-.starsBadge{
-  background:#ffe7a6;
-  border:1px solid rgba(0,0,0,.06);
-  border-radius:12px;
-  padding:8px 10px;
-  font-weight:900;
-  color:var(--primary-2);
-  white-space:nowrap;
-}
-.ratingNum{font-weight:900; color:var(--primary-2);}
-.ratingMeta{color:var(--muted); font-weight:600; font-size:13px;}
-
-.yelpSnips{
-  margin-top:14px;
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:10px;
-}
-
-.snip{
-  border:1px solid var(--border);
-  background:#fff;
-  border-radius:14px;
-  padding:10px 12px;
-  box-shadow: 0 8px 18px rgba(10,35,45,.05);
-  color:var(--muted);
-  font-weight:600;
-  font-size:13px;
-}
-
-.yelpTiny{color:var(--muted); font-weight:600; font-size:13px; max-width: 220px;}
-
-/* Responsive */
-@media (max-width: 860px){
-  .yelpCard{flex-direction:column; align-items:stretch;}
-  .yelpRight{align-items:flex-start; text-align:left;}
-  .yelpSnips{grid-template-columns: 1fr;}
-  .yelpTiny{max-width:none;}
-}
-
-}
-.ratingNum{font-weight:900; color:var(--primary-2);}
-.ratingMeta{color:var(--muted); font-weight:600; font-size:13px;}
-.yelpSnips{
-  margin-top:14px;
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:10px;
-}
-.snip{
-  border:1px solid var(--border);
-  background:#fff;
-  border-radius:14px;
-  padding:10px 12px;
-  box-shadow: 0 8px 18px rgba(10,35,45,.05);
-  color:var(--muted);
-  font-weight:600;
-  font-size:13px;
-}
-.yelpTiny{color:var(--muted); font-weight:600; font-size:13px; text-align:right;}
-
-@media (max-width: 860px){
-  .yelpCard{flex-direction:column; align-items:stretch;}
-  .yelpRight{align-items:flex-start;}
-  .yelpSnips{grid-template-columns: 1fr;}
-  .yelpTiny{text-align:left;}
-}
-
+    .ctaInner p{margin:4px 0 0; color: var(--muted); font-weight:600}
 
     /* Footer */
     footer{
@@ -557,12 +392,6 @@
     footer a{color: #cde8ff}
     .foot h4{margin:0 0 8px; font-family:"DM Sans", Inter, sans-serif}
     .foot p{margin:0; color: rgba(255,255,255,.76)}
-    .footbox{
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 16px;
-      padding: 14px;
-    }
     .bottom{
       border-top: 1px solid rgba(255,255,255,.12);
       padding: 14px 0;
@@ -595,15 +424,13 @@
       details.quoteDrop{width:100%}
       details.quoteDrop > summary{justify-content:center;width:100%}
       details.quoteBtn{display:none}
-      .tiles{grid-template-columns: 1fr 1fr}
-      .step-row{grid-template-columns: 1fr}
-      .strip{grid-template-columns: 1fr 1fr 1fr}
-      .review-bar{grid-template-columns: 1fr}
       .brand .name{display:none}
+      .aboutGrid{grid-template-columns: 1fr}
+      .tiles{grid-template-columns: 1fr 1fr}
+      .teamRow{grid-template-columns: 1fr}
     }
     @media (max-width: 560px){
       .tiles{grid-template-columns: 1fr}
-      .strip{grid-template-columns: 1fr 1fr}
       .brand img{height: 38px}
     }
   </style>
@@ -621,8 +448,8 @@
 
         <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">☰</button>
 
-        <nav aria-label="Main menu" id="mainNav">
-          <a class="active" href="index.html">Home</a>
+        <nav id="mainNav" aria-label="Main menu">
+          <a href="index.html">Home</a>
 
           <details class="quoteDrop" id="quoteNavDrop">
             <summary>Quote <span aria-hidden="true">▾</span></summary>
@@ -634,7 +461,7 @@
           </details>
 
           <a href="gallery.html">Gallery</a>
-          <a href="about-us.html">About Us</a>
+          <a class="active" href="about-us.html">About Us</a>
           <a href="contact.html">Contact</a>
         </nav>
       </div>
@@ -646,9 +473,10 @@
     <div class="container">
       <div class="grid">
         <div>
-          <h1>Local printing and embroidery made easy.</h1>
+          <h1>About My Shirt Printing.</h1>
           <p class="lead">
-            Family-owned service, quick turnaround, and quality prints for businesses, events and everyday needs.
+            We’re a family-owned shop in Santa Clara focused on making custom printing and embroidery simple —
+            with clear communication, dependable turnaround, and quality you’ll be proud to hand out or wear.
           </p>
 
           <div class="hero-actions">
@@ -661,7 +489,7 @@
               </div>
             </details>
 
-            <a class="btn ghost" href="gallery.html">View Gallery</a>
+            <a class="btn ghost" href="contact.html">Contact Us</a>
           </div>
 
           <div class="chips" aria-label="Highlights">
@@ -674,119 +502,151 @@
     </div>
   </section>
 
-  <!-- WHAT WE PRINT -->
+  <!-- OUR STORY -->
   <section class="section">
     <div class="container">
       <div class="title">
-        <h2>What we offer</h2>
-        <p>Popular products, plus custom orders — we’ll help you choose the right options.</p>
+        <h2>Our story</h2>
+        <p>Local service with big attention to detail.</p>
+      </div>
+
+      <div class="aboutGrid">
+        <div class="card aboutCard">
+          <h3>Printing, embroidery, and “let’s figure it out” problem-solving.</h3>
+          <p>
+            We started My Shirt &amp; Signs to help local businesses, schools, and families get great-looking
+            print and embroidery without the headache. Whether you have press-ready artwork or a simple idea,
+            we’ll guide you to the right materials, finishes, and quantities.
+          </p>
+          <p>
+            Our goal is straightforward: make the process easy, communicate clearly, and deliver quality on time.
+            If you’re not sure what you need, that’s okay — we’ll walk through options and recommend what fits your budget.
+          </p>
+          <p>
+            Need something beyond garments? We also help with items like business cards, flyers, banners, and more.
+            If it can be printed, there’s a good chance we can do it — and if not, we’ll point you in the right direction.
+          </p>
+        </div>
+
+        <div class="facts" aria-label="Quick facts">
+          <div class="fact">
+            <strong>Based in</strong>
+            <span>Santa Clara, CA (local pickup available)</span>
+          </div>
+          <div class="fact">
+            <strong>What we do</strong>
+            <span>Custom apparel printing, embroidery, and other print services</span>
+          </div>
+          <div class="fact">
+            <strong>What we’re known for</strong>
+            <span>Friendly help, fast turnaround, consistent quality</span>
+          </div>
+          <div class="fact">
+            <strong>Best for</strong>
+            <span>Businesses, events, teams, schools, and everyday custom needs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OUR VALUES -->
+  <section class="section sky">
+    <div class="container">
+      <div class="title">
+        <h2>What we care about</h2>
+        <p>How we work, every order.</p>
       </div>
 
       <div class="tiles">
-        <div class="tile"><div><span>Business Cards</span><small>Clean, premium, and fast.</small></div></div>
-        <div class="tile"><div><span>Flyers &amp; Brochures</span><small>Great for promos &amp; menus.</small></div></div>
-        <div class="tile"><div><span>Banners &amp; Signs</span><small>Events, storefronts, more.</small></div></div>
-        <div class="tile"><div><span>Stickers &amp; Labels</span><small>Custom shapes &amp; finishes.</small></div></div>
-        <div class="tile"><div><span>Invitations</span><small>Weddings, parties, announcements.</small></div></div>
-        <div class="tile"><div><span>Custom Orders</span><small>Tell us what you’re making.</small></div></div>
+        <div class="tile">
+          <div>
+            <span>Clear communication</span>
+            <small>No guessing — we confirm details before production.</small>
+          </div>
+        </div>
+        <div class="tile">
+          <div>
+            <span>Quality you can trust</span>
+            <small>Clean prints, solid stitching, and careful checks.</small>
+          </div>
+        </div>
+        <div class="tile">
+          <div>
+            <span>On-time turnaround</span>
+            <small>We respect your deadline and keep you updated.</small>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- FAST FROM IDEA TO PRINT -->
-  <section class="section steps">
+  <!-- THE TEAM (simple placeholders you can customize) -->
+  <section class="section">
     <div class="container">
       <div class="title">
-        <h2>Fast from idea to print</h2>
-        <p>Simple steps, clear pricing, helpful guidance.</p>
+        <h2>Meet the team</h2>
+        <p>Real people who pick up the phone and get the job done.</p>
       </div>
 
-      <div class="step-row">
-        <div class="step">
-          <div class="badge">1</div>
-          <div>
-            <strong>Tell us what you need</strong>
-            <p>Share size, quantity, and your deadline — even a rough idea is fine.</p>
+      <div class="teamRow">
+        <div class="card">
+          <div class="person">
+            <div class="avatar" aria-hidden="true">MS</div>
+            <div class="pMeta">
+              <strong>My Shirt Team</strong>
+              <span>Customer service &amp; order guidance</span>
+            </div>
           </div>
+          <p style="margin:12px 0 0; color:var(--muted); font-weight:500;">
+            We help you choose garments, sizing, quantities, and timelines — and make sure nothing gets missed.
+          </p>
         </div>
-        <div class="step">
-          <div class="badge">2</div>
-          <div>
-            <strong>We reply with options &amp; pricing</strong>
-            <p>We’ll suggest materials/finishes and send pricing you can understand.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="badge">3</div>
-          <div>
-            <strong>Approve &amp; we print!</strong>
-            <p>Once you approve, we’ll produce your order — ready for pickup or delivery.</p>
-          </div>
-        </div>
-      </div>
 
-      <div style="display:flex; justify-content:center; margin-top:16px;">
-        <a class="btn primary" href="gallery.html">See the full gallery</a>
+        <div class="card">
+          <div class="person">
+            <div class="avatar" aria-hidden="true">PR</div>
+            <div class="pMeta">
+              <strong>Production</strong>
+              <span>Printing, embroidery &amp; quality checks</span>
+            </div>
+          </div>
+          <p style="margin:12px 0 0; color:var(--muted); font-weight:500;">
+            From setup to final inspection, we focus on consistency and clean results.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="person">
+            <div class="avatar" aria-hidden="true">DL</div>
+            <div class="pMeta">
+              <strong>Delivery &amp; Pickup</strong>
+              <span>Local pickup and coordination</span>
+            </div>
+          </div>
+          <p style="margin:12px 0 0; color:var(--muted); font-weight:500;">
+            Need it by a certain day? We’ll coordinate the smoothest pickup or delivery option.
+          </p>
+        </div>
       </div>
     </div>
   </section>
 
-  
-
-      <
-
-        <!-- kept empty on purpose (bubbles moved to Yelp section) -->
-        <div></div>
+  <!-- CTA -->
+  <section class="section ctaBand">
+    <div class="container">
+      <div class="card ctaInner">
+        <div>
+          <h3>Have a project in mind?</h3>
+          <p>Tell us what you’re making — we’ll respond with options and pricing.</p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="btn primary" href="quote.html">Start a Quote</a>
+          <a class="btn ghost" href="gallery.html">View Gallery</a>
+        </div>
       </div>
     </div>
   </section>
-
-  <!-- YELP SECTION (UPDATED: bubbles moved into this white card) -->
- <!-- REVIEWS + YELP (COMBINED) -->
-<section id="reviews" class="section sky">
-  <div class="container">
-    <div class="title">
-      <h2>Customers love working with us</h2>
-      <p>Friendly service, quality results, and reliable turnaround — read more on Yelp.</p>
-    </div>
-
-    <div class="card yelpCard">
-      <!-- Left: business info + quotes -->
-      <div class="yelpLeft">
-        <div class="yelpTop">
-          <div>
-            <div class="yelpName">My Shirt &amp; Signs</div>
-            <div class="yelpLoc">Santa Clara, CA</div>
-          </div>
-
-          <div class="yelpRating" aria-label="Yelp rating">
-            <span class="starsBadge">★★★★★</span>
-            <span class="ratingNum">4.9</span>
-            <span class="ratingMeta">on Yelp</span>
-          </div>
-        </div>
-
-        <div class="yelpSnips" aria-label="Review highlights">
-          <div class="snip">“Excellent service and quick turnaround!”</div>
-          <div class="snip">“High-quality prints at great prices.”</div>
-          <div class="snip">“So helpful and friendly!”</div>
-        </div>
-      </div>
-
-      <!-- Right: CTA -->
-      <div class="yelpRight">
-        <a class="btn primary"
-           href="https://www.yelp.com/biz/my-shirt-and-signs-santa-clara"
-           target="_blank" rel="noopener">
-          Open Yelp
-        </a>
-        <div class="yelpTiny">Read more reviews &amp; see photos.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
 
   <!-- FOOTER -->
   <footer>
@@ -809,18 +669,23 @@
   </footer>
 
   <script>
+  document.addEventListener("DOMContentLoaded", function () {
     // footer year
-    document.getElementById("year").textContent = new Date().getFullYear();
+    var yearEl = document.getElementById("year");
+    if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
     // Mobile menu toggle
-    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-    const mainNav = document.getElementById("mainNav");
+    var mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    var mainNav = document.getElementById("mainNav");
+
     if (mobileMenuBtn && mainNav) {
-      mobileMenuBtn.addEventListener("click", () => {
+      mobileMenuBtn.addEventListener("click", function (e) {
+        e.stopPropagation(); // prevents outside-click closer from firing immediately
         mainNav.classList.toggle("show");
       });
+
       // Close menu when clicking outside
-      document.addEventListener("click", (e) => {
+      document.addEventListener("click", function (e) {
         if (!mainNav.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
           mainNav.classList.remove("show");
         }
@@ -828,28 +693,30 @@
     }
 
     // Close dropdowns on outside click
-    document.addEventListener("click", (e) => {
-      const ids = ["quoteNavDrop", "quoteHeroBtn"];
-      ids.forEach((id) => {
-        const el = document.getElementById(id);
+    document.addEventListener("click", function (e) {
+      var ids = ["quoteNavDrop", "quoteHeroBtn"];
+      for (var i = 0; i < ids.length; i++) {
+        var el = document.getElementById(ids[i]);
         if (el && !el.contains(e.target)) el.removeAttribute("open");
-      });
+      }
     });
 
-    // Only keep one open at a time
-    const ddIds = ["quoteNavDrop", "quoteHeroBtn"];
-    ddIds.forEach((id) => {
-      const el = document.getElementById(id);
+    // Only keep one dropdown open at a time
+    var ddIds = ["quoteNavDrop", "quoteHeroBtn"];
+    ddIds.forEach(function (id) {
+      var el = document.getElementById(id);
       if (!el) return;
-      el.addEventListener("toggle", () => {
+
+      el.addEventListener("toggle", function () {
         if (!el.open) return;
-        ddIds.forEach((otherId) => {
+        ddIds.forEach(function (otherId) {
           if (otherId === id) return;
-          const other = document.getElementById(otherId);
+          var other = document.getElementById(otherId);
           if (other) other.removeAttribute("open");
         });
       });
     });
+  });
   </script>
 </body>
 </html>

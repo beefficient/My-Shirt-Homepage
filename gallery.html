@@ -37,6 +37,7 @@
     }
 
     .nav-container {
+      position: relative;
       max-width: var(--container);
       margin: auto;
       padding: 16px 24px;
@@ -137,6 +138,17 @@
     }
     .qMenu a:hover { background: #f2f7ff; color: var(--primary); }
 
+    /* Mobile menu toggle */
+    .mobile-menu-btn{
+      display:none;
+      background:none;
+      border:none;
+      font-size:28px;
+      cursor:pointer;
+      padding:4px 8px;
+      color:var(--primary);
+    }
+
     /* ===== PAGE ===== */
     main {
       max-width: var(--container);
@@ -199,6 +211,39 @@
       font-size: 32px;
       text-decoration: none;
     }
+
+    @media (max-width: 980px){
+      .mobile-menu-btn{display:block}
+      nav{
+        display:none;
+        position:absolute;
+        top:100%;
+        left:0;
+        right:0;
+        background:#fff;
+        border-top:1px solid var(--border);
+        flex-direction:column;
+        align-items:stretch;
+        padding:8px;
+        box-shadow:var(--shadow);
+      }
+      nav.show{display:flex}
+      nav a{justify-content:center;padding:12px}
+      details.quoteDrop{width:100%}
+      details.quoteDrop > summary{justify-content:center;width:100%}
+      .logo{min-width:auto}
+    }
+    @media (max-width: 768px){
+      .gallery-grid{grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));gap:14px}
+      main{padding:24px 16px}
+    }
+    @media (max-width: 560px){
+      .logo img{height: 38px}
+      .gallery-grid{grid-template-columns: 1fr 1fr;gap:12px}
+      .gallery-grid img{height:180px}
+      main{padding:20px 12px}
+      h1{font-size:24px}
+    }
   </style>
 </head>
 
@@ -211,7 +256,9 @@
         <img src="logo.png" alt="My Shirt Printing Logo">
       </div>
 
-      <nav aria-label="Main menu">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">☰</button>
+
+      <nav id="mainNav" aria-label="Main menu">
         <a href="index.html">Home</a>
 
         <!-- Quote dropdown (same options, no extra buttons added) -->
@@ -220,14 +267,14 @@
           <div class="qMenu" role="menu" aria-label="Quote menu">
             <a href="quote.html">Garment Printing Quote</a>
             <a href="embroidery-quote.html">Embroidery Quote</a>
-            <a href="other-printing.html">Other (Print)</a>
+            <a href="other-printing.html">Other Services</a>
 
           </div>
         </details>
 
         <a href="gallery.html">Gallery</a>
-        <a href="index.html#about">About Us</a>
-        <a href="index.html#contact">Contact</a>
+        <a href="about-us.html">About Us</a>
+        <a href="contact.html">Contact</a>
 
        
   </header>
@@ -265,6 +312,21 @@
   <div id="img12" class="lightbox"><a class="close" href="#">×</a><img src="Images/gallery-12.jpg"></div>
 
   <script>
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const mainNav = document.getElementById("mainNav");
+    if (mobileMenuBtn && mainNav) {
+      mobileMenuBtn.addEventListener("click", () => {
+        mainNav.classList.toggle("show");
+      });
+      // Close menu when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!mainNav.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+          mainNav.classList.remove("show");
+        }
+      });
+    }
+
     // Close quote dropdown when clicking outside
     document.addEventListener("click", (e) => {
       const dd = document.getElementById("quoteDrop");
