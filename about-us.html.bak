@@ -581,6 +581,55 @@
     </div>
   </section>
 
+  <!-- THE TEAM (simple placeholders you can customize) -->
+  <section class="section">
+    <div class="container">
+      <div class="title">
+        <h2>Meet the team</h2>
+        <p>Real people who pick up the phone and get the job done.</p>
+      </div>
+
+      <div class="teamRow">
+        <div class="card">
+          <div class="person">
+            <div class="avatar" aria-hidden="true">MS</div>
+            <div class="pMeta">
+              <strong>My Shirt Team</strong>
+              <span>Customer service &amp; order guidance</span>
+            </div>
+          </div>
+          <p style="margin:12px 0 0; color:var(--muted); font-weight:500;">
+            We help you choose garments, sizing, quantities, and timelines — and make sure nothing gets missed.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="person">
+            <div class="avatar" aria-hidden="true">PR</div>
+            <div class="pMeta">
+              <strong>Production</strong>
+              <span>Printing, embroidery &amp; quality checks</span>
+            </div>
+          </div>
+          <p style="margin:12px 0 0; color:var(--muted); font-weight:500;">
+            From setup to final inspection, we focus on consistency and clean results.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="person">
+            <div class="avatar" aria-hidden="true">DL</div>
+            <div class="pMeta">
+              <strong>Delivery &amp; Pickup</strong>
+              <span>Local pickup and coordination</span>
+            </div>
+          </div>
+          <p style="margin:12px 0 0; color:var(--muted); font-weight:500;">
+            Need it by a certain day? We’ll coordinate the smoothest pickup or delivery option.
+          </p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- CTA -->

@@ -291,6 +291,40 @@
     }
     .discMsg.bad{ color: var(--danger); }
 
+    /* Image upload styles */
+    .fineprint{margin-top:8px;font-size:13px;color:var(--muted)}
+    .inlineCheck{
+      display:flex;gap:10px;align-items:flex-start;margin-top:12px;
+      padding:10px;border:1px solid var(--border);border-radius:12px;background:#fff;
+    }
+    .inlineCheck input{width:auto;margin-top:2px}
+    .fileCount{margin-top:8px;font-size:13px;color:var(--accent);font-weight:600}
+
+    /* Info boxes */
+    .infoBox{
+      margin-top:12px;
+      background:#e8f3ff;
+      border:1px solid #b3d9ff;
+      border-radius:12px;
+      padding:12px;
+    }
+    .infoBox .title{font-weight:800;margin-bottom:8px;font-size:15px;color:var(--text)}
+    .infoBox .text{color:var(--muted);font-weight:500;line-height:1.6}
+
+    /* Price match box */
+    .priceMatchBox{
+      margin-top:12px;
+      background:#fff4e6;
+      border:1px solid #ffd699;
+      border-radius:12px;
+      padding:12px;
+    }
+    .priceMatchBox .title{font-weight:800;margin-bottom:8px;font-size:15px;color:var(--text)}
+    .priceMatchBox .text{color:var(--muted);font-weight:500;line-height:1.6;margin-bottom:12px}
+    .priceMatchBox label{margin:8px 0 6px;font-size:14px}
+    .priceMatchBox input[type="file"]{font-size:13px;padding:8px}
+    .priceMatchBox .uploadNote{font-size:13px;color:var(--muted);margin-top:6px}
+
     @media (max-width: 860px){
       .grid{grid-template-columns:1fr}
       .row{grid-template-columns:1fr}
@@ -377,7 +411,7 @@
             <select id="rush" autocomplete="off">
               <option value="" selected disabled>Select one</option>
               <option value="standard">Standard</option>
-              <option value="3-5">3–5 business days (+25%)</option>
+              <option value="3–5">3–5 business days (+25%)</option>
               <option value="2-3">2–3 business days (+35%)</option>
               <option value="1day">1 business day (+50%)</option>
             </select>
@@ -502,6 +536,25 @@
           </div>
         </div>
 
+        <label for="artFile">Upload images (optional)</label>
+        <input id="artFile" type="file" accept="image/*,.pdf,.ai,.eps,.svg" multiple />
+        <div class="fileCount" id="fileCount"></div>
+        <div class="fineprint" id="limitText"></div>
+        <div class="error" id="fileError"></div>
+
+        <div class="inlineCheck">
+          <input id="sharingDirectly" type="checkbox">
+          <label for="sharingDirectly" style="margin:0;font-weight:700">
+            Sharing images directly
+            <div class="muted" style="font-weight:500;margin-top:4px">
+              Gmail allows a maximum attachment size of 25&nbsp;MB total.
+              If your files exceed this limit, please share them via Google Drive, Dropbox,
+              or a similar platform and send the link directly to
+              <strong>myshirtcustomerservice@gmail.com</strong>.
+            </div>
+          </label>
+        </div>
+
         <button class="btn" id="calc">Calculate Quote</button>
         <div class="error" id="error"></div>
       </div>
@@ -539,6 +592,22 @@
           <div class="note">Prices may change after review. Some items may be on sale or out of stock. All quotes will be confirmed after review.</div>
         </div>
 
+        <!-- Estimates Notice -->
+        <div class="infoBox">
+          <div class="title">Quotes are ESTIMATES ONLY</div>
+          <div class="text">There may be discounts that were not applied. Give us 24 hours to confirm pricing.</div>
+        </div>
+
+        <!-- Price Match Box -->
+        <div class="priceMatchBox">
+          <div class="title">PRICE MATCHES</div>
+          <div class="text">We will beat prices if it is apples to apples. Upload your quote document here or email it to us! We will look into your quote and get back to you within 24 hours.</div>
+          <label for="priceMatchFile">Upload competitor's quote</label>
+          <input id="priceMatchFile" type="file" accept="image/*,.pdf,.doc,.docx" />
+          <div class="fileCount" id="priceMatchFileCount"></div>
+          <div class="uploadNote">You can also email quotes to <strong>myshirtcustomerservice@gmail.com</strong></div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -574,6 +643,100 @@
       window.open("https://www.companycasuals.com/myshirtcompany//start.jsp", "_blank", "noopener,noreferrer");
     });
   }
+
+  // File upload validation (multiple files)
+  const GMAIL_MAX_BYTES = 25 * 1024 * 1024;
+  const artFile = document.getElementById("artFile");
+  const fileError = document.getElementById("fileError");
+  const limitText = document.getElementById("limitText");
+  const fileCount = document.getElementById("fileCount");
+  const sharingDirectly = document.getElementById("sharingDirectly");
+
+  function formatBytes(bytes){
+    var mb = bytes / (1024 * 1024);
+    var rounded = Math.round(mb);
+    var display = (Math.abs(mb - rounded) < 0.05) ? rounded.toString() : mb.toFixed(1);
+    return display + " MB";
+  }
+
+  if (limitText) {
+    limitText.textContent = "Maximum total upload size: " + formatBytes(GMAIL_MAX_BYTES) + ".";
+  }
+
+  function validateFiles(){
+    if (fileError) fileError.textContent = "";
+    if (fileCount) fileCount.textContent = "";
+    
+    if (!artFile || !artFile.files || artFile.files.length === 0) return true;
+    
+    var files = artFile.files;
+    var totalSize = 0;
+    var fileNames = [];
+    
+    for (var i = 0; i < files.length; i++) {
+      totalSize += files[i].size;
+      fileNames.push(files[i].name);
+    }
+    
+    // Display file count
+    if (fileCount) {
+      if (files.length === 1) {
+        fileCount.textContent = "1 file selected: " + fileNames[0];
+      } else {
+        fileCount.textContent = files.length + " files selected (" + formatBytes(totalSize) + " total)";
+      }
+    }
+    
+    // Check total size
+    if (totalSize > GMAIL_MAX_BYTES){
+      if (fileError) {
+        fileError.textContent = "Your files exceed the size limit of " + formatBytes(GMAIL_MAX_BYTES) + " (total: " + formatBytes(totalSize) + ").\nPlease reduce file sizes or share the files via Google Drive/Dropbox (or similar) directly to myshirtcustomerservice@gmail.com.";
+      }
+      return false;
+    }
+    
+    return true;
+  }
+
+  if (artFile) {
+    artFile.addEventListener("change", function() {
+      if (sharingDirectly && !sharingDirectly.checked) validateFiles();
+      else if (fileCount) {
+        // Still show file count even if sharing directly
+        var files = artFile.files;
+        if (files && files.length > 0) {
+          var totalSize = 0;
+          for (var i = 0; i < files.length; i++) {
+            totalSize += files[i].size;
+          }
+          if (files.length === 1) {
+            fileCount.textContent = "1 file selected";
+          } else {
+            fileCount.textContent = files.length + " files selected (" + formatBytes(totalSize) + " total)";
+          }
+        } else {
+          fileCount.textContent = "";
+        }
+      }
+    });
+  }
+
+  // Price match file upload display
+  const priceMatchFile = document.getElementById("priceMatchFile");
+  const priceMatchFileCount = document.getElementById("priceMatchFileCount");
+
+  if (priceMatchFile) {
+    priceMatchFile.addEventListener("change", function() {
+      if (priceMatchFileCount) {
+        var files = priceMatchFile.files;
+        if (files && files.length > 0) {
+          priceMatchFileCount.textContent = "File selected: " + files[0].name;
+        } else {
+          priceMatchFileCount.textContent = "";
+        }
+      }
+    });
+  }
 </script>
 
 <script>
@@ -584,6 +747,23 @@
     { qty: 72,  c1: 3.15, c2: 3.40, c3: 3.65, c4: 3.90, c5: 4.15, c6: 4.40, c7: 4.65, c8: 4.90, df: 1.60 },
     { qty: 100, c1: 2.95, c2: 3.20, c3: 3.45, c4: 3.70, c5: 3.95, c6: 4.20, c7: 4.45, c8: 4.70, df: 1.50 },
   ];
+
+  // ✅ INLINE / KATHY pricing chart
+  const INLINE_PRICING_TIERS = [
+    { qty: 12,  c1: 3.70, c2: 4.70, c3: 5.20, c4: 5.70, c5: 6.20, c6: 6.70, c7: 7.20, c8: 7.70, df: 2.00 },
+    { qty: 24,  c1: 2.95, c2: 3.15, c3: 3.35, c4: 3.55, c5: 3.75, c6: 3.95, c7: 4.15, c8: 4.35, df: 1.75 },
+    { qty: 36,  c1: 2.70, c2: 2.85, c3: 3.00, c4: 3.15, c5: 3.30, c6: 3.45, c7: 3.60, c8: 3.75, df: 1.60 },
+    { qty: 48,  c1: 2.50, c2: 2.65, c3: 2.80, c4: 2.95, c5: 3.10, c6: 3.25, c7: 3.40, c8: 3.55, df: 1.50 },
+    { qty: 72,  c1: 2.30, c2: 2.45, c3: 2.60, c4: 2.75, c5: 2.90, c6: 3.05, c7: 3.20, c8: 3.35, df: 1.40 },
+    { qty: 144, c1: 2.15, c2: 2.30, c3: 2.45, c4: 2.60, c5: 2.75, c6: 2.90, c7: 3.05, c8: 3.20, df: 1.35 },
+    { qty: 288, c1: 2.00, c2: 2.10, c3: 2.20, c4: 2.30, c5: 2.40, c6: 2.50, c7: 2.60, c8: 2.70, df: 1.30 },
+    { qty: 450, c1: 1.80, c2: 1.90, c3: 2.00, c4: 2.10, c5: 2.20, c6: 2.30, c7: 2.40, c8: 2.50, df: 1.25 },
+    { qty: 600, c1: 1.60, c2: 1.70, c3: 1.80, c4: 1.90, c5: 2.00, c6: 2.10, c7: 2.20, c8: 2.30, df: 1.20 },
+  ];
+
+  // ✅ INLINE setup fees (from your sheet)
+  const INLINE_SCREEN_SETUP_FEE_NEW = 8;      // per screen
+  const INLINE_SCREEN_SETUP_FEE_REORDER = 15; // per screen
 
   const SCREEN_SETUP_FEE_NEW = 25;      // per screen
   const SCREEN_SETUP_FEE_REORDER = 20;  // per screen
@@ -634,8 +814,8 @@
     return { discountAmount: 0, rushOverride: null, label: "Invalid code" , ok:false };
   }
 
-  function getTier(qty){
-    const tiers = [...PRICING_TIERS].sort((a,b)=>a.qty-b.qty);
+  function getTier(qty, tiersArray){
+    const tiers = [...(tiersArray || PRICING_TIERS)].sort((a,b)=>a.qty-b.qty);
     let tier = tiers.find(t => Number(t.qty) >= qty);
     if(!tier) tier = tiers[tiers.length - 1];
     return tier;
@@ -664,10 +844,10 @@
     // garmentBox stays visible; do not hide it
   }
 
-  function renderSummary({qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,perGarmentTotalAllLocations,garmentsPrintCost,discountLine,rushRate,rushFee}){
+  function renderSummary({qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,perGarmentTotalAllLocations,garmentsPrintCost,discountLine,rushRate,rushFee,pricingLabel}){
     const summary = document.getElementById("summary");
     summary.innerHTML = `
-      <div class="line"><div class="k">Quantity</div><div class="v">${qty} <span class="muted">(uses ${tierQty}-tier pricing)</span></div></div>
+      <div class="line"><div class="k">Quantity</div><div class="v">${qty} <span class="muted">(uses ${tierQty}-tier ${pricingLabel})</span></div></div>
       <div class="line"><div class="k">Garments</div><div class="v">${isDark ? "Dark" : "Light"}</div></div>
       <div class="line"><div class="k">Total screens</div><div class="v">${totalScreens}</div></div>
       <div class="line"><div class="k">Setup fee</div><div class="v">${money(setupFee)} <span class="muted">(${money(setupRate)} per screen)</span></div></div>
@@ -692,6 +872,8 @@
     const reorder = document.getElementById("reorder").value;
     const rush = document.getElementById("rush").value;
     const discountCode = document.getElementById("discountCode").value;
+    const codeNorm = normalizeCode(discountCode);
+    const isInline = (codeNorm === "INLINE" || codeNorm === "KATHYINLINE");
 
     // Pause/Go controls
     const pg = handlePauseGoCodes(discountCode);
@@ -732,7 +914,8 @@
       return;
     }
 
-    const tier = getTier(qty);
+    const tierSource = isInline ? INLINE_PRICING_TIERS : PRICING_TIERS;
+    const tier = getTier(qty, tierSource);
     const tierQty = Number(tier.qty);
 
     let colorScreensTotal = 0;
@@ -787,7 +970,10 @@
 
     const totalScreens = colorScreensTotal + underbaseScreensTotal;
 
-    const setupRate = (reorder === "reorder") ? SCREEN_SETUP_FEE_REORDER : SCREEN_SETUP_FEE_NEW;
+    const setupRate = isInline
+      ? ((reorder === "reorder") ? INLINE_SCREEN_SETUP_FEE_REORDER : INLINE_SCREEN_SETUP_FEE_NEW)
+      : ((reorder === "reorder") ? SCREEN_SETUP_FEE_REORDER : SCREEN_SETUP_FEE_NEW);
+
     const setupFee = totalScreens * setupRate;
 
     const filmFee = (reorder === "reorder") ? 0 : totalScreens * FILM_FEE;
@@ -803,7 +989,13 @@
 
     let rushFee = subtotal * rushRate;
 
-    const disc = applyDiscount(discountCode, printingOnlyTotal);
+    let disc = { discountAmount: 0, rushOverride: null, label: "", ok: true };
+
+    if (isInline){
+      discMsgEl.textContent = "INLINE pricing applied.";
+    } else {
+      disc = applyDiscount(discountCode, printingOnlyTotal);
+    }
     if (discountCode && disc.label){
       if (!disc.ok){
         discMsgEl.textContent = disc.label;
@@ -821,6 +1013,8 @@
       ? (discountAmount > 0 ? `-${money(discountAmount)} <span class="muted">(${disc.label})</span>` : `<span class="muted">${disc.label || "—"}</span>`)
       : "";
 
+    const pricingLabel = isInline ? "INLINE pricing" : "pricing";
+
     renderSummary({
       qty,
       isDark,
@@ -833,7 +1027,8 @@
       garmentsPrintCost: printingOnlyTotal,
       discountLine,
       rushRate,
-      rushFee
+      rushFee,
+      pricingLabel
     });
 
     document.getElementById("breakdown").innerHTML = breakdownLines.join("");

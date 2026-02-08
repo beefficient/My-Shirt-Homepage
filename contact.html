@@ -369,6 +369,7 @@
               align-items:stretch;
               padding:8px;
               box-shadow:var(--shadow);
+              z-index: 100;
             }
             nav.show{display:flex}
             nav a{justify-content:center;padding:12px}
@@ -376,12 +377,44 @@
             details.quoteDrop > summary{justify-content:center;width:100%}
             details.quoteBtn{display:none}
             .brand .name{display:none}
-            .contactGrid{grid-template-columns: 1fr}
+            .contactGrid{
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
             .formRow{grid-template-columns: 1fr}
             .mapWrap{height: 300px}
+            .hero{padding: 24px 0 16px}
+            .hero::after{right:-160px; top:-40px; width:480px; height:480px}
+            .section{padding: 28px 0}
+            .card{padding: 20px 16px}
+            .foot{grid-template-columns: 1fr; gap:20px}
+        }
+        @media (max-width: 768px){
+            .container{padding: 0 18px}
         }
         @media (max-width: 560px){
             .brand img{height: 38px}
+            .container{padding: 0 16px}
+            .hero{padding: 18px 0 12px}
+            h1{font-size: 30px !important; margin-bottom: 10px}
+            .lead{font-size: 15px; line-height: 1.5}
+            .section{padding: 20px 0}
+            .contactGrid{gap: 16px}
+            .card{padding: 18px 14px}
+            .card h2{font-size: 19px !important}
+            .card p{font-size: 14px}
+            .infoList{gap: 8px; margin-top: 10px}
+            .infoItem{padding: 10px 12px}
+            .infoItem strong{font-size: 13px}
+            .infoItem span{font-size: 12px}
+            .btn{padding: 10px 16px; font-size: 14px}
+            form label{font-size: 13px; margin: 10px 0 5px}
+            .field{padding: 11px 12px; font-size: 14px}
+            textarea.field{min-height: 130px}
+            .mapWrap{height: 260px; margin-top: 12px}
+            .foot h4{font-size: 15px}
+            .foot p, .foot a{font-size: 13px}
+            .bottom{font-size: 12px}
         }
     </style>
 </head>
