@@ -287,6 +287,7 @@
       padding:10px;border:1px solid var(--border);border-radius:12px;background:#fff;
     }
     .inlineCheck input{width:auto;margin-top:2px}
+    .fileCount{margin-top:8px;font-size:13px;color:var(--accent);font-weight:600}
 
     /* Garment supply box (ALWAYS visible now + updated wording) */
     .garmentBox{
@@ -357,6 +358,31 @@
       max-width: 80ch;
     }
 
+    /* Info boxes */
+    .infoBox{
+      margin-top:12px;
+      background:#e8f3ff;
+      border:1px solid #b3d9ff;
+      border-radius:12px;
+      padding:12px;
+    }
+    .infoBox .title{font-weight:800;margin-bottom:8px;font-size:15px;color:var(--text)}
+    .infoBox .text{color:var(--muted);font-weight:500;line-height:1.6}
+
+    /* Price match box */
+    .priceMatchBox{
+      margin-top:12px;
+      background:#fff4e6;
+      border:1px solid #ffd699;
+      border-radius:12px;
+      padding:12px;
+    }
+    .priceMatchBox .title{font-weight:800;margin-bottom:8px;font-size:15px;color:var(--text)}
+    .priceMatchBox .text{color:var(--muted);font-weight:500;line-height:1.6;margin-bottom:12px}
+    .priceMatchBox label{margin:8px 0 6px;font-size:14px}
+    .priceMatchBox input[type="file"]{font-size:13px;padding:8px}
+    .priceMatchBox .uploadNote{font-size:13px;color:var(--muted);margin-top:6px}
+
     @media (max-width: 860px){
       .wrap{padding:0 12px}
       .grid{grid-template-columns:1fr}
@@ -414,7 +440,7 @@
 
   <div class="wrap">
     <h1>Embroidery Quote Request</h1>
-    <p>For embroidery, we will need an estimated stitch count to provide a quote. We’ll review your details and send an official quote.</p>
+    <p>For embroidery, we will need an estimated stitch count to provide a quote. We'll review your details and send an official quote.</p>
     <div class="subnote">Please give us up to 24 hours (business days).</div>
 
     <div class="grid">
@@ -605,8 +631,9 @@
         <textarea id="notes" placeholder="Garment type, placement details, deadlines, etc."></textarea>
 
         <label for="artFile">Upload image (optional)</label>
-        <input id="artFile" type="file" accept="image/*,.pdf,.ai,.eps,.svg" />
+        <input id="artFile" type="file" accept="image/*,.pdf,.ai,.eps,.svg" multiple />
         <div class="fineprint" id="limitText"></div>
+        <div class="fileCount" id="fileCount"></div>
         <div class="error" id="fileError"></div>
 
         <div class="inlineCheck">
@@ -653,6 +680,23 @@
 
           <div class="fineNote">Prices may change after review. Some items may be on sale or out of stock. All quotes will be confirmed after review.</div>
         </div>
+
+        <!-- Estimates Notice -->
+        <div class="infoBox">
+          <div class="title">Quotes are ESTIMATES ONLY</div>
+          <div class="text">There may be discounts that were not applied. Give us 24 hours to confirm pricing.</div>
+        </div>
+
+        <!-- Price Match Box -->
+        <div class="priceMatchBox">
+          <div class="title">PRICE MATCHES</div>
+          <div class="text">We will beat prices if it is apples to apples. Upload your quote document here or email it to us! We will look into your quote and get back to you within 24 hours.</div>
+          <label for="priceMatchFile">Upload competitor's quote</label>
+          <input id="priceMatchFile" type="file" accept="image/*,.pdf,.doc,.docx" />
+          <div class="fileCount" id="priceMatchFileCount"></div>
+          <div class="uploadNote">You can also email quotes to <strong>myshirtcustomerservice@gmail.com</strong></div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -720,10 +764,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function validateFile(){
     fileError.textContent = "";
-    var f = artFile.files && artFile.files[0];
-    if(!f) return true;
-    if (f.size > GMAIL_MAX_BYTES){
-      fileError.textContent = "Your file exceeds the size limit of " + formatBytes(GMAIL_MAX_BYTES) + ".\nPlease make the image smaller, or share the file via Google Drive/Dropbox (or similar) directly to myshirtcustomerservice@gmail.com.";
+    var files = artFile.files;
+    if(!files || files.length === 0) return true;
+    
+    var totalSize = 0;
+    for(var i = 0; i < files.length; i++){
+      totalSize += files[i].size;
+    }
+    
+    if (totalSize > GMAIL_MAX_BYTES){
+      fileError.textContent = "Your files exceed the total size limit of " + formatBytes(GMAIL_MAX_BYTES) + ".\nPlease reduce the number of files or share them via Google Drive/Dropbox (or similar) directly to myshirtcustomerservice@gmail.com.";
       return false;
     }
     return true;
@@ -746,6 +796,20 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   artFile.addEventListener("change", function() {
+    var fileCountEl = document.getElementById("fileCount");
+    var files = artFile.files;
+    
+    if(files && files.length > 0){
+      var totalSize = 0;
+      for(var i = 0; i < files.length; i++){
+        totalSize += files[i].size;
+      }
+      var fileText = files.length === 1 ? "1 file" : files.length + " files";
+      fileCountEl.textContent = fileText + " selected (" + formatBytes(totalSize) + " total)";
+    } else {
+      fileCountEl.textContent = "";
+    }
+    
     if (!sharingDirectly.checked) validateFile();
   });
 
@@ -753,6 +817,23 @@ document.addEventListener("DOMContentLoaded", function() {
     if (sharingDirectly.checked) fileError.textContent = "";
     else validateFile();
   });
+
+  // Price match file upload display
+  var priceMatchFile = document.getElementById("priceMatchFile");
+  var priceMatchFileCount = document.getElementById("priceMatchFileCount");
+
+  if (priceMatchFile) {
+    priceMatchFile.addEventListener("change", function() {
+      if (priceMatchFileCount) {
+        var files = priceMatchFile.files;
+        if (files && files.length > 0) {
+          priceMatchFileCount.textContent = "File selected: " + files[0].name;
+        } else {
+          priceMatchFileCount.textContent = "";
+        }
+      }
+    });
+  }
 
   function getSelectedLocations(){
     var locChecks = document.querySelectorAll(".locCheck");
