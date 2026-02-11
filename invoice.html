@@ -1,0 +1,1103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Invoice — My Shirt Printing</title>
+
+  <!-- Same fonts as your index.html -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* === Theme copied to match your index.html palette & feel === */
+    :root{
+      --bg: #f6fbff;
+      --sky: #eaf4ff;
+      --card: #ffffff;
+      --text: #0f2a33;
+      --muted: #47606a;
+      --border: #d7e7f7;
+      --primary: #032d44;
+      --primary-2: #0b3f5b;
+      --pill: 999px;
+      --radius: 16px;
+      --shadow: 0 10px 24px rgba(10,35,45,.08);
+      --max: 1120px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #dfeeff 0%, #f6fbff 55%, #ffffff 100%);
+      line-height: 1.55;
+    }
+    a{color:inherit;text-decoration:none}
+    .container{max-width:var(--max);margin:0 auto;padding:0 20px}
+
+    /* Top Nav (kept consistent with your site) */
+    header{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navwrap{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; padding:14px 0;
+    }
+    .brand{display:flex; align-items:center; gap:12px; min-width:220px;}
+    .brand img{height:42px; width:auto; object-fit:contain;}
+    .brand .name{
+      font-family:"DM Sans", Inter, sans-serif;
+      font-weight:700; font-size:16px; letter-spacing:.2px; color:var(--primary-2);
+      white-space:nowrap;
+    }
+    nav{display:flex; gap:18px; align-items:center; flex-wrap:wrap;}
+    nav a{
+      font-size:14px; color:var(--primary-2);
+      padding:8px 10px; border-radius:10px; font-weight:600;
+    }
+    nav a:hover{background:var(--sky)}
+    nav a.active{border-bottom:2px solid var(--primary); border-radius:0; padding-bottom:6px}
+
+    /* Buttons (same style) */
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:11px 16px; border-radius:var(--pill);
+      font-weight:700; border:1px solid transparent;
+      cursor:pointer; user-select:none; white-space:nowrap; gap:8px;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .btn.primary{background:var(--primary); color:#fff; box-shadow:var(--shadow)}
+    .btn.primary:hover{filter:brightness(.98)}
+    .btn.ghost{background:#fff; border-color:var(--border); color:var(--primary-2)}
+    .btn.ghost:hover{background:var(--sky)}
+    .btn.small{padding:9px 12px; font-size:13px}
+
+    /* Page */
+    .hero{
+      padding: 26px 0 12px;
+      position: relative;
+      overflow: visible;
+    }
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-260px; top:-120px;
+      width:760px; height:760px;
+      background: rgba(120,180,255,.18);
+      border-radius:50%;
+      pointer-events:none;
+    }
+    .page-title{
+      position: relative;
+      z-index: 1;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 8px 0 6px;
+    }
+    .page-title h1{
+      margin:0;
+      font-family:"DM Sans", Inter, sans-serif;
+      font-size: 30px;
+      letter-spacing: -.4px;
+      color: var(--primary-2);
+    }
+    .page-title p{margin:4px 0 0; color: var(--muted); font-weight:600; font-size:14px}
+
+    /* Invoice shell */
+    .sheet{
+      position: relative;
+      z-index: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 22px rgba(10,35,45,.06);
+      overflow: hidden;
+    }
+
+    /* Skynova-style action bar */
+    .actionbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 14px;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(8px);
+    }
+    .action-left{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .action-right{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+
+    details.menu{position:relative;}
+    details.menu > summary{
+      list-style:none;
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:11px 16px;
+      border-radius: var(--pill);
+      font-weight:700;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--primary-2);
+      gap:8px;
+    }
+    details.menu > summary::-webkit-details-marker{display:none}
+    details.menu > summary:hover{background:var(--sky)}
+    .menuPanel{
+      position:absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 220px;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 6px;
+      z-index: 999;
+    }
+    .menuPanel button{
+      width:100%;
+      text-align:left;
+      border:0;
+      background:transparent;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight:700;
+      color: var(--primary-2);
+      cursor:pointer;
+      font-family: inherit;
+    }
+    .menuPanel button:hover{background: var(--sky);}
+
+    /* Content layout */
+    .content{padding: 18px;}
+    .topgrid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      align-items:start;
+    }
+    .box{
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      background:#fff;
+    }
+    .box h3{
+      margin:0 0 8px;
+      font-family:"DM Sans", Inter, sans-serif;
+      color: var(--primary-2);
+      font-size: 16px;
+      letter-spacing: -.2px;
+    }
+    .label{
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color: var(--muted);
+      margin-bottom:6px;
+      display:block;
+    }
+    .field{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+      background:#fff;
+      color: var(--text);
+      outline: none;
+    }
+    .field:focus{box-shadow: 0 0 0 4px rgba(120,180,255,.18); border-color:#b9d9f7}
+    textarea.field{min-height: 92px; resize: vertical;}
+    .row2{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    .row3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;}
+    .mono{font-family: var(--mono);}
+
+    /* Items table */
+    .tableWrap{
+      margin-top: 14px;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      overflow:hidden;
+      background:#fff;
+    }
+    table{width:100%; border-collapse:collapse;}
+    thead th{
+      text-align:left;
+      background: var(--primary-2);
+      color:#fff;
+      padding: 12px 12px;
+      font-size: 13px;
+      letter-spacing:.04em;
+      font-weight:800;
+    }
+    tbody td{
+      padding: 10px 12px;
+      border-bottom:1px solid var(--border);
+      vertical-align: top;
+      font-size: 14px;
+    }
+    tbody tr:last-child td{border-bottom:none;}
+    .t-right{text-align:right;}
+    .w-type{width:160px;}
+    .w-unit{width:130px;}
+    .w-qty{width:110px;}
+    .w-amt{width:140px;}
+    .w-del{width:56px;}
+
+    .iconbtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+      font-weight:900;
+      color: var(--primary-2);
+    }
+    .iconbtn:hover{background: var(--sky);}
+
+    .toolbar{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      padding: 12px;
+      border-top:1px solid var(--border);
+      background: rgba(234,244,255,.55);
+    }
+
+    /* Totals */
+    .bottomgrid{
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap: 14px;
+      margin-top: 14px;
+      align-items:start;
+    }
+    .totals{
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      overflow:hidden;
+      background:#fff;
+    }
+    .trow{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding: 12px 14px;
+      border-bottom:1px solid var(--border);
+      font-weight:800;
+      color: var(--primary-2);
+    }
+    .trow:last-child{border-bottom:none;}
+    .trow .value{font-family: var(--mono); font-weight:900; color: var(--text);}
+    .trow.total{background: rgba(234,244,255,.6);}
+    .trow.balance{background: var(--primary); color:#fff;}
+    .trow.balance .value{color:#fff;}
+    .trow input{
+      width: 120px;
+      text-align:right;
+    }
+
+    /* Status pill */
+    .status{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: var(--pill);
+      border: 1px solid var(--border);
+      background: #fff;
+      font-weight: 800;
+      color: var(--primary-2);
+      font-size: 13px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background:#ffd77a;border:1px solid rgba(0,0,0,.06);
+    }
+    .dot.sent{background:#9ad7ff}
+    .dot.paid{background:#9ff0bf}
+
+    /* Responsive */
+    @media (max-width: 920px){
+      .topgrid{grid-template-columns: 1fr;}
+      .bottomgrid{grid-template-columns: 1fr;}
+      .actionbar{position: sticky; top: 70px; z-index: 40;} /* keeps actions visible */
+    }
+
+    /* Print/PDF */
+    @media print{
+      header, .actionbar { display:none !important; }
+      .noPrint{ display:none !important; }
+      #contactSearch, #contactResults, #btnAddNewCustomer { display:none !important; }
+      .noPrint, .noPrint *{
+        display:none !important;
+        visibility:hidden !important;
+      }
+      body{ background:#fff; }
+      .hero{ padding: 0; }
+      .sheet{ border:none; box-shadow:none; }
+      *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    @page { size: Letter; margin: 14mm; }
+  </style>
+</head>
+
+<body>
+  <!-- NAV (matches your site) -->
+  <header>
+    <div class="container">
+      <div class="navwrap">
+        <a class="brand" href="index.html" aria-label="Go to homepage">
+          <img src="logo.png" alt="My Shirt Printing logo" />
+          <div class="name">My Shirt Printing and embroidery</div>
+        </a>
+
+        <nav aria-label="Main menu">
+          <a href="index.html">Home</a>
+          <a class="active" href="invoice.html">Invoices</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <div class="page-title">
+        <div>
+          <h1>Invoice</h1>
+          <p>Skynova-style actions + form/calculator editing.</p>
+        </div>
+        <span class="status" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Draft</span></span>
+      </div>
+
+      <div class="sheet" role="document" aria-label="Invoice editor">
+        <!-- Action bar (Skynova options) -->
+        <div class="actionbar">
+          <div class="action-left">
+            <button class="btn ghost" type="button" id="btnEdit">Edit</button>
+            <button class="btn ghost" type="button" id="btnPrint">Print</button>
+            <button class="btn ghost" type="button" id="btnPdf">PDF</button>
+            <button class="btn primary" type="button" id="btnSend">Send</button>
+            <button class="btn ghost" type="button" id="btnPaid">Mark as Paid</button>
+          </div>
+
+          <div class="action-right">
+            <details class="menu" id="moreMenu">
+              <summary>More Actions… <span aria-hidden="true">▾</span></summary>
+              <div class="menuPanel" role="menu" aria-label="More actions">
+                <button type="button" id="btnDuplicate">Duplicate</button>
+                <button type="button" id="btnVoid">Void</button>
+                <button type="button" id="btnDownloadJson">Download JSON</button>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="content">
+          <!-- Top info -->
+          <div class="topgrid">
+            <div class="box">
+              <h3>From</h3>
+              <div class="row2">
+                <div>
+                  <label class="label">Business name</label>
+                  <input class="field" id="bizName" value="My Shirt Company" />
+                </div>
+                <div>
+                  <label class="label">Email</label>
+                  <input class="field" id="bizEmail" value="myshirtcustomerservice@gmail.com" />
+                </div>
+              </div>
+              <div style="margin-top:10px" class="row2">
+                <div>
+                  <label class="label">Address</label>
+                  <input class="field" id="bizAddr" value="3331 Edward Avenue" />
+                </div>
+                <div>
+                  <label class="label">City, State ZIP</label>
+                  <input class="field" id="bizCity" value="Santa Clara, CA 95054" />
+                </div>
+              </div>
+              <div style="margin-top:10px">
+                <label class="label">Phone</label>
+                <input class="field" id="bizPhone" value="669-231-9059" />
+              </div>
+              <div style="margin-top:10px">
+                <label class="label">Payment Link</label>
+                <input class="field" id="bizPaymentLink" value="https://square.link/u/HE22n772" readonly style="font-size:13px;" />
+              </div>
+            </div>
+
+            <div class="box">
+              <h3>Invoice Details</h3>
+              <div class="row3">
+                <div>
+                  <label class="label">Invoice #</label>
+                  <input class="field mono" id="invNo" value="" />
+                </div>
+                <div>
+                  <label class="label">Invoice Date</label>
+                  <input class="field" id="invDate" type="date" value="" />
+                </div>
+              </div>
+
+              <div style="margin-top:10px" class="noPrint">
+                <label class="label">Find contact</label>
+                <div style="position:relative;">
+                  <input class="field" id="contactSearch" placeholder="Type a few letters (business, first, last)…" autocomplete="off" />
+                  <div id="contactResults" style="
+                      position:absolute; left:0; right:0; top:calc(100% + 8px);
+                      background:#fff; border:1px solid var(--border); border-radius:14px;
+                      box-shadow: var(--shadow); padding:6px; display:none; z-index:1000;
+                      max-height: 260px; overflow:auto;
+                    "></div>
+                </div>
+
+                <div style="margin-top:10px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+                  <button class="btn ghost small" type="button" id="btnAddNewCustomer">Add New Customer</button>
+                </div>
+              </div>
+
+              <div style="margin-top:10px">
+                <label class="label">Bill To (client)</label>
+                <input class="field" id="clientName" value="" />
+              </div>
+              <div style="margin-top:10px" class="row2">
+                <div>
+                  <label class="label">Client email</label>
+                  <input class="field" id="clientEmail" value="" />
+                </div>
+                <div>
+                  <label class="label">Client address (optional)</label>
+                  <input class="field" id="clientAddr" value="" />
+                </div>
+              </div>
+              <div style="margin-top:10px" class="row2">
+                <div>
+                  <label class="label">Client phone</label>
+                  <input class="field" id="clientPhone" value="" />
+                </div>
+                <div id="clientContactWrap" style="display:none;">
+                  <label class="label">Contact name</label>
+                  <input class="field" id="clientContact" value="" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Line items -->
+          <div class="tableWrap" aria-label="Line items">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Description</th>
+                  <th class="right">Unit Price</th>
+                  <th class="right">Quantity</th>
+                  <th class="right">Amount</th>
+                  <th></th>
+                </tr>
+              </thead>
+
+              <!-- Entry row (horizontal) -->
+              <tbody>
+                <tr class="entry-row">
+                  <td>
+                    <select id="itemType" class="cell-select">
+                      <option value="Product">Product</option>
+                      <option value="Services">Services</option>
+                      <option value="Discount">Discount</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </td>
+
+                  <td>
+                    <input id="itemDesc" class="cell-input" placeholder="printing / shirts / setup..." />
+                  </td>
+
+                  <td class="right">
+                    <input id="itemPrice" class="cell-input right" inputmode="decimal" placeholder="0.00" />
+                  </td>
+
+                  <td class="right">
+                    <input id="itemQty" class="cell-input right" inputmode="numeric" value="1" />
+                  </td>
+
+                  <td class="right">
+                    <input id="itemAmount" class="cell-input right" placeholder="0.00" disabled />
+                  </td>
+
+                  <td class="right">
+                    <button type="button" class="btn" id="addItemBtn">Add</button>
+                  </td>
+                </tr>
+              </tbody>
+
+              <!-- Actual added lines go here -->
+              <tbody id="itemsBody"></tbody>
+            </table>
+
+            <div id="addItemHint" class="small" style="margin-top:10px; font-weight:800; color:var(--muted);"></div>
+          </div>
+
+          <!-- Notes + Totals -->
+          <div class="bottomgrid">
+            <div class="box" style="background: rgba(234,244,255,.45);">
+              <h3>Notes / Terms</h3>
+              <label class="label">Notes</label>
+              <textarea class="field" id="notes"></textarea>
+
+              <div style="height:10px"></div>
+
+              <label class="label">Terms</label>
+              <textarea class="field" id="terms"></textarea>
+            </div>
+
+            <div class="totals" aria-label="Totals">
+              <div class="trow">
+                <div>Subtotal</div>
+                <div class="value" id="subtotal">$0.00</div>
+              </div>
+
+              <div class="trow">
+                <div>
+                  Tax %
+                  <div style="font-size:12px; font-weight:700; color:var(--muted);">edit percent</div>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                  <input class="field mono" id="taxRate" type="number" step="0.001" value="9.375" />
+                  <div class="value" id="taxAmount">$0.00</div>
+                </div>
+              </div>
+
+              <div class="trow total">
+                <div>Total</div>
+                <div class="value" id="total">$0.00</div>
+              </div>
+
+              <div class="trow">
+                <div>Amount Paid</div>
+                <div style="display:flex; justify-content:flex-end;">
+                  <input class="field mono" id="amountPaid" type="number" step="0.01" value="0.00" />
+                </div>
+              </div>
+
+              <div class="trow balance">
+                <div>Balance Due</div>
+                <div class="value" id="balance">$0.00</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /content -->
+      </div><!-- /sheet -->
+    </div>
+  </section>
+
+  <script>
+    const API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
+    const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
+    const RANGE_A1 = "contacts!A1:J5000";
+
+    const COL = {
+      first: "First Name",
+      last: "Last Name",
+      contact: "Contact Name",
+      phone: "Phone",
+      email1: "Email 1",
+      email2: "Email 2",
+      address: "Address"
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function esc(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
+
+    function fullName(c){
+      const first = (c[COL.first] || "").trim();
+      const last  = (c[COL.last] || "").trim();
+      return last ? `${first} ${last}`.trim() : first;
+    }
+
+    function hideResults(resultsEl){
+      resultsEl.style.display = "none";
+      resultsEl.innerHTML = "";
+    }
+
+    function matches(c, q){
+      const query = q.trim().toLowerCase();
+      if (!query) return false;
+      const hay = [
+        c[COL.first], c[COL.last], c[COL.contact],
+        c[COL.email1], c[COL.email2], c[COL.phone], c[COL.address]
+      ].join(" ").toLowerCase();
+      return hay.includes(query);
+    }
+
+    function pickContact(c){
+      $("clientName").value  = fullName(c);
+      $("clientEmail").value = ((c[COL.email1] || "").trim() || (c[COL.email2] || "").trim());
+      $("clientAddr").value  = (c[COL.address] || "").trim();
+      $("clientPhone").value = (c[COL.phone] || "").trim();
+
+      const wrap = $("clientContactWrap");
+      const contactEl = $("clientContact");
+      const contactName = (c[COL.contact] || "").trim();
+      if (wrap && contactEl) {
+        if (contactName) { wrap.style.display = "block"; contactEl.value = contactName; }
+        else { wrap.style.display = "none"; contactEl.value = ""; }
+      }
+    }
+
+    async function loadContacts(){
+      const url =
+        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SPREADSHEET_ID)}` +
+        `/values/${encodeURIComponent(RANGE_A1)}?key=${encodeURIComponent(API_KEY)}`;
+
+      const res = await fetch(url, { cache: "no-store" });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data?.error?.message || `Sheets error ${res.status}`);
+
+      const values = data.values || [];
+      if (values.length < 2) return [];
+
+      const headers = values[0].map(h => String(h || "").trim());
+      return values.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = String(row[i] ?? "").trim());
+        return obj;
+      }).filter(r => r[COL.first] || r[COL.email1] || r[COL.phone]);
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      const searchEl  = $("contactSearch");
+      const resultsEl = $("contactResults");
+      if (!searchEl || !resultsEl) return;
+
+      let CONTACTS = [];
+      let CONTACTS_ERROR = "";
+
+      try {
+        CONTACTS = await loadContacts();
+        CONTACTS_ERROR = "";
+      } catch (e) {
+        CONTACTS = [];
+        CONTACTS_ERROR = e?.message || "Could not load contacts.";
+      }
+
+      function showMessage(msg){
+        resultsEl.innerHTML = `<div style="padding:10px 12px; font-weight:800; color:var(--muted);">${esc(msg)}</div>`;
+        resultsEl.style.display = "block";
+      }
+
+      function showResults(list){
+        resultsEl.innerHTML = "";
+        list.slice(0, 12).forEach(c => {
+          const top = fullName(c) || "Unnamed";
+          const sub = [c[COL.email1] || c[COL.email2] || "", c[COL.phone] || ""].filter(Boolean).join(" • ");
+
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.style.width = "100%";
+          btn.style.textAlign = "left";
+          btn.style.border = "0";
+          btn.style.background = "transparent";
+          btn.style.padding = "10px 12px";
+          btn.style.borderRadius = "12px";
+          btn.style.cursor = "pointer";
+          btn.innerHTML = `
+            <div style="font-weight:900; color:var(--primary-2);">${esc(top)}</div>
+            <div style="font-size:12px; font-weight:800; color:var(--muted); margin-top:2px;">${esc(sub)}</div>
+          `;
+          btn.addEventListener("mouseenter", () => btn.style.background = "var(--sky)");
+          btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
+          btn.addEventListener("click", () => {
+            pickContact(c);
+            hideResults(resultsEl);
+          });
+          resultsEl.appendChild(btn);
+        });
+        resultsEl.style.display = list.length ? "block" : "none";
+      }
+
+      let t = null;
+      searchEl.addEventListener("input", () => {
+        const q = searchEl.value.trim();
+        clearTimeout(t);
+        t = setTimeout(() => {
+          if (!q) return hideResults(resultsEl);
+          if (CONTACTS_ERROR) return showMessage("Contacts not available (check API key + sheet sharing).");
+
+          const q1 = q[0]?.toLowerCase() || "";
+          const list = CONTACTS
+            .filter(c => matches(c, q))
+            .sort((a, b) => {
+              const aFirst = (a[COL.first] || "").trim().toLowerCase();
+              const bFirst = (b[COL.first] || "").trim().toLowerCase();
+              const aStarts = q1 && aFirst.startsWith(q1) ? 0 : 1;
+              const bStarts = q1 && bFirst.startsWith(q1) ? 0 : 1;
+              return aStarts - bStarts || aFirst.localeCompare(bFirst);
+            });
+
+          if (!list.length) return showMessage(`No matches for "${q}"`);
+          showResults(list);
+        }, 60);
+      });
+
+      window.addEventListener("click", (e) => {
+        const within = resultsEl.contains(e.target) || searchEl.contains(e.target);
+        if (!within) hideResults(resultsEl);
+      });
+    })();
+  </script>
+
+  <!-- Entry-row calculator -->
+  <script>
+    (() => {
+      function toNum(v){
+        const s = String(v ?? "").trim().replace(/[^0-9.-]/g, "");
+        const n = parseFloat(s);
+        return Number.isFinite(n) ? n : 0;
+      }
+      function money2(n){
+        const x = Number(n);
+        return Number.isFinite(x) ? x.toFixed(2) : "0.00";
+      }
+
+      function wireEntryRowCalc(){
+        const typeEl  = document.getElementById("itemType");
+        const priceEl = document.getElementById("itemPrice");
+        const qtyEl   = document.getElementById("itemQty");
+        const amtEl   = document.getElementById("itemAmount");
+
+        // If any are missing, we can't wire it.
+        if (!priceEl || !qtyEl || !amtEl) return;
+
+        function recalc(){
+          const type  = typeEl ? typeEl.value : "Product";
+          const price = toNum(priceEl.value);
+          const qty   = Math.max(0, toNum(qtyEl.value || 1));
+          let amt = price * qty;
+
+          // Discounts should reduce totals
+          if (type === "Discount" && amt > 0) amt = -amt;
+
+          amtEl.value = money2(amt);
+        }
+
+        // Listen to everything (covers typing, spinner arrows, focus changes)
+        ["input","change","keyup","blur"].forEach(ev => {
+          priceEl.addEventListener(ev, recalc);
+          qtyEl.addEventListener(ev, recalc);
+        });
+        typeEl && typeEl.addEventListener("change", recalc);
+
+        // Initialize once on load
+        recalc();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", wireEntryRowCalc);
+      } else {
+        wireEntryRowCalc();
+      }
+    })();
+  </script>
+
+  <script>
+(() => {
+  // ---- helpers ----
+  function toNum(v){
+    const s = String(v ?? "").trim().replace(/[^0-9.-]/g, "");
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+  function money2(n){
+    const x = Number(n);
+    return Number.isFinite(x) ? x.toFixed(2) : "0.00";
+  }
+  function moneyUSD(n){
+    const x = Number(n);
+    const safe = Number.isFinite(x) ? x : 0;
+    return safe.toLocaleString(undefined, { style:"currency", currency:"USD" });
+  }
+  function esc(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  function getEls(){
+    return {
+      typeEl: document.getElementById("itemType"),
+      descEl: document.getElementById("itemDesc"),
+      priceEl: document.getElementById("itemPrice"),
+      qtyEl: document.getElementById("itemQty"),
+      amtEl: document.getElementById("itemAmount"),
+      addBtn: document.getElementById("addItemBtn"),
+      itemsBody: document.getElementById("itemsBody"),
+      subtotalEl: document.getElementById("subtotal"),
+      taxRateEl: document.getElementById("taxRate"),
+      taxAmtEl: document.getElementById("taxAmount"),
+      totalEl: document.getElementById("total"),
+      paidEl: document.getElementById("amountPaid"),
+      balanceEl: document.getElementById("balance"),
+    };
+  }
+
+  function recalcEntryAmount(){
+    const { typeEl, priceEl, qtyEl, amtEl } = getEls();
+    if (!priceEl || !qtyEl || !amtEl) return;
+
+    const type  = typeEl ? typeEl.value : "Product";
+    const price = toNum(priceEl.value);
+    const qty   = Math.max(0, toNum(qtyEl.value || 1));
+    let amt = price * qty;
+    if (type === "Discount" && amt > 0) amt = -amt;
+
+    amtEl.value = money2(amt);
+  }
+
+  function recalcTotals(){
+    const { itemsBody, subtotalEl, taxRateEl, taxAmtEl, totalEl, paidEl, balanceEl } = getEls();
+    if (!itemsBody || !subtotalEl || !taxRateEl || !taxAmtEl || !totalEl || !paidEl || !balanceEl) return;
+
+    const rows = Array.from(itemsBody.querySelectorAll("tr"));
+    const subtotal = rows.reduce((sum, tr) => sum + toNum(tr.dataset.amount), 0);
+
+    const taxRate = toNum(taxRateEl.value) / 100;
+    const tax = subtotal * (Number.isFinite(taxRate) ? taxRate : 0);
+
+    const total = subtotal + tax;
+    const paid = toNum(paidEl.value);
+    const balance = total - paid;
+
+    subtotalEl.textContent = moneyUSD(subtotal);
+    taxAmtEl.textContent   = moneyUSD(tax);
+    totalEl.textContent    = moneyUSD(total);
+    balanceEl.textContent  = moneyUSD(balance);
+  }
+
+  function addLine(){
+    const { typeEl, descEl, priceEl, qtyEl, amtEl, itemsBody } = getEls();
+    if (!typeEl || !descEl || !priceEl || !qtyEl || !amtEl || !itemsBody) {
+      alert("Add failed: missing one of itemType/itemDesc/itemPrice/itemQty/itemAmount/itemsBody");
+      return;
+    }
+
+    const type = typeEl.value;
+    const desc = descEl.value.trim();
+    const price = toNum(priceEl.value);
+    const qty = Math.max(0, toNum(qtyEl.value || 1));
+
+    if (!desc) return; // keep UI clean
+
+    let amount = toNum(amtEl.value);
+    if (!Number.isFinite(amount)) amount = price * qty;
+    if (type === "Discount" && amount > 0) amount = -amount;
+
+    const tr = document.createElement("tr");
+    tr.dataset.amount = String(amount);
+    tr.innerHTML = `
+      <td>${esc(type)}</td>
+      <td>${esc(desc)}</td>
+      <td class="t-right">${moneyUSD(price)}</td>
+      <td class="t-right">${qty}</td>
+      <td class="t-right">${moneyUSD(amount)}</td>
+      <td class="t-right"><button type="button" class="iconbtn" aria-label="Remove">✕</button></td>
+    `;
+
+    tr.querySelector("button").addEventListener("click", () => {
+      tr.remove();
+      recalcTotals();
+    });
+
+    itemsBody.appendChild(tr);
+
+    // reset entry
+    descEl.value = "";
+    priceEl.value = "";
+    qtyEl.value = "1";
+    typeEl.value = "Product";
+    amtEl.value = "0.00";
+
+    recalcTotals();
+    descEl.focus();
+  }
+
+  function wire(){
+    const { addBtn, priceEl, qtyEl, typeEl, taxRateEl, paidEl } = getEls();
+    if (!addBtn) {
+      alert("Cannot wire Add: #addItemBtn not found");
+      return;
+    }
+
+    // Keep entry amount live
+    ["input","change","keyup","blur"].forEach(ev => {
+      priceEl && priceEl.addEventListener(ev, recalcEntryAmount);
+      qtyEl && qtyEl.addEventListener(ev, recalcEntryAmount);
+    });
+    typeEl && typeEl.addEventListener("change", recalcEntryAmount);
+
+    // Totals update
+    ["input","change","keyup","blur"].forEach(ev => {
+      taxRateEl && taxRateEl.addEventListener(ev, recalcTotals);
+      paidEl && paidEl.addEventListener(ev, recalcTotals);
+    });
+
+    // HARD OVERRIDE: capture-phase handler that beats other listeners
+    addBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation(); // <- key line: prevents other click handlers
+      addLine();
+    }, true);
+
+    // initialize
+    recalcEntryAmount();
+    recalcTotals();
+  }
+
+  const CONTACTS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzeCDuKCpxYfS_Eefrn4Skf6G0XasekzgsJxn1cVZhu2wbrokqc9zIwApr4MWcNDALI/exec";
+  const CONTACTS_SECRET = "msp-invoice-contacts-2026-m@g0wie!!!";
+  const CONTACTS_SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
+
+  function getVal(id){ return (document.getElementById(id)?.value || "").trim(); }
+
+  async function addNewCustomerToSheet(){
+    console.log("=== ADD CUSTOMER CLICKED ===");
+    
+    const firstName = getVal("clientName");
+    const lastName  = "";
+    const phone     = getVal("clientPhone");
+    const contactName = getVal("clientContact");
+    const email     = getVal("clientEmail");
+    const address   = getVal("clientAddr");
+    const notes     = "";
+
+    console.log("Form values:", { firstName, lastName, phone, contactName, email, address, notes });
+
+    if (!firstName) { 
+      console.log("Validation failed: no firstName");
+      alert("Please enter a name / business name."); 
+      return; 
+    }
+    if (!email && !phone) { 
+      console.log("Validation failed: no email or phone");
+      alert("Please add at least an email or phone."); 
+      return; 
+    }
+
+    const payload = {
+      secret: CONTACTS_SECRET,
+      spreadsheetId: CONTACTS_SPREADSHEET_ID,
+      firstName,
+      lastName,
+      phone,
+      contactName,
+      email,
+      address,
+      notes
+    };
+
+    console.log("Payload:", payload);
+
+    const form = new URLSearchParams(payload);
+    console.log("URLSearchParams body:", form.toString());
+
+    let res, text, data;
+    try {
+      console.log("Fetching:", CONTACTS_WEBAPP_URL);
+      res = await fetch(CONTACTS_WEBAPP_URL, {
+        method: "POST",
+        body: form
+      });
+      console.log("Response status:", res.status);
+      console.log("Response ok:", res.ok);
+      
+      text = await res.text();
+      console.log("Response text:", text);
+      
+      data = JSON.parse(text);
+      console.log("Parsed data:", data);
+    } catch (err) {
+      console.error("FETCH ERROR:", err);
+      console.error("Error stack:", err.stack);
+      alert("Could not add customer (network/CORS). Check console for details.");
+      return;
+    }
+
+    if (!res.ok || !data.ok) {
+      const msg = data?.error || `HTTP ${res.status}`;
+      console.error("Server error:", msg);
+      alert("Could not add customer. " + msg);
+      return;
+    }
+
+    console.log("SUCCESS! Customer added.");
+    alert("Customer added to your contact list.");
+  }
+
+  const btnAddCustomer = document.getElementById("btnAddNewCustomer");
+  console.log("Button found:", btnAddCustomer);
+  
+  if (btnAddCustomer) {
+    btnAddCustomer.addEventListener("click", (e) => {
+      console.log("Button click event fired");
+      e.preventDefault();
+      e.stopPropagation();
+      addNewCustomerToSheet();
+    });
+  } else {
+    console.error("btnAddNewCustomer not found in DOM!");
+  }
+  document.getElementById("btnAddNewCustomer")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    addNewCustomerToSheet();
+  });
+
+  if (document.readyState === "loading") {
+    window.addEventListener("DOMContentLoaded", wire);
+  } else {
+    wire();
+  }
+
+  // Wire up Print button
+  document.getElementById("btnPrint")?.addEventListener("click", () => {
+    window.print();
+  });
+
+  // Wire up PDF button (uses print dialog)
+  document.getElementById("btnPdf")?.addEventListener("click", () => {
+    window.print();
+  });
+})();
+</script>
+</body>
+</html>
