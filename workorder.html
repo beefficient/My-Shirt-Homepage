@@ -67,7 +67,31 @@
     .modal{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);max-width:900px;width:100%}
     .modalHeader{padding:14px;border-bottom:1px solid rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-between;gap:10px}
     .modalBody{padding:14px;max-height:75vh;overflow:auto}
+    .modalBody img{max-width:100%;height:auto;display:block}
     .modalFooter{padding:14px;border-top:1px solid rgba(0,0,0,.08);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+
+    /* Preview (modal) 2-column layout for each item */
+    .previewGrid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:12px;
+      align-items:start;
+    }
+    @media (max-width: 820px){
+      .previewGrid{ grid-template-columns:1fr; }
+    }
+    .previewImages{
+      display:grid;
+      gap:10px;
+    }
+    .previewImages img{
+      width:100%;
+      max-height:240px;        /* match your normal webpage image height */
+      object-fit:contain;
+      border:1px solid #bbb;
+      border-radius:10px;
+      background:#fff;
+    }
 
     /* Required field highlighting */
     .reqMark{color:var(--danger);font-weight:900;margin-left:4px}
@@ -76,9 +100,54 @@
     /* Print */
     @media print{
       .noPrint{display:none !important}
-      body{background:#fff}
+      body{background:#fff; font-size:11px; line-height:1.25}
+
+      /* Try to keep to one page */
+      @page { margin: 0.35in; } /* tight margins */
+
       .printOnly{display:block !important}
-      .printCard{border:1px solid #bbb;border-radius:10px;padding:12px;margin-bottom:10px}
+      .printCard{
+        border:1px solid #bbb;
+        border-radius:8px;
+        padding:8px;
+        margin:0 0 8px 0;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      /* Make item images SMALL */
+      .printCard img{
+        max-height:140px !important;
+        width:auto !important;
+        max-width:100% !important;
+        object-fit:contain !important;
+      }
+
+      /* Print 2-column item layout */
+      .printItemGrid{
+        display:grid;
+        grid-template-columns: 1.25fr .75fr;
+        gap:10px;
+        align-items:start;
+      }
+      .printItemImages{
+        display:grid;
+        gap:8px;
+        justify-items:end;
+      }
+      .printItemImages img{
+        width:100% !important;
+        max-height:160px !important;  /* smaller for print */
+        object-fit:contain !important;
+        border:1px solid #bbb;
+        border-radius:8px;
+        background:#fff;
+      }
+
+      /* Prevent awkward splits */
+      .printSection, .printRow, .printCard { page-break-inside: avoid; break-inside: avoid; }
+
+      /* Hide links styling */
       a{color:inherit;text-decoration:none}
     }
     .printOnly{display:none}
@@ -139,15 +208,15 @@
               <input id="email" placeholder="customer@email.com" required>
             </div>
             <div>
-              <label>Phone <span class="reqMark">*</span></label>
-              <input id="phone" placeholder="(555) 555-5555" required>
+              <label>Phone</label>
+              <input id="phone" placeholder="(555) 555-5555">
             </div>
           </div>
 
           <div class="row">
             <div>
-              <label>Billing Address <span class="reqMark">*</span></label>
-              <textarea id="billingAddress" placeholder="Street, City, State, ZIP" required></textarea>
+              <label>Billing Address</label>
+              <textarea id="billingAddress" placeholder="Street, City, State, ZIP"></textarea>
             </div>
             <div>
               <label>Shipping / Pickup Notes <span class="reqMark">*</span></label>
@@ -165,7 +234,13 @@
           <div id="tab-items" style="margin-top:10px">
             <div class="btnRow" style="justify-content:space-between">
               <div class="muted">Add each product/service line so production has everything they need.</div>
-              <button class="btn" id="addItem">Add Item</button>
+              <div class="btnRow">
+                <label class="pill" style="gap:10px">
+                  <input type="checkbox" id="sameArtNext" style="width:auto">
+                  Use same artwork for next item
+                </label>
+                <button class="btn" id="addItem">Add Item</button>
+              </div>
             </div>
 
             <div id="itemsWrap" style="margin-top:12px;display:grid;gap:12px"></div>
@@ -248,9 +323,6 @@
             </div>
             <div class="help">Drafts auto-save on this device.</div>
           </div>
-        </div>
-
-        
         </div>
       </div>
 
@@ -335,6 +407,31 @@
     r.readAsDataURL(file);
   });
 
+  function artworkKeyForItem(item){
+    const ids = Array.isArray(item.artworkIds) ? item.artworkIds : [];
+    if(!ids.length) return `NO_ART_${item.id}`; // keep no-art items separate
+    // Key is based on the exact artwork IDs (order-sensitive)
+    return ids.join("|");
+  }
+
+  async function waitForImages(root){
+    const imgs = Array.from(root.querySelectorAll("img"));
+    if(!imgs.length) return;
+
+    await Promise.all(imgs.map(async (img) => {
+      try{
+        // decode() is the most reliable when available (Chrome/Safari)
+        if (img.decode) {
+          await img.decode();
+          return;
+        }
+      }catch(e){}
+      // fallback
+      if(img.complete) return;
+      await new Promise(res => { img.onload = res; img.onerror = res; });
+    }));
+  }
+
   function clearInvalids(){
     document.querySelectorAll(".invalid").forEach(el => el.classList.remove("invalid"));
   }
@@ -355,16 +452,14 @@
     id: crypto.randomUUID(),
     serviceType: "Screen Printing",
     product: "",
-    // non-garment items
     itemSize: "",
-    // garment services optional
     variantColor: "",
     sizeBreakdown: newSizeBreakdown(),
     quantity: 0,
     location: "",
     inkColors: "",
-    artNotes: "",   // OPTIONAL
-    image: null,    // OPTIONAL
+    artNotes: "",      // OPTIONAL
+    artworkIds: [],    // references into wo.artworks[]
   });
 
   const newWO = () => ({
@@ -380,6 +475,7 @@
     notesCustomer: "",
     notesInternal: "",
     items: [defaultItem()],
+    artworks: [], // shared artwork library for this work order
     approval: { approved:false, approvedName:"", approvedDate:"", termsAccepted:false }
   });
 
@@ -390,6 +486,9 @@
     try{
       const parsed = JSON.parse(raw);
 
+      // Ensure shared library exists
+      if(!Array.isArray(parsed.artworks)) parsed.artworks = [];
+
       if(Array.isArray(parsed.items)){
         parsed.items = parsed.items.map(it => {
           const next = {
@@ -398,6 +497,30 @@
             sizeBreakdown: Array.isArray(it.sizeBreakdown) ? it.sizeBreakdown : newSizeBreakdown(),
             quantity: typeof it.quantity === "number" ? it.quantity : Number(it.quantity||0)
           };
+          
+          // Back-compat: migrate old images into shared artworks + item.artworkIds
+          const legacyImgs = [];
+          if(next.image?.dataUrl) legacyImgs.push(next.image);
+          if(Array.isArray(next.images)) legacyImgs.push(...next.images);
+
+          if(!Array.isArray(next.artworkIds)) next.artworkIds = [];
+
+          for(const im of legacyImgs){
+            if(!im?.dataUrl) continue;
+
+            let existing = parsed.artworks.find(a => a.dataUrl === im.dataUrl);
+            if(!existing){
+              existing = { id: crypto.randomUUID(), name: im.name || "artwork", dataUrl: im.dataUrl };
+              parsed.artworks.push(existing);
+            }
+            if(!next.artworkIds.includes(existing.id)){
+              next.artworkIds.push(existing.id);
+            }
+          }
+
+          delete next.image;
+          delete next.images;
+          
           delete next.dueDate; // ignore old item due dates
           return next;
         });
@@ -408,7 +531,16 @@
     }catch(e){}
   }
   function saveDraft(){
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(wo));
+    try{
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(wo));
+    }catch(e){
+      console.warn("Draft save failed:", e);
+      toast(
+        "Draft too large to save on this device. Remove some images or use smaller files, then try again.",
+        "error",
+        6500
+      );
+    }
   }
 
   // ====== VALIDATION ======
@@ -421,8 +553,6 @@
       { id:"dueDate", label:"Due Date" },
       { id:"customerName", label:"Customer Name" },
       { id:"email", label:"Email" },
-      { id:"phone", label:"Phone" },
-      { id:"billingAddress", label:"Billing Address" },
       { id:"shippingAddress", label:"Shipping / Pickup Notes" },
       { id:"notesCustomer", label:"Customer Notes" },
       { id:"notesInternal", label:"Internal Notes" },
@@ -666,19 +796,34 @@
         sizeArea.appendChild(box);
       }
 
-      // image area
+      // image area (shared artwork)
       const imageArea = card.querySelector('[data-slot="imageArea"]');
-      if(it.image?.dataUrl){
+      const ids = Array.isArray(it.artworkIds) ? it.artworkIds : [];
+      const imgs = ids.map(id => wo.artworks.find(a => a.id === id)).filter(Boolean);
+
+      if(imgs.length){
         imageArea.innerHTML = `
-          <img class="imgPreview" src="${it.image.dataUrl}" alt="${esc(it.image.name||"mockup")}">
-          <div class="help" style="margin-top:6px">${esc(it.image.name||"")}</div>
-          <div class="btnRow" style="margin-top:8px">
-            <button class="btn secondary" data-action="removeImage" data-id="${it.id}">Remove image</button>
+          <div style="display:grid;gap:10px">
+            ${imgs.map((im, imIdx) => `
+              <div style="border:1px solid var(--border);border-radius:14px;padding:10px;background:#fff">
+                <img class="imgPreview" src="${im.dataUrl}" alt="${esc(im.name||"mockup")}">
+                <div class="help" style="margin-top:6px">${esc(im.name||"")}</div>
+                <div class="btnRow" style="margin-top:8px">
+                  <button class="btn secondary" data-action="removeArtworkRef" data-id="${it.id}" data-idx="${imIdx}">Remove</button>
+                </div>
+              </div>
+            `).join("")}
+
+            <div class="btnRow">
+              <input type="file" accept="image/*" multiple data-action="uploadArtwork" data-id="${it.id}">
+              <button class="btn secondary" data-action="clearArtworkRefs" data-id="${it.id}">Clear all</button>
+            </div>
+            <div class="help">Uploads are stored once per work order and reused across items.</div>
           </div>
         `;
       }else{
         imageArea.innerHTML = `
-          <input type="file" accept="image/*" data-action="uploadImage" data-id="${it.id}">
+          <input type="file" accept="image/*" multiple data-action="uploadArtwork" data-id="${it.id}">
         `;
       }
 
@@ -710,48 +855,93 @@
   }
 
   // ====== CUSTOMER PREVIEW ======
-  function openPreview(){
-    if(!validateAllRequired({ includeApproval: false })) return;
+  async function openPreview(){
+    validateAllRequired({ includeApproval: false }); // warn + highlight, but don't block
+
+    // Group items by artwork
+    const groupsMap = new Map();
+    for(const item of wo.items){
+      const key = artworkKeyForItem(item);
+      if(!groupsMap.has(key)) groupsMap.set(key, []);
+      groupsMap.get(key).push(item);
+    }
+    const groups = Array.from(groupsMap.values());
 
     const html = `
       <div class="muted"><b>Work Order:</b> ${esc(wo.woNumber)}</div>
       <div style="margin-top:6px"><b>Customer:</b> ${esc(wo.customerName || "(missing)")}</div>
-      <div><b>Email:</b> ${esc(wo.email || "(missing)")}</div>
       <div><b>Due Date:</b> ${esc(wo.dueDate || "-")}</div>
       <hr>
       <div style="display:grid;gap:10px">
-        ${wo.items.map(i => `
-          <div class="itemCard">
-            <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
-              <div style="font-weight:900">${esc(i.serviceType)}</div>
-              <div class="muted"><b>Qty</b> ${Number(i.quantity||0)}</div>
-            </div>
-            <div style="margin-top:6px">${esc(i.product || "(missing description)")}</div>
+        ${groups.map((itemsInGroup, gIdx) => {
+          const ids = Array.isArray(itemsInGroup[0].artworkIds) ? itemsInGroup[0].artworkIds : [];
+          const imgs = ids.map(id => wo.artworks.find(a => a.id === id)).filter(Boolean);
 
-            ${isGarment(i.serviceType) && i.variantColor?.trim()
-              ? `<div class="help" style="margin-top:6px"><b>Shirt Color:</b> ${esc(i.variantColor)}</div>`
-              : ``}
+          return `
+            <div class="itemCard">
+              <div style="font-weight:900;margin-bottom:8px">
+                Group ${gIdx+1}
+                ${itemsInGroup.length > 1 ? `<span class="muted" style="font-weight:700">· ${itemsInGroup.length} items</span>` : ``}
+              </div>
 
-            <div class="help" style="margin-top:6px">
-              <b>${esc(sizeFieldLabel(i.serviceType))}:</b>
-              ${
-                isGarment(i.serviceType)
-                  ? (i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).length
-                      ? i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).map(r=>`${esc(r.size)}-${Number(r.qty||0)}`).join(", ")
-                      : "-"
-                    )
-                  : (esc(i.itemSize || "-"))
-              }
-              <br>
-              <b>Location:</b> ${esc(i.location||"-")} &nbsp; · &nbsp;
-              <b>Colors:</b> ${esc(i.inkColors||"-")}
+              <div class="previewGrid">
+                <div style="display:grid;gap:10px">
+                  ${itemsInGroup.map((i, idx) => `
+                    <div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                        <div style="font-weight:900">${esc(i.serviceType)}${itemsInGroup.length>1 ? ` <span class="muted" style="font-weight:700">· Item ${idx+1}</span>` : ``}</div>
+                        <div class="muted"><b>Qty</b> ${Number(i.quantity||0)}</div>
+                      </div>
+
+                      <div style="margin-top:6px">${esc(i.product || "(missing description)")}</div>
+
+                      ${isGarment(i.serviceType) && i.variantColor?.trim()
+                        ? `<div style="margin-top:6px"><b>Shirt Color:</b> ${esc(i.variantColor)}</div>`
+                        : ``}
+
+                      <div style="margin-top:6px">
+                        <div>
+                          <b>${esc(sizeFieldLabel(i.serviceType))}:</b>
+                          ${
+                            isGarment(i.serviceType)
+                              ? (i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).length
+                                  ? i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).map(r=>`${esc(r.size)}-${Number(r.qty||0)}`).join(", ")
+                                  : "-"
+                                )
+                              : (esc(i.itemSize||"-"))
+                          }
+                        </div>
+                        <div style="margin-top:4px">
+                          <b>Location:</b> ${esc(i.location||"-")} &nbsp; · &nbsp;
+                          <b>Colors:</b> ${esc(i.inkColors||"-")}
+                        </div>
+                      </div>
+
+                      ${i.artNotes?.trim()
+                        ? `<div style="margin-top:6px"><b>Notes:</b> <span style="white-space:pre-wrap">${esc(i.artNotes)}</span></div>`
+                        : ``}
+                    </div>
+                  `).join('<hr style="border:none;border-top:1px solid rgba(0,0,0,.08);margin:6px 0">')}
+                </div>
+
+                <div class="previewImages">
+                  ${
+                    imgs.length
+                      ? imgs.map(im => `<img src="${im.dataUrl}" alt="">`).join("")
+                      : ``
+                  }
+                </div>
+              </div>
             </div>
-            ${i.image?.dataUrl ? `<img class="imgPreview" style="margin-top:8px;max-height:320px" src="${i.image.dataUrl}" alt="${esc(i.image.name||"mockup")}">` : ``}
-          </div>
-        `).join("")}
+          `;
+        }).join("")}
       </div>
     `;
     $("modalBody").innerHTML = html;
+    
+    // Wait for all images to load before showing modal
+    await waitForImages($("modalBody"));
+    
     $("modalBackdrop").classList.remove("hidden");
   }
   function closePreview(){
@@ -761,36 +951,62 @@
   // ====== PRINT VIEW ======
   function buildPrintView(){
     const status = wo.approval.approved ? "Approved" : "Draft";
-    const items = wo.items.map((i, idx) => {
-      const sizeText = isGarment(i.serviceType)
-        ? (i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).length
-            ? i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).map(r=>`${esc(r.size)}-${Number(r.qty||0)}`).join(", ")
-            : "-"
-          )
-        : (esc(i.itemSize||"-"));
+    
+    // Group items by artwork
+    const groupsMap = new Map();
+    for(const item of wo.items){
+      const key = artworkKeyForItem(item);
+      if(!groupsMap.has(key)) groupsMap.set(key, []);
+      groupsMap.get(key).push(item);
+    }
+    const groups = Array.from(groupsMap.values());
+
+    const items = groups.map((itemsInGroup, gIdx) => {
+      const ids = Array.isArray(itemsInGroup[0].artworkIds) ? itemsInGroup[0].artworkIds : [];
+      const imgs = ids.map(id => wo.artworks.find(a => a.id === id)).filter(Boolean);
+      const printImgs = imgs.slice(0, 2); // keep print clean (2 max)
 
       return `
         <div class="printCard">
-          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
-            <div style="flex:1">
-              <div style="font-weight:900">${idx+1}. ${esc(i.serviceType)}</div>
-              <div>${esc(i.product)}</div>
+          <div class="printItemGrid">
+            <div>
+              ${itemsInGroup.map((i, idx) => `
+                <div ${idx > 0 ? 'style="margin-top:8px;padding-top:8px;border-top:1px solid #ddd"' : ''}>
+                  <div style="font-weight:900">${esc(i.serviceType)} <span style="font-weight:600">· Qty ${Number(i.quantity||0)}</span></div>
+                  <div style="margin-top:2px">${esc(i.product||"-")}</div>
 
-              ${isGarment(i.serviceType) && i.variantColor?.trim()
-                ? `<div style="font-size:12px;color:#555;margin-top:6px"><b>Shirt Color:</b> ${esc(i.variantColor)}</div>`
-                : ``}
+                  ${isGarment(i.serviceType) && i.variantColor?.trim()
+                    ? `<div style="margin-top:2px"><b>Shirt:</b> ${esc(i.variantColor)}</div>`
+                    : ``}
 
-              <div style="font-size:12px;color:#555;margin-top:6px">
-                <b>${esc(sizeFieldLabel(i.serviceType))}:</b> ${sizeText}<br>
-                <b>Location:</b> ${esc(i.location||"-")} · <b>Colors:</b> ${esc(i.inkColors||"-")}<br>
-                ${i.artNotes ? `<b>Notes:</b> <span style="white-space:pre-wrap">${esc(i.artNotes)}</span>` : ``}
-              </div>
+                  <div style="margin-top:2px">
+                    <b>${esc(sizeFieldLabel(i.serviceType))}:</b>
+                    ${
+                      isGarment(i.serviceType)
+                        ? (i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).length
+                            ? i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).map(r=>`${esc(r.size)}-${Number(r.qty||0)}`).join(", ")
+                            : "-"
+                          )
+                        : (esc(i.itemSize||"-"))
+                    }
+                    <br>
+                    <b>Location:</b> ${esc(i.location||"-")} &nbsp; · &nbsp;
+                    <b>Colors:</b> ${esc(i.inkColors||"-")}
+                  </div>
+
+                  ${i.artNotes ? `<div style="margin-top:4px"><b>Notes:</b> <span style="white-space:pre-wrap">${esc(i.artNotes)}</span></div>` : ``}
+                </div>
+              `).join("")}
             </div>
-            <div style="white-space:nowrap;text-align:right">
-              <div><b>Qty:</b> ${Number(i.quantity||0)}</div>
+
+            <div class="printItemImages">
+              ${
+                printImgs.length
+                  ? printImgs.map(im => `<img src="${im.dataUrl}" alt="">`).join("")
+                  : ``
+              }
             </div>
           </div>
-          ${i.image?.dataUrl ? `<img style="margin-top:10px;max-height:420px;width:100%;object-fit:contain;border:1px solid #bbb;border-radius:10px" src="${i.image.dataUrl}" alt="">` : ``}
         </div>
       `;
     }).join("");
@@ -904,6 +1120,7 @@
 
   function bindItemsEvents(){
     const wrap = $("itemsWrap");
+    const MAX_IMAGES_PER_ITEM = 6;
 
     wrap.addEventListener("click", async (e)=>{
       const btn = e.target.closest("[data-action]");
@@ -926,7 +1143,6 @@
           ...src,
           id: crypto.randomUUID(),
           variantColor: "", // clear color so it's obvious what to change
-          // image: null,     // uncomment if you want a fresh upload per color
         };
 
         wo.items.push(clone);
@@ -934,30 +1150,88 @@
         renderAll();
       }
 
-      if(action==="removeImage"){
+      if(action==="removeArtworkRef"){
+        const idx = Number(btn.dataset.idx);
         const it = wo.items.find(i=>i.id===id);
-        if(it){ it.image = null; toast("Image removed."); renderAll(); }
+        if(it && Array.isArray(it.artworkIds)){
+          it.artworkIds.splice(idx, 1);
+          toast("Artwork removed from this item.");
+          renderAll();
+        }
+      }
+
+      if(action==="clearArtworkRefs"){
+        const it = wo.items.find(i=>i.id===id);
+        if(it){
+          it.artworkIds = [];
+          toast("Artwork cleared from this item.");
+          renderAll();
+        }
+      }
+
+      if(action==="removeOneImage"){
+        const idx = Number(btn.dataset.idx);
+        const it = wo.items.find(i=>i.id===id);
+        if(it && Array.isArray(it.images)){
+          it.images.splice(idx, 1);
+          toast("Image removed.");
+          renderAll();
+        }
+      }
+
+      if(action==="clearImages"){
+        const it = wo.items.find(i=>i.id===id);
+        if(it){
+          it.images = [];
+          toast("Images cleared.");
+          renderAll();
+        }
       }
     });
 
     wrap.addEventListener("change", async (e)=>{
       const el = e.target;
 
-      // upload image (optional)
-      if(el.matches('[data-action="uploadImage"]')){
+      // upload artwork (shared library)
+      if(el.matches('[data-action="uploadArtwork"]')){
         const id = el.dataset.id;
-        const file = el.files && el.files[0];
-        if(!file) return;
-        if(!file.type.startsWith("image/")){ toast("Please upload an image file (PNG/JPG/etc.).","error",3500); return; }
+        const files = Array.from(el.files || []);
+        if(!files.length) return;
+
         const maxBytes = 6 * 1024 * 1024;
-        if(file.size > maxBytes){ toast("Image too large. Please use a file under 6MB.","error",3500); return; }
-        try{
+        const it = wo.items.find(i=>i.id===id);
+        if(!it) return;
+
+        if(!Array.isArray(wo.artworks)) wo.artworks = [];
+        if(!Array.isArray(it.artworkIds)) it.artworkIds = [];
+
+        for(const file of files){
+          if(!file.type.startsWith("image/")){
+            toast("One of the files is not an image (PNG/JPG/etc.).","error",3500);
+            continue;
+          }
+          if(file.size > maxBytes){
+            toast(`"${file.name}" is over 6MB. Please use a smaller file.`,"error",4200);
+            continue;
+          }
+
           const dataUrl = await readFileAsDataUrl(file);
-          const it = wo.items.find(i=>i.id===id);
-          if(it){ it.image = { name:file.name, dataUrl }; toast("Image attached."); renderAll(); }
-        }catch(err){
-          toast("Could not read that image file.","error",3500);
+
+          // De-dupe at the work order level
+          let existing = wo.artworks.find(a => a.dataUrl === dataUrl);
+          if(!existing){
+            existing = { id: crypto.randomUUID(), name: file.name, dataUrl };
+            wo.artworks.push(existing);
+          }
+
+          // Link to this item (no duplicates)
+          if(!it.artworkIds.includes(existing.id)){
+            it.artworkIds.push(existing.id);
+          }
         }
+
+        toast("Artwork attached.");
+        renderAll();
         return;
       }
 
@@ -974,7 +1248,14 @@
         const idx = Number(idxStr);
         const it = wo.items.find(i=>i.id===id);
         if(it){
-          it.sizeBreakdown[idx].enabled = !!el.checked;
+          const checked = !!el.checked;
+          it.sizeBreakdown[idx].enabled = checked;
+
+          // If unchecked, erase the qty
+          if(!checked){
+            it.sizeBreakdown[idx].qty = 0; // state
+          }
+
           it.quantity = sizeTotal(it.sizeBreakdown);
           renderAll();
         }
@@ -1033,7 +1314,18 @@
     });
 
     $("addItem").addEventListener("click", ()=>{
-      wo.items.push(defaultItem());
+      const next = defaultItem();
+
+      // Safe checkbox lookup (no optional chaining)
+      const sameBox = document.getElementById("sameArtNext");
+      const useSame = sameBox && sameBox.checked;
+
+      if(useSame && wo.items.length){
+        const last = wo.items[wo.items.length - 1];
+        next.artworkIds = Array.isArray(last.artworkIds) ? last.artworkIds.slice() : [];
+      }
+
+      wo.items.push(next);
       toast("Item added.");
       renderAll();
     });
@@ -1053,14 +1345,22 @@
     $("modalClose2").addEventListener("click", closePreview);
     $("modalBackdrop").addEventListener("click", (e)=>{ if(e.target === $("modalBackdrop")) closePreview(); });
 
-    $("printBtn").addEventListener("click", ()=>{
-      if(!validateAllRequired({ includeApproval: false })) return;
+    $("printBtn").addEventListener("click", async ()=>{
+      validateAllRequired({ includeApproval: false });
       buildPrintView();
+
+      await waitForImages($("printView"));
+      await new Promise(r => setTimeout(r, 150)); // Safari-friendly
+
       window.print();
     });
-    $("modalPrint").addEventListener("click", ()=>{
+    $("modalPrint").addEventListener("click", async ()=>{
       if(!validateAllRequired({ includeApproval: false })) return;
       buildPrintView();
+
+      await waitForImages($("printView"));
+      await new Promise(r => setTimeout(r, 150));
+
       closePreview();
       window.print();
     });
