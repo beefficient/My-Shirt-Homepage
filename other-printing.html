@@ -450,292 +450,195 @@
     </div>
   </div>
 
+<!-- Supabase JS v2 (must be before our code) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-  // Mobile menu toggle
-  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-  const mainNav = document.getElementById("mainNav");
-  if (mobileMenuBtn && mainNav) {
-    mobileMenuBtn.addEventListener("click", () => {
-      mainNav.classList.toggle("show");
+// ================================
+// CONFIG (MUST EXIST)
+// ================================
+window.SUPABASE_URL = "https://tvtyjmeedapbsaopeebh.supabase.co";
+window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHlqbWVlZGFwYnNhb3BlZWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzQ3MzUsImV4cCI6MjA4NzIxMDczNX0.VKNQc9G18OgJndoN3eiv5wcLWaAmqOcQ9qA4ve2tNsQ";
+window.CUSTOMER_QUOTES_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyK3LZVt_91OIPLoWMTM7cf21t_h9sjM46qiGYJll49b9fwV2OdUZM0GLP6hx0FFMaJ/exec";
+window.MIRROR_SECRET = "myshirt_customer_quote_2026";
+
+// ================================
+// SUPABASE INIT
+// ================================
+function initSupabase(){
+  if (!window.supabase) return null;
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
+  return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+}
+window.sb = initSupabase();
+
+function getSB(){
+  if (window.sb) return window.sb;
+  if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY){
+    window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    return window.sb;
+  }
+  return null;
+}
+window.getSB = getSB;
+
+// ===============================
+// UPLOADS (bucket for other printing)
+// ===============================
+const OTHER_BUCKET = "quote_uploads";
+
+function safeName(name) {
+  return String(name || "file")
+    .replace(/[^\w.\-]+/g, "_")
+    .replace(/_+/g, "_")
+    .slice(0, 120);
+}
+
+async function uploadQuoteFiles(files, quoteNo) {
+  const sb = getSB();
+  if (!sb) throw new Error("Supabase client not ready.");
+  if (!files || files.length === 0) return [];
+
+  const uploaded = [];
+  for (const file of files) {
+    const ts = Date.now();
+    const path = `other-printing/${quoteNo}/${ts}-${safeName(file.name)}`;
+
+    const { error: upErr } = await sb.storage
+      .from(OTHER_BUCKET)
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || undefined
+      });
+
+    if (upErr) throw upErr;
+
+    const { data } = sb.storage.from(OTHER_BUCKET).getPublicUrl(path);
+    uploaded.push({ name: file.name, path, url: data?.publicUrl || "" });
+  }
+  return uploaded;
+}
+window.uploadQuoteFiles = uploadQuoteFiles;
+
+// ===============================
+// MIRROR TO APPS SCRIPT
+// ===============================
+async function mirrorOtherPrintingToSheet(data, payload){
+  const url = String(window.CUSTOMER_QUOTES_WEBAPP_URL || "").trim();
+  if (!url) return;
+
+  const productValue = (document.getElementById("product")?.value || "").trim();
+  const body = new URLSearchParams({
+    secret: window.MIRROR_SECRET || "",
+    source: "customer",
+    created_at: new Date().toISOString(),
+    quote_no: data?.quote_no || "",
+
+    // MUST MATCH Apps Script keys
+    name: payload.name || "",
+    email: payload.email || payload.customerEmail || "",
+    phone: payload.phone || "",
+    // service field removed per user request
+
+    // Extra fields
+    product: productValue,
+    artwork_need: (payload.artwork_need || payload.artworkNeed || (payload.other_service && payload.other_service.artwork_need) || ""),
+    grommets: payload.grommets || "",
+    notes: payload.notes || payload.customer_notes || "",
+    qty: payload.qty || "",
+
+    supabase_id: data?.id || "",
+    file_urls: JSON.stringify(payload.files || [])
+  });
+
+  await fetch(url, { method: "POST", body });
+}
+
+// ===============================
+// MAIN SUBMIT
+// ===============================
+window.sendOtherPrintingQuote = async function sendOtherPrintingQuote(){
+  const sb = getSB();
+  if (!sb) { alert("Supabase not initialized (missing anon key or URL)."); return; }
+
+  const name  = (document.getElementById("custName")?.value || "").trim();
+  const email = (document.getElementById("custEmail")?.value || "").trim();
+  const phone = (document.getElementById("custPhone")?.value || "").trim();
+  const product = (document.getElementById("product")?.value || "").trim();
+  const qty   = (document.getElementById("qty")?.value || "").trim();
+  const size  = (document.getElementById("size")?.value || "").trim();
+  const artworkNeed = (document.getElementById("artworkNeed")?.value || "").trim();
+  const notes = (document.getElementById("notes")?.value || "").trim();
+
+  // Conditional options
+  let printSides = "";
+  if (document.getElementById("frontOnly")?.checked) printSides = "Front Print";
+  if (document.getElementById("frontBack")?.checked) printSides = "Back and Front Print";
+
+  let grommets = "";
+  if (document.getElementById("withGrommets")?.checked) grommets = "With grommets";
+  if (document.getElementById("withoutGrommets")?.checked) grommets = "Without grommets";
+
+  const payload = {
+    email,
+    qty,
+    customer_notes: notes || "",
+    other_service: {
+      artwork_need: artworkNeed || "",
+      // anything else for “Other Printing Services”
+    },
+    files: []
+  };
+
+  // 1) Insert row to get quote_no
+  const { data, error } = await sb
+    .from("customer_quotes")
+    .insert({ name, email, phone, service: "other_printing", payload })
+    .select("id, quote_no")
+    .single();
+
+  if (error) { console.error(error); alert(error.message); return; }
+
+  // 2) Upload files to bucket using quote_no
+  const files = Array.from(document.getElementById("artFile")?.files || []);
+  try {
+    const uploaded = await uploadQuoteFiles(files, data.quote_no);
+    payload.files = uploaded;
+
+    // 3) Update row with payload.files
+    await sb.from("customer_quotes").update({ payload }).eq("id", data.id);
+
+    // 4) Mirror to Apps Script with file_urls
+    await mirrorOtherPrintingToSheet(data, payload);
+
+    alert(`Sent ✅ Quote #${data.quote_no}`);
+  } catch(e) {
+    console.error(e);
+    alert(`Saved Quote #${data.quote_no}, but upload/email failed. Check console.`);
+  }
+};
+
+// Show 'Quote submitted' message immediately
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("submitBtn");
+  if (btn) {
+    let msg = document.getElementById("submitMsg");
+    if (!msg) {
+      msg = document.createElement("span");
+      msg.id = "submitMsg";
+      msg.style.marginLeft = "16px";
+      msg.style.fontWeight = "700";
+      msg.style.color = "var(--accent, #2f7a5a)";
+      btn.parentNode.insertBefore(msg, btn.nextSibling);
+    }
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      msg.textContent = "Quote submitted";
+      window.sendOtherPrintingQuote();
     });
-    // Close menu when clicking outside
-    document.addEventListener("click", (e) => {
-      if (!mainNav.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
-        mainNav.classList.remove("show");
-      }
-    });
   }
-
-  // Close quote dropdown when clicking outside
-  document.addEventListener("click", (e) => {
-    const dd = document.getElementById("quoteDrop");
-    if (!dd) return;
-    if (!dd.contains(e.target)) dd.removeAttribute("open");
-  });
-
-  const API_ENDPOINT = "/api/send-quote";
-  const ENABLE_MAILTO_FALLBACK = false;
-
-  const GMAIL_MAX_BYTES = 25 * 1024 * 1024;
-
-  const artFile = document.getElementById("artFile");
-  const fileError = document.getElementById("fileError");
-  const limitText = document.getElementById("limitText");
-  const errorEl = document.getElementById("error");
-  const successBox = document.getElementById("successBox");
-  const emptyState = document.getElementById("emptyState");
-  const sharingDirectly = document.getElementById("sharingDirectly");
-
-  function formatBytes(bytes){
-    const mb = bytes / (1024 * 1024);
-    const rounded = Math.round(mb);
-    const display = (Math.abs(mb - rounded) < 0.05) ? rounded.toString() : mb.toFixed(1);
-    return `${display} MB`;
-  }
-  limitText.textContent = `Maximum upload size: ${formatBytes(GMAIL_MAX_BYTES)}.`;
-
-  function normalizeNum(v){
-    const n = Number(String(v || "").trim());
-    return Number.isFinite(n) && n > 0 ? n : null;
-  }
-
-  function validateFile(){
-    fileError.textContent = "";
-    const f = artFile.files && artFile.files[0];
-    if(!f) return true;
-    if (f.size > GMAIL_MAX_BYTES){
-      fileError.textContent =
-`Your file exceeds the size limit of ${formatBytes(GMAIL_MAX_BYTES)}.
-Please make the image smaller, or share the file via Google Drive/Dropbox (or similar) directly to myshirtcustomerservice@gmail.com.`;
-      return false;
-    }
-    return true;
-  }
-
-  artFile.addEventListener("change", () => {
-    if (!sharingDirectly.checked) validateFile();
-  });
-
-  sharingDirectly.addEventListener("change", () => {
-    if (sharingDirectly.checked) fileError.textContent = "";
-    else validateFile();
-  });
-
-  // ===== Conditional option blocks =====
-  const productEl = document.getElementById("product");
-  const printSidesBlock = document.getElementById("printSidesBlock");
-  const grommetsBlock = document.getElementById("grommetsBlock");
-
-  const frontOnly = document.getElementById("frontOnly");
-  const frontBack = document.getElementById("frontBack");
-  const withGrommets = document.getElementById("withGrommets");
-  const withoutGrommets = document.getElementById("withoutGrommets");
-
-  function setExclusive(a, b){
-    a.addEventListener("change", () => { if (a.checked) b.checked = false; });
-    b.addEventListener("change", () => { if (b.checked) a.checked = false; });
-  }
-  setExclusive(frontOnly, frontBack);
-  setExclusive(withGrommets, withoutGrommets);
-
-  function updateProductOptions(){
-    const p = (productEl.value || "").trim();
-
-    const needsSides = ["Business Cards","Flyers","Yard Signs","Invitations"].includes(p);
-    const isBanner = (p === "Banners");
-
-    printSidesBlock.style.display = needsSides ? "block" : "none";
-    grommetsBlock.style.display = isBanner ? "block" : "none";
-
-    // Clear options when switching products
-    if (!needsSides){
-      frontOnly.checked = false;
-      frontBack.checked = false;
-    }
-    if (!isBanner){
-      withGrommets.checked = false;
-      withoutGrommets.checked = false;
-    }
-  }
-  productEl.addEventListener("change", updateProductOptions);
-  updateProductOptions();
-
-  // ===== Build body for email / server =====
-  function buildOtherQuoteBody(data){
-    const lines = [];
-    lines.push("OTHER PRINTING QUOTE REQUEST");
-    lines.push("");
-    lines.push(`Name: ${data.name}`);
-    lines.push(`Email: ${data.email}`);
-    if (data.phone) lines.push(`Phone: ${data.phone}`);
-    lines.push("");
-    lines.push(`Product: ${data.product}`);
-    lines.push(`Quantity: ${data.qty}`);
-    lines.push(`Size: ${data.size || "(not provided)"}`);
-    lines.push(`Artwork: ${data.artworkNeed}`);
-
-    if (data.printSides){
-      lines.push(`Print sides: ${data.printSides}`);
-    }
-    if (data.grommets){
-      lines.push(`Banner grommets: ${data.grommets}`);
-    }
-
-    lines.push("");
-    lines.push(`Sharing image directly: ${data.sharingDirectly ? "Yes" : "No"}`);
-
-    const f = artFile.files && artFile.files[0];
-    if (!data.sharingDirectly && f){
-      lines.push(`Uploaded file selected (note: sending file requires server upload handling): ${f.name} (${formatBytes(f.size)})`);
-    }
-
-    if (data.notes){
-      lines.push("");
-      lines.push("Notes / details:");
-      lines.push(data.notes);
-    }
-
-    lines.push("");
-    lines.push("Please respond within 24 business hours with an official quote.");
-    lines.push("If artwork is larger than 25MB, customer will send a Drive/Dropbox link to myshirtcustomerservice@gmail.com.");
-    return lines.join("\n");
-  }
-
-  async function sendToServer(payload){
-    const res = await fetch(API_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.message || "Server not available yet.");
-    return data;
-  }
-
-  function mailtoFallback(subject, body){
-    const to = "myshirtcustomerservice@gmail.com";
-    const url = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = url;
-  }
-
-  function showSuccess(){
-    emptyState.style.display = "none";
-    successBox.style.display = "block";
-    successBox.innerHTML = `
-      <div style="font-weight:900;margin-bottom:6px">Request sent</div>
-      <div class="muted" style="font-weight:600">
-        Your request for a quote has been sent, please give us up to 24 hours to respond with a quote! Thank you!
-      </div>
-    `;
-  }
-
-  function validateForm(){
-    errorEl.textContent = "";
-
-    const name = (document.getElementById("custName").value || "").trim();
-    const email = (document.getElementById("custEmail").value || "").trim();
-    const phone = (document.getElementById("custPhone").value || "").trim();
-    const product = (document.getElementById("product").value || "").trim();
-
-    const qtyRaw = document.getElementById("qty").value;
-    const qty = normalizeNum(qtyRaw);
-
-    const size = (document.getElementById("size").value || "").trim();
-    const artworkNeed = (document.getElementById("artworkNeed").value || "").trim();
-    const notes = (document.getElementById("notes").value || "").trim();
-    const website = (document.getElementById("website").value || "").trim();
-
-    const sharing = !!sharingDirectly.checked;
-
-    if (!name){
-      errorEl.textContent = "Please enter your name.";
-      return null;
-    }
-    if (!email || !email.includes("@")){
-      errorEl.textContent = "Please enter a valid email address.";
-      return null;
-    }
-    if (!product){
-      errorEl.textContent = "Please select a product.";
-      return null;
-    }
-    if (!qty){
-      errorEl.textContent = "Please enter a valid quantity.";
-      return null;
-    }
-    if (!artworkNeed){
-      errorEl.textContent = "Please select whether you need artwork or will supply your own.";
-      return null;
-    }
-
-    // If relevant block is visible, require one option selected
-    const needsSides = ["Business Cards","Flyers","Yard Signs","Invitations"].includes(product);
-    if (needsSides && !(frontOnly.checked || frontBack.checked)){
-      errorEl.textContent = "Please select Front Print or Back and Front Print.";
-      return null;
-    }
-
-    const isBanner = (product === "Banners");
-    if (isBanner && !(withGrommets.checked || withoutGrommets.checked)){
-      errorEl.textContent = "Please select With grommets or Without grommets.";
-      return null;
-    }
-
-    if (!sharing && !validateFile()){
-      errorEl.textContent = "Please fix the file issue above, or check “Sharing image directly”.";
-      return null;
-    }
-
-    let printSides = "";
-    if (frontOnly.checked) printSides = "Front Print";
-    if (frontBack.checked) printSides = "Back and Front Print";
-
-    let grommets = "";
-    if (withGrommets.checked) grommets = "With grommets";
-    if (withoutGrommets.checked) grommets = "Without grommets";
-
-    return {
-      name, email, phone,
-      product,
-      qty,
-      size,
-      artworkNeed,
-      printSides,
-      grommets,
-      notes,
-      website,
-      sharingDirectly: sharing
-    };
-  }
-
-  document.getElementById("submitBtn").addEventListener("click", async (e) => {
-    e.preventDefault();
-
-    const data = validateForm();
-    if(!data) return;
-
-    const body = buildOtherQuoteBody(data);
-    const subject = `Other Printing Quote — ${data.name} (${data.product})`;
-
-    const payload = {
-      type: "other_printing",
-      name: data.name,
-      customerEmail: data.email,
-      subject,
-      body,
-      website: data.website
-    };
-
-    try{
-      await sendToServer(payload);
-      showSuccess();
-    }catch(err){
-      showSuccess();
-      if (ENABLE_MAILTO_FALLBACK){
-        mailtoFallback(subject, body);
-      }
-    }
-  });
+});
 </script>
 </body>
 </html>

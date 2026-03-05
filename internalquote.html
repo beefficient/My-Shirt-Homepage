@@ -1,0 +1,1376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quote — My Shirt Printing</title>
+
+  <!-- Same fonts as your site -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* === Theme copied to match your index.html palette & feel === */
+    body.locked { overflow:hidden; }
+
+    #loginOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #loginOverlay.hidden { display: none; }
+    #loginOverlay .panel {
+      width: min(420px, calc(100% - 40px));
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    :root{
+      --bg: #f6fbff;
+      --sky: #eaf4ff;
+      --card: #ffffff;
+      --text: #0f2a33;
+      --muted: #47606a;
+      --border: #d7e7f7;
+      --primary: #032d44;
+      --primary-2: #0b3f5b;
+      --pill: 999px;
+      --radius: 16px;
+      --shadow: 0 10px 24px rgba(10,35,45,.08);
+      --max: 1120px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #dfeeff 0%, #f6fbff 55%, #ffffff 100%);
+      line-height: 1.55;
+    }
+    a{color:inherit;text-decoration:none}
+    .container{max-width:var(--max);margin:0 auto;padding:0 20px}
+
+    /* Top Nav (kept consistent with your site) */
+    header{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navwrap{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; padding:14px 0;
+    }
+    .brand{display:flex; align-items:center; gap:12px; min-width:220px;}
+    .brand img{height:42px; width:auto; object-fit:contain;}
+    .brand .name{
+      font-family:"DM Sans", Inter, sans-serif;
+      font-weight:700; font-size:16px; letter-spacing:.2px; color:var(--primary-2);
+      white-space:nowrap;
+    }
+    nav{display:flex; gap:18px; align-items:center; flex-wrap:wrap;}
+    nav a{
+      font-size:14px; color:var(--primary-2);
+      padding:8px 10px; border-radius:10px; font-weight:600;
+    }
+    nav a:hover{background:var(--sky)}
+    nav a.active{border-bottom:2px solid var(--primary); border-radius:0; padding-bottom:6px}
+
+    /* Buttons */
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:11px 16px; border-radius:var(--pill);
+      font-weight:700; border:1px solid transparent;
+      cursor:pointer; user-select:none; white-space:nowrap; gap:8px;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .btn.primary{background:var(--primary); color:#fff; box-shadow:var(--shadow);}
+    .btn.primary:hover{filter:brightness(.98)}
+    .btn.ghost{background:#fff; border-color:var(--border); color:var(--primary-2)}
+    .btn.ghost:hover{background:var(--sky)}
+    .btn.small{padding:9px 12px; font-size:13px}
+
+    /* Page */
+    .hero{ padding: 26px 0 12px; position: relative; overflow: visible; }
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-260px; top:-120px;
+      width:760px; height:760px;
+      background: rgba(120,180,255,.18);
+      border-radius:50%;
+      pointer-events:none;
+    }
+
+    .page-title{
+      position: relative;
+      z-index: 1;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 8px 0 6px;
+    }
+
+    .sheet{
+      position: relative;
+      z-index: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 22px rgba(10,35,45,.06);
+      overflow: hidden;
+    }
+
+    .actionbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 14px;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(8px);
+    }
+    .action-left{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .action-right{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+
+    details.menu{position:relative;}
+    details.menu > summary{
+      list-style:none;
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:11px 16px;
+      border-radius: var(--pill);
+      font-weight:700;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--primary-2);
+      gap:8px;
+    }
+    details.menu > summary::-webkit-details-marker{display:none}
+    details.menu > summary:hover{background:var(--sky)}
+    .menuPanel{
+      position:absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 220px;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 6px;
+      z-index: 999;
+    }
+    .menuPanel button{
+      width:100%;
+      text-align:left;
+      border:0;
+      background:transparent;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight:700;
+      color: var(--primary-2);
+      cursor:pointer;
+      font-family: inherit;
+    }
+    .menuPanel button:hover{background: var(--sky);}
+
+    .content{padding: 18px;}
+    .topgrid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      align-items:start;
+    }
+    .box{
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      background:#fff;
+    }
+    .box h3{
+      margin:0 0 8px;
+      font-family:"DM Sans", Inter, sans-serif;
+      color: var(--primary-2);
+      font-size: 16px;
+      letter-spacing: -.2px;
+    }
+    .label{
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color: var(--muted);
+      margin-bottom:6px;
+      display:block;
+    }
+    .field{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+      background:#fff;
+      color: var(--text);
+      outline: none;
+    }
+    .field:focus{box-shadow: 0 0 0 4px rgba(120,180,255,.18); border-color:#b9d9f7}
+    textarea.field{min-height: 92px; resize: vertical;}
+    .row2{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    .row3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;}
+    .mono{font-family: var(--mono);}
+
+    .tableWrap{
+      margin-top: 14px;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      overflow-x: auto;
+      overflow-y: hidden;
+      background:#fff;
+    }
+    table{width:100%; border-collapse:collapse;}
+
+    .items-table{
+      min-width: 900px;
+      table-layout: fixed;
+    }
+    thead th{
+      text-align:left;
+      background: var(--primary-2);
+      color:#fff;
+      padding: 12px 12px;
+      font-size: 13px;
+      letter-spacing:.04em;
+      font-weight:800;
+    }
+    tbody td{
+      padding: 10px 12px;
+      border-bottom:1px solid var(--border);
+      vertical-align: top;
+      font-size: 14px;
+    }
+    tbody tr:last-child td{border-bottom:none;}
+    .t-right{text-align:right;}
+
+    .iconbtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+      font-weight:900;
+      color: var(--primary-2);
+    }
+    .iconbtn:hover{background: var(--sky);}
+
+    /* Print */
+    @media print{
+      .noPrintCell,
+      .noPrintCell *{ display:none !important; visibility:hidden !important; }
+      #moreMenu { display:none !important; }
+      header, .actionbar { display:none !important; }
+      .noPrint{ display:none !important; }
+      #contactSearch, #contactResults, #btnAddNewCustomer { display:none !important; }
+      #loginOverlay{ display:none !important; }
+      #addItemBtnFallback{ display:none !important; }
+      body{ background:#fff; }
+      .hero{ padding: 0; }
+      .sheet{ border:none; box-shadow:none; }
+      *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    @page { size: Letter; margin: 14mm; }
+  </style>
+</head>
+
+<body>
+  <!-- REQUIRED for Quote Mode calculator (can be hidden) -->
+  <div id="quoteCalcHidden" style="display:none;">
+    <input id="taxRate" type="number" value="9.375" />
+    <div id="taxAmount">$0.00</div>
+  </div>
+
+  <div id="loginOverlay">
+    <div class="panel">
+      <h2 style="margin:0 0 12px;">Staff Login</h2>
+      <input id="loginEmail" type="email" placeholder="Email" style="width:100%;padding:10px;margin-bottom:10px;">
+      <input id="loginPassword" type="password" placeholder="Password" style="width:100%;padding:10px;margin-bottom:10px;">
+      <button id="loginBtn" type="button" class="btn primary" style="width:100%;">Login</button>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <header>
+    <div class="container">
+      <div class="navwrap">
+        <a class="brand" href="index.html" aria-label="Go to homepage">
+          <img src="logo.png" alt="My Shirt Printing logo" />
+          <div class="name">My Shirt Printing and embroidery</div>
+        </a>
+        <nav aria-label="Main menu">
+          <a href="index.html">Home</a>
+          <a class="active" href="quote.html">Quote</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <div class="sheet">
+
+        <!-- ACTION BAR -->
+        <div class="actionbar">
+          <div class="action-left">
+            <button class="btn ghost" type="button" id="btnSave">Save</button>
+            <button class="btn ghost" type="button" id="btnPrint">Print</button>
+            <button class="btn ghost" type="button" id="btnPdf">PDF</button>
+            <button class="btn primary" type="button" id="btnSend">Send</button>
+            <button class="btn primary" type="button" id="btnCreateWO">Create Work Order</button>
+            <input type="text" id="woSearch" placeholder="Enter Work Order #" style="margin-left:12px;max-width:140px;" />
+            <button type="button" id="btnLoadWO">Load</button>
+          </div>
+
+          <div class="action-right">
+            <details class="menu" id="moreMenu">
+              <summary>More Actions… <span aria-hidden="true">▾</span></summary>
+              <div class="menuPanel" role="menu" aria-label="More actions">
+                <button type="button" id="btnDuplicate">Duplicate</button>
+                <button type="button" id="btnVoid">Void</button>
+                <button type="button" id="btnDownloadJson">Download JSON</button>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="content">
+
+          <!-- Top info -->
+          <div class="topgrid">
+            <div class="box">
+              <h3>From</h3>
+              <div class="row2">
+                <div>
+                  <label class="label">Business name</label>
+                  <input class="field" id="bizName" value="My Shirt Company" />
+                </div>
+                <div>
+                  <label class="label">Email</label>
+                  <input class="field" id="bizEmail" value="myshirtcustomerservice@gmail.com" />
+                </div>
+              </div>
+              <div style="margin-top:10px" class="row2">
+                <div>
+                  <label class="label">Address</label>
+                  <input class="field" id="bizAddr" value="3331 Edward Avenue" />
+                </div>
+                <div>
+                  <label class="label">City, State ZIP</label>
+                  <input class="field" id="bizCity" value="Santa Clara, CA 95054" />
+                </div>
+              </div>
+              <div style="margin-top:10px">
+                <label class="label">Phone</label>
+                <input class="field" id="bizPhone" value="669-231-9059" />
+              </div>
+              <div style="margin-top:10px">
+                <label class="label">Payment Link</label>
+                <input class="field" id="bizPaymentLink" value="https://square.link/u/HE22n772" readonly style="font-size:13px;" />
+              </div>
+            </div>
+
+            <div class="box">
+              <h3>Quote Details</h3>
+              <div class="row3">
+                <div>
+                  <label class="label">Quote #</label>
+                  <input class="field mono" id="invNo" value="" />
+                </div>
+                <div>
+                  <label class="label">Quote Date</label>
+                  <input class="field" id="invDate" type="date" value="" />
+                </div>
+              </div>
+
+              <div style="margin-top:10px" class="noPrint">
+                <label class="label">Find contact</label>
+                <div style="position:relative;">
+                  <input class="field" id="contactSearch" placeholder="Type a few letters (business, first, last)…" autocomplete="off" />
+                  <div id="contactResults" style="
+                      position:absolute; left:0; right:0; top:calc(100% + 8px);
+                      background:#fff; border:1px solid var(--border); border-radius:14px;
+                      box-shadow: var(--shadow); padding:6px; display:none; z-index:1000;
+                      max-height: 260px; overflow:auto;
+                    "></div>
+                </div>
+
+                <div style="margin-top:10px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+                  <button class="btn ghost small" type="button" id="btnAddNewCustomer">Add New Customer</button>
+                </div>
+              </div>
+
+              <div style="margin-top:10px">
+                <label class="label">Bill To (client)</label>
+                <input class="field" id="clientName" value="" />
+              </div>
+              <div style="margin-top:10px" class="row2">
+                <div>
+                  <label class="label">Client email</label>
+                  <input class="field" id="clientEmail" value="" />
+                </div>
+                <div>
+                  <label class="label">Client address (optional)</label>
+                  <input class="field" id="clientAddr" value="" />
+                </div>
+              </div>
+              <div style="margin-top:10px" class="row2">
+                <div>
+                  <label class="label">Client phone</label>
+                  <input class="field" id="clientPhone" value="" />
+                </div>
+                <div id="clientContactWrap" style="display:none;">
+                  <label class="label">Contact name</label>
+                  <input class="field" id="clientContact" value="" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Item entry -->
+          <div class="box noPrint" style="margin-top:14px;">
+            <h3>Add Item</h3>
+            <div class="row2">
+              <div>
+                <label class="label">Item</label>
+                <select id="itemType" class="field">
+                  <option value="Product">Product</option>
+                  <option value="Services">Services</option>
+                  <option value="Discount">Discount</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="label">Description</label>
+                <input id="itemDesc" class="field" placeholder="printing / shirts / setup..." />
+              </div>
+            </div>
+
+            <div class="row3" style="margin-top:10px;">
+              <div>
+                <label class="label">Unit Price</label>
+                <input id="itemPrice" class="field mono" inputmode="decimal" placeholder="0.00" />
+              </div>
+              <div>
+                <label class="label">Quantity</label>
+                <input id="itemQty" class="field mono" inputmode="numeric" value="1" />
+              </div>
+              <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:10px;">
+                <label style="display:flex; align-items:center; gap:8px; font-weight:800; color:var(--muted);">
+                  <input id="itemTaxable" type="checkbox" checked />
+                  <span>Taxable</span>
+                </label>
+                <button type="button" class="btn primary" id="addItemBtn" onclick="window.__lineItemsAdd && window.__lineItemsAdd(event)">Add Item</button>
+              </div>
+            </div>
+
+            <div style="margin-top:10px; display:flex; gap:18px; flex-wrap:wrap;">
+              <div><div class="label">Amount</div><div class="mono" id="itemAmountView">$0.00</div></div>
+              <div><div class="label">Tax</div><div class="mono" id="itemTaxView">$0.00</div></div>
+              <div><div class="label">Total</div><div class="mono" id="itemTotalView">$0.00</div></div>
+            </div>
+          </div>
+
+          <!-- Line items table -->
+          <div class="tableWrap" aria-label="Line items">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Description</th>
+                  <th class="t-right">Unit Price</th>
+                  <th class="t-right">Quantity</th>
+                  <th class="t-right">Amount</th>
+                  <th class="t-right">Tax</th>
+                  <th class="t-right">Total</th>
+                  <th class="noPrintCell"></th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody"></tbody>
+            </table>
+
+            <div class="noPrint" style="margin-top:12px;text-align:right; padding:0 12px 12px;">
+              <button type="button" class="btn small" id="addItemBtnFallback" onclick="window.__lineItemsAdd && window.__lineItemsAdd(event)" style="min-width:80px;font-weight:600;font-size:15px;">Add Item</button>
+              <div id="addItemHint" class="small" style="margin-top:10px; font-weight:800; color:var(--muted);"></div>
+            </div>
+          </div>
+
+          <!-- Notes / Terms -->
+          <div style="margin-top:14px;" class="row2">
+            <div class="box" style="background: rgba(234,244,255,.45);">
+              <h3>Notes</h3>
+              <textarea class="field" id="notes"></textarea>
+            </div>
+            <div class="box" style="background: rgba(234,244,255,.45);">
+              <h3>Terms</h3>
+              <textarea class="field" id="terms"></textarea>
+            </div>
+          </div>
+
+        </div><!-- /content -->
+      </div><!-- /sheet -->
+    </div>
+  </section>
+
+  <!-- Add New Customer Modal -->
+  <div id="newCustomerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+    <div style="width:min(520px, calc(100% - 40px)); background:#fff; border:1px solid #d7e7f7; border-radius:16px; padding:16px; box-shadow:0 10px 24px rgba(10,35,45,.12);">
+      <h3 style="margin:0 0 12px; color:#0b3f5b;">Add New Customer</h3>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div>
+          <label class="label">First Name</label>
+          <input id="ncFirst" class="field" />
+        </div>
+        <div>
+          <label class="label">Last Name</label>
+          <input id="ncLast" class="field" />
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <label class="label">Contact Name (optional)</label>
+        <input id="ncContact" class="field" />
+      </div>
+
+      <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div>
+          <label class="label">Phone</label>
+          <input id="ncPhone" class="field" />
+        </div>
+        <div>
+          <label class="label">Email</label>
+          <input id="ncEmail1" class="field" />
+        </div>
+      </div>
+
+      <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div>
+          <label class="label">Email 2 (optional)</label>
+          <input id="ncEmail2" class="field" />
+        </div>
+        <div>
+          <label class="label">Address</label>
+          <input id="ncAddress" class="field" />
+        </div>
+      </div>
+
+      <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:10px;">
+        <button id="ncCancel" type="button" class="btn ghost">Cancel</button>
+        <button id="ncSave" type="button" class="btn primary">Save to New Customers</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase JS v2 (LOAD ONCE) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    /* =========================
+       GLOBAL CONFIG (ONE PLACE)
+    ========================== */
+    window.NEW_CUSTOMERS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzeCDuKCpxYfS_Eefrn4Skf6G0XasekzgsJxn1cVZhu2wbrokqc9zIwApr4MWcNDALI/exec";
+    window.CONTACTS_SECRET = "msp-invoice-contacts-2026-m@g0wie!!!";
+
+    window.SUPABASE_URL = "https://tvtyjmeedapbsaopeebh.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHlqbWVlZGFwYnNhb3BlZWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzQ3MzUsImV4cCI6MjA4NzIxMDczNX0.VKNQc9G18OgJndoN3eiv5wcLWaAmqOcQ9qA4ve2tNsQ";
+
+    // Always-available Add Item fallback. Later scripts can replace this.
+    window.__lineItemsAdd = function(e){
+      e?.preventDefault?.();
+      const $ = (id) => document.getElementById(id);
+      const hint = $("addItemHint");
+      const tbody = $("itemsBody");
+      if (!tbody) return;
+
+      const num = (v) => {
+        const n = parseFloat(String(v ?? "").trim().replace(/[^0-9.-]/g, ""));
+        return Number.isFinite(n) ? n : 0;
+      };
+      const money = (n) => {
+        const x = Number(n);
+        return (Number.isFinite(x) ? x : 0).toLocaleString(undefined, { style:"currency", currency:"USD" });
+      };
+      const esc = (s) => String(s ?? "")
+        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+      const isDiscount = (t) => String(t || "").trim().toLowerCase() === "discount";
+
+      const type = $("itemType")?.value || "Product";
+      const desc = ($("itemDesc")?.value || "").trim();
+      const price = num($("itemPrice")?.value);
+      const qty = Math.max(0, num($("itemQty")?.value || 1));
+      let taxable = !!$("itemTaxable")?.checked;
+      if (!desc){
+        if (hint) hint.textContent = "Enter a description before adding.";
+        $("itemDesc")?.focus();
+        return;
+      }
+      if (isDiscount(type)) taxable = false;
+      if (hint) hint.textContent = "";
+
+      let amount = price * qty;
+      if (isDiscount(type) && amount > 0) amount = -amount;
+      const taxRate = (num($("taxRate")?.value || 0) / 100) || 0;
+      const tax = taxable && !isDiscount(type) ? amount * taxRate : 0;
+      const total = amount + tax;
+
+      const tr = document.createElement("tr");
+      tr.dataset.type = type;
+      tr.dataset.desc = desc;
+      tr.dataset.price = String(price);
+      tr.dataset.qty = String(qty);
+      tr.dataset.amount = String(amount);
+      tr.dataset.taxable = taxable ? "1" : "0";
+      tr.dataset.tax = String(tax);
+      tr.dataset.total = String(total);
+      tr.innerHTML = `
+        <td>${esc(type)}</td>
+        <td>${esc(desc)}</td>
+        <td class="t-right">${money(price)}</td>
+        <td class="t-right">${String(qty)}</td>
+        <td class="t-right">${money(amount)}</td>
+        <td class="t-right" data-col="tax">${money(tax)}</td>
+        <td class="t-right" data-col="total">${money(total)}</td>
+        <td class="t-right noPrintCell">
+          <button type="button" class="iconbtn" data-action="delete" title="Delete">✕</button>
+        </td>
+      `;
+      tr.querySelector('[data-action="delete"]')?.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        tr.remove();
+      });
+      tbody.appendChild(tr);
+
+      if ($("itemDesc")) $("itemDesc").value = "";
+      if ($("itemPrice")) $("itemPrice").value = "";
+      if ($("itemQty")) $("itemQty").value = "1";
+      if ($("itemType")) $("itemType").value = "Product";
+      if ($("itemTaxable")) { $("itemTaxable").checked = true; $("itemTaxable").disabled = false; }
+      $("itemDesc")?.focus();
+    };
+  </script>
+
+  <script>
+    /* ================================
+       1) SUPABASE INIT + LOGIN
+    ================================ */
+    (function(){
+      window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+
+      async function login(){
+        const email = document.getElementById("loginEmail")?.value?.trim();
+        const password = document.getElementById("loginPassword")?.value || "";
+        if (!email || !password) return alert("Enter email + password.");
+
+        const { error } = await window.sb.auth.signInWithPassword({ email, password });
+        if (error){ console.error(error); alert(error.message); return; }
+
+        document.getElementById("loginOverlay")?.classList.add("hidden");
+        document.body.classList.remove("locked");
+      }
+
+      async function checkSession(){
+        const { data } = await window.sb.auth.getSession();
+        if (data?.session){
+          document.getElementById("loginOverlay")?.classList.add("hidden");
+          document.body.classList.remove("locked");
+        } else {
+          document.getElementById("loginOverlay")?.classList.remove("hidden");
+          document.body.classList.add("locked");
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("loginBtn")?.addEventListener("click", (e) => { e.preventDefault(); login(); });
+        checkSession();
+      });
+    })();
+  </script>
+
+  <script>
+    /* ================================
+       2) CONTACT SEARCH (GOOGLE SHEETS) — ONE COPY
+    ================================ */
+    (function(){
+      const API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
+      const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
+      const RANGE_A1 = "contacts!A1:J5000";
+
+      const COL = {
+        first: "First Name",
+        last: "Last Name",
+        contact: "Contact Name",
+        phone: "Phone",
+        email1: "Email 1",
+        email2: "Email 2",
+        address: "Address"
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      function esc(s){
+        return String(s ?? "")
+          .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+          .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+      }
+
+      function fullName(c){
+        return [c[COL.first], c[COL.last]].filter(Boolean).join(" ").trim();
+      }
+
+      function hideResults(resultsEl){
+        resultsEl.style.display = "none";
+        resultsEl.innerHTML = "";
+      }
+
+      function pickContact(c){
+        $("clientName").value  = fullName(c);
+        $("clientEmail").value = ((c[COL.email1] || "").trim() || (c[COL.email2] || "").trim());
+        $("clientAddr").value  = (c[COL.address] || "").trim();
+        $("clientPhone").value = (c[COL.phone] || "").trim();
+
+        const wrap = $("clientContactWrap");
+        const contactEl = $("clientContact");
+        const contactName = (c[COL.contact] || "").trim();
+        if (wrap && contactEl) {
+          if (contactName) { wrap.style.display = "block"; contactEl.value = contactName; }
+          else { wrap.style.display = "none"; contactEl.value = ""; }
+        }
+      }
+
+      async function loadContacts(){
+        const url =
+          `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SPREADSHEET_ID)}` +
+          `/values/${encodeURIComponent(RANGE_A1)}?key=${encodeURIComponent(API_KEY)}`;
+
+        const res = await fetch(url, { cache: "no-store" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error?.message || `Sheets error ${res.status}`);
+
+        const values = data.values || [];
+        if (values.length < 2) return [];
+
+        const headers = values[0].map(h => String(h || "").trim());
+        return values.slice(1).map(row => {
+          const obj = {};
+          headers.forEach((h, i) => obj[h] = String(row[i] ?? "").trim());
+          return obj;
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        const searchEl  = $("contactSearch");
+        const resultsEl = $("contactResults");
+        if (!searchEl || !resultsEl) return;
+
+        let CONTACTS = [];
+        let CONTACTS_ERROR = "";
+
+        try { CONTACTS = await loadContacts(); CONTACTS_ERROR = ""; }
+        catch (e){ CONTACTS = []; CONTACTS_ERROR = e?.message || "Could not load contacts."; console.error(CONTACTS_ERROR); }
+
+        function showMessage(msg){
+          resultsEl.innerHTML = `<div style="padding:10px 12px; font-weight:800; color:var(--muted);">${esc(msg)}</div>`;
+          resultsEl.style.display = "block";
+        }
+
+        function showResults(list){
+          resultsEl.innerHTML = "";
+          list.slice(0, 12).forEach(c => {
+            const top = fullName(c) || "Unnamed";
+            const sub = [c[COL.email1] || c[COL.email2] || "", c[COL.phone] || ""].filter(Boolean).join(" • ");
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.style.width = "100%";
+            btn.style.textAlign = "left";
+            btn.style.border = "0";
+            btn.style.background = "transparent";
+            btn.style.padding = "10px 12px";
+            btn.style.borderRadius = "12px";
+            btn.style.cursor = "pointer";
+            btn.innerHTML = `
+              <div style="font-weight:900; color:var(--primary-2);">${esc(top)}</div>
+              <div style="font-size:12px; font-weight:800; color:var(--muted); margin-top:2px;">${esc(sub)}</div>
+            `;
+            btn.addEventListener("mouseenter", () => btn.style.background = "var(--sky)");
+            btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
+            btn.addEventListener("click", () => { pickContact(c); hideResults(resultsEl); });
+            resultsEl.appendChild(btn);
+          });
+
+          resultsEl.style.display = list.length ? "block" : "none";
+        }
+
+        function matches(c, q){
+          const query = q.trim().toLowerCase();
+          if (!query) return false;
+          const hay = [
+            c[COL.first], c[COL.last], c[COL.contact],
+            c[COL.email1], c[COL.email2], c[COL.phone], c[COL.address]
+          ].join(" ").toLowerCase();
+          return hay.includes(query);
+        }
+
+        let t = null;
+        searchEl.addEventListener("input", () => {
+          const q = searchEl.value.trim();
+          clearTimeout(t);
+          t = setTimeout(() => {
+            if (!q) return hideResults(resultsEl);
+            if (CONTACTS_ERROR) return showMessage("Contacts not available (check API key + sheet sharing).");
+
+            const list = CONTACTS.filter(c => matches(c, q));
+            if (!list.length) return showMessage(`No matches for "${q}"`);
+            showResults(list);
+          }, 70);
+        });
+
+        window.addEventListener("click", (e) => {
+          const within = resultsEl.contains(e.target) || searchEl.contains(e.target);
+          if (!within) hideResults(resultsEl);
+        });
+      });
+    })();
+  </script>
+
+  <script>
+    /* ================================
+       3) LINE ITEMS (Add/Edit/Delete) — ONE COPY
+    ================================ */
+    (() => {
+      console.log("✅ Line-item script loaded");
+
+      let editingRow = null;
+      const $ = (id) => document.getElementById(id);
+
+      function toNum(v){
+        const s = String(v ?? "").trim().replace(/[^0-9.-]/g,"");
+        const n = parseFloat(s);
+        return Number.isFinite(n) ? n : 0;
+      }
+      function moneyUSD(n){
+        const x = Number(n);
+        const safe = Number.isFinite(x) ? x : 0;
+        return safe.toLocaleString(undefined, { style:"currency", currency:"USD" });
+      }
+      function esc(s){
+        return String(s ?? "")
+          .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+          .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+      }
+      function isDiscountType(type){
+        return String(type || "").trim().toLowerCase() === "discount";
+      }
+      function getTaxRatePct(){ return toNum($("taxRate")?.value || 0); }
+
+      function enforceEntryTaxableRules(){
+        const typeEl = $("itemType");
+        const taxableEl = $("itemTaxable");
+        if (!typeEl || !taxableEl) return;
+
+        if (isDiscountType(typeEl.value)){
+          taxableEl.checked = false;
+          taxableEl.disabled = true;
+        } else {
+          taxableEl.disabled = false;
+        }
+      }
+
+      function calcAmount(type, price, qty){
+        let amt = price * qty;
+        if (isDiscountType(type) && amt > 0) amt = -amt;
+        return amt;
+      }
+      function calcTax(amount, taxable, type){
+        if (!taxable) return 0;
+        if (isDiscountType(type)) return 0;
+        const rate = (getTaxRatePct() / 100) || 0;
+        return amount * rate;
+      }
+
+      function updateEntryPreview(){
+        const type = $("itemType")?.value || "Product";
+        const price = toNum($("itemPrice")?.value);
+        const qty = Math.max(0, toNum($("itemQty")?.value || 1));
+        const taxable = !!$("itemTaxable")?.checked;
+
+        enforceEntryTaxableRules();
+
+        const amount = calcAmount(type, price, qty);
+        const tax = calcTax(amount, taxable, type);
+        const total = amount + tax;
+
+        $("itemAmountView") && ($("itemAmountView").textContent = moneyUSD(amount));
+        $("itemTaxView") && ($("itemTaxView").textContent = moneyUSD(tax));
+        $("itemTotalView") && ($("itemTotalView").textContent = moneyUSD(total));
+      }
+
+      function setButtonMode(editing){
+        const btn = $("addItemBtn");
+        if (!btn) return;
+        btn.textContent = editing ? "Update Item" : "Add Item";
+      }
+
+      function startEditRow(tr){
+        editingRow = tr;
+        $("itemType").value = tr.dataset.type || "Product";
+        $("itemDesc").value = tr.dataset.desc || "";
+        $("itemPrice").value = tr.dataset.price || "";
+        $("itemQty").value = tr.dataset.qty || "1";
+        $("itemTaxable") && ($("itemTaxable").checked = (tr.dataset.taxable === "1"));
+
+        setButtonMode(true);
+        enforceEntryTaxableRules();
+        updateEntryPreview();
+        $("itemDesc")?.focus();
+      }
+
+      function stopEditMode(){
+        editingRow = null;
+        setButtonMode(false);
+        updateEntryPreview();
+      }
+
+      function upsertLine(){
+        const tbody = $("itemsBody");
+        if (!tbody) return;
+
+        const type = $("itemType")?.value || "Product";
+        const desc = ($("itemDesc")?.value || "").trim();
+        const price = toNum($("itemPrice")?.value);
+        const qty = Math.max(0, toNum($("itemQty")?.value || 1));
+        if (!desc){
+          const hint = $("addItemHint");
+          if (hint) hint.textContent = "Enter a description before adding.";
+          $("itemDesc")?.focus();
+          return;
+        }
+        const hint = $("addItemHint");
+        if (hint) hint.textContent = "";
+
+        let taxable = !!$("itemTaxable")?.checked;
+        enforceEntryTaxableRules();
+        if (isDiscountType(type)) taxable = false;
+
+        const amount = calcAmount(type, price, qty);
+        const tax = calcTax(amount, taxable, type);
+        const total = amount + tax;
+
+        // UPDATE
+        if (editingRow){
+          editingRow.dataset.type = type;
+          editingRow.dataset.desc = desc;
+          editingRow.dataset.price = String(price);
+          editingRow.dataset.qty = String(qty);
+          editingRow.dataset.amount = String(amount);
+          editingRow.dataset.taxable = taxable ? "1" : "0";
+          editingRow.dataset.tax = String(tax);
+          editingRow.dataset.total = String(total);
+
+          const tds = editingRow.querySelectorAll("td");
+          tds[0].textContent = type;
+          tds[1].textContent = desc;
+          tds[2].textContent = moneyUSD(price);
+          tds[3].textContent = String(qty);
+          tds[4].textContent = moneyUSD(amount);
+          editingRow.querySelector("[data-col='tax']").textContent = moneyUSD(tax);
+          editingRow.querySelector("[data-col='total']").textContent = moneyUSD(total);
+
+          stopEditMode();
+          return;
+        }
+
+        // ADD
+        const tr = document.createElement("tr");
+        tr.dataset.type = type;
+        tr.dataset.desc = desc;
+        tr.dataset.price = String(price);
+        tr.dataset.qty = String(qty);
+        tr.dataset.amount = String(amount);
+        tr.dataset.taxable = taxable ? "1" : "0";
+        tr.dataset.tax = String(tax);
+        tr.dataset.total = String(total);
+
+        tr.innerHTML = `
+          <td>${esc(type)}</td>
+          <td>${esc(desc)}</td>
+          <td class="t-right">${moneyUSD(price)}</td>
+          <td class="t-right">${String(qty)}</td>
+          <td class="t-right">${moneyUSD(amount)}</td>
+          <td class="t-right" data-col="tax">${moneyUSD(tax)}</td>
+          <td class="t-right" data-col="total">${moneyUSD(total)}</td>
+          <td class="t-right noPrintCell">
+            <button type="button" class="iconbtn" data-action="edit" title="Edit">✏️</button>
+            <button type="button" class="iconbtn" data-action="delete" title="Delete" style="margin-left:6px;">✕</button>
+          </td>
+        `;
+
+        tr.querySelector('[data-action="edit"]').addEventListener("click", (e) => {
+          e.preventDefault();
+          startEditRow(tr);
+        });
+
+        tr.querySelector('[data-action="delete"]').addEventListener("click", (e) => {
+          e.preventDefault();
+          if (editingRow === tr) stopEditMode();
+          tr.remove();
+        });
+
+        tbody.appendChild(tr);
+
+        // reset entry fields
+        $("itemDesc").value = "";
+        $("itemPrice").value = "";
+        $("itemQty").value = "1";
+        $("itemType").value = "Product";
+        if ($("itemTaxable")) { $("itemTaxable").checked = true; $("itemTaxable").disabled = false; }
+
+        updateEntryPreview();
+        $("itemDesc")?.focus();
+      }
+
+      function safeUpsert(e){
+        e?.preventDefault?.();
+        try {
+          upsertLine();
+        } catch (err) {
+          console.error("Add item failed:", err);
+          const hint = $("addItemHint");
+          if (hint) hint.textContent = "Add failed. Check console for error details.";
+        }
+      }
+
+      // Backup hook for inline button onclick if listener wiring is skipped.
+      window.__lineItemsAdd = safeUpsert;
+
+      function wire(){
+        ["input","change","keyup","blur"].forEach(ev => {
+          $("itemPrice")?.addEventListener(ev, updateEntryPreview);
+          $("itemQty")?.addEventListener(ev, updateEntryPreview);
+          $("itemTaxable")?.addEventListener(ev, updateEntryPreview);
+        });
+
+        $("itemType")?.addEventListener("change", () => {
+          enforceEntryTaxableRules();
+          updateEntryPreview();
+        });
+
+        const addBtn = $("addItemBtn");
+        const addBtnFallback = $("addItemBtnFallback");
+        addBtn?.addEventListener("click", safeUpsert);
+        addBtnFallback?.addEventListener("click", safeUpsert);
+
+        enforceEntryTaxableRules();
+        updateEntryPreview();
+      }
+
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
+      else wire();
+
+      // Expose helpers for quote load/save
+      window.__getItems = function(){
+        const rows = document.querySelectorAll("#itemsBody tr");
+        return Array.from(rows).map(tr => ({
+          type: tr.dataset.type,
+          desc: tr.dataset.desc,
+          price: parseFloat(tr.dataset.price || 0) || 0,
+          qty: parseFloat(tr.dataset.qty || 0) || 0,
+          amount: parseFloat(tr.dataset.amount || 0) || 0,
+          taxable: tr.dataset.taxable === "1",
+          tax: parseFloat(tr.dataset.tax || 0) || 0,
+          total: parseFloat(tr.dataset.total || 0) || 0
+        }));
+      };
+
+      window.__fillItems = function(items){
+        const tbody = document.getElementById("itemsBody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+
+        (Array.isArray(items) ? items : []).forEach(it => {
+          const type = it.type || "Product";
+          const desc = it.desc || "";
+          const price = parseFloat(it.price || 0) || 0;
+          const qty = parseFloat(it.qty || 0) || 0;
+          const amount = parseFloat(it.amount || 0) || 0;
+          const taxable = !!it.taxable;
+          const tax = parseFloat(it.tax || 0) || 0;
+          const total = parseFloat(it.total || 0) || 0;
+
+          const tr = document.createElement("tr");
+          tr.dataset.type = type;
+          tr.dataset.desc = desc;
+          tr.dataset.price = String(price);
+          tr.dataset.qty = String(qty);
+          tr.dataset.amount = String(amount);
+          tr.dataset.taxable = taxable ? "1" : "0";
+          tr.dataset.tax = String(tax);
+          tr.dataset.total = String(total);
+
+          tr.innerHTML = `
+            <td>${esc(type)}</td>
+            <td>${esc(desc)}</td>
+            <td class="t-right">${moneyUSD(price)}</td>
+            <td class="t-right">${String(qty)}</td>
+            <td class="t-right">${moneyUSD(amount)}</td>
+            <td class="t-right" data-col="tax">${moneyUSD(tax)}</td>
+            <td class="t-right" data-col="total">${moneyUSD(total)}</td>
+            <td class="t-right noPrintCell">
+              <button type="button" class="iconbtn" data-action="edit" title="Edit">✏️</button>
+              <button type="button" class="iconbtn" data-action="delete" title="Delete" style="margin-left:6px;">✕</button>
+            </td>
+          `;
+
+          tr.querySelector('[data-action="edit"]').addEventListener("click", (e) => {
+            e.preventDefault();
+            startEditRow(tr);
+          });
+
+          tr.querySelector('[data-action="delete"]').addEventListener("click", (e) => {
+            e.preventDefault();
+            if (editingRow === tr) stopEditMode();
+            tr.remove();
+          });
+
+          tbody.appendChild(tr);
+        });
+      };
+    })();
+  </script>
+
+  <script>
+  /* ================================
+     QUOTE SAVE / LOAD SYSTEM
+     - Creates saveQuote()
+     - Wires Save button
+     - Re-fetches quote_number after insert
+  ================================ */
+
+  (function(){
+
+    const qs = (id) => document.getElementById(id);
+
+    window.currentQuoteId = null;
+
+    function getQuotePayload(){
+      return {
+        quote_number: document.getElementById("invNo")?.value?.trim() || null,
+        quote_date: document.getElementById("invDate")?.value || null,
+        client_name: document.getElementById("clientName")?.value?.trim() || null,
+        client_email: document.getElementById("clientEmail")?.value?.trim() || null,
+        client_addr: document.getElementById("clientAddr")?.value?.trim() || null,
+        client_phone: document.getElementById("clientPhone")?.value?.trim() || null,
+        biz_name: document.getElementById("bizName")?.value?.trim() || null,
+        biz_email: document.getElementById("bizEmail")?.value?.trim() || null,
+        biz_phone: document.getElementById("bizPhone")?.value?.trim() || null,
+        biz_addr: document.getElementById("bizAddr")?.value?.trim() || null,
+        biz_city: document.getElementById("bizCity")?.value?.trim() || null,
+        payment_link: document.getElementById("bizPaymentLink")?.value?.trim() || null,
+        notes: document.getElementById("notes")?.value?.trim() || null,
+        terms: document.getElementById("terms")?.value?.trim() || null
+      };
+    }
+
+    async function saveQuote(){
+
+      if (!window.sb) {
+        alert("Supabase client not initialized.");
+        return null;
+      }
+
+      const payload = getQuotePayload();
+
+      let savedRow;
+
+      // UPDATE
+      if (window.currentQuoteId){
+        const { data, error } = await window.sb
+          .from("quotes")
+          .update(payload)
+          .eq("id", window.currentQuoteId)
+          .select("*")
+          .single();
+
+        if (error){
+          console.error(error);
+          alert(error.message);
+          return null;
+        }
+
+        savedRow = data;
+      }
+
+      // INSERT
+      else {
+        const { data, error } = await window.sb
+          .from("quotes")
+          .insert(payload)
+          .select("*")
+          .single();
+
+        if (error){
+          console.error(error);
+          alert(error.message);
+          return null;
+        }
+
+        savedRow = data;
+      }
+
+      // Store current ID
+      window.currentQuoteId = savedRow.id;
+
+      // Put generated quote number into the field
+      if (savedRow && savedRow.quote_number && qs("invNo")) {
+        qs("invNo").value = savedRow.quote_number;
+      }
+
+      // ✅ Mirror to Google Sheet (internal_quotes tab)
+      mirrorInternalQuoteToSheet({
+        created_at: new Date().toISOString(),
+        quote_no: savedRow.quote_number || savedRow.quote_no || "",
+        status: "draft",
+        customer_name: document.getElementById("clientName")?.value?.trim() || "",
+        customer_email: document.getElementById("clientEmail")?.value?.trim() || "",
+        customer_phone: document.getElementById("clientPhone")?.value?.trim() || "",
+        customer_address: document.getElementById("clientAddr")?.value?.trim() || "",
+        business_name: document.getElementById("bizName")?.value?.trim() || "",
+        business_email: document.getElementById("bizEmail")?.value?.trim() || "",
+        business_phone: document.getElementById("bizPhone")?.value?.trim() || "",
+        business_address: document.getElementById("bizAddr")?.value?.trim() || "",
+        business_city: document.getElementById("bizCity")?.value?.trim() || "",
+        tax_rate: document.getElementById("taxRate")?.value || "0",
+        subtotal: "",
+        tax: "",
+        total: "",
+        items_json: JSON.stringify(payload.items || []),
+        notes: document.getElementById("notes")?.value?.trim() || "",
+        terms: document.getElementById("terms")?.value?.trim() || "",
+        supabase_quote_id: savedRow.id
+      });
+
+      // Keep URL synced
+      const url = new URL(window.location.href);
+      url.searchParams.set("id", savedRow.id);
+      history.replaceState({}, "", url.toString());
+
+      alert("Saved ✅");
+      console.log("✅ Quote saved:", savedRow);
+
+      return savedRow;
+    }
+
+    window.saveQuote = saveQuote;
+
+    async function loadQuote(id){
+      if (!window.sb) return;
+
+      const { data, error } = await window.sb
+        .from("quotes")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error){
+        console.error(error);
+        alert(error.message);
+        return;
+      }
+
+      window.currentQuoteId = data.id;
+
+      if (qs("invNo")) qs("invNo").value = data.quote_number || "";
+      if (qs("invDate")) qs("invDate").value = data.quote_date || "";
+
+      if (qs("clientName")) qs("clientName").value = data.client_name || "";
+      if (qs("clientEmail")) qs("clientEmail").value = data.client_email || "";
+      if (qs("clientPhone")) qs("clientPhone").value = data.client_phone || "";
+      if (qs("clientAddr")) qs("clientAddr").value = data.client_addr || "";
+      if (qs("clientContact")) qs("clientContact").value = data.client_contact || "";
+
+      if (qs("notes")) qs("notes").value = data.notes || "";
+      if (qs("terms")) qs("terms").value = data.terms || "";
+
+      if (window.__fillItems){
+        window.__fillItems(Array.isArray(data.items) ? data.items : []);
+      }
+    }
+
+    window.loadQuote = loadQuote;
+
+    // Wire Save button
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const btn = document.getElementById("btnSave");
+      if (!btn){
+        console.warn("btnSave not found");
+        return;
+      }
+
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        await saveQuote();
+      });
+
+    });
+
+  })();
+  </script>
+  <script>
+  /* =========================
+     MIRROR INTERNAL QUOTE -> GOOGLE SHEET
+  ========================= */
+  window.MIRROR_WEBAPP_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE"; // same /exec as customer quotes mirror
+  window.MIRROR_SECRET = "PASTE_YOUR_SECRET_HERE"; // your Apps Script secret (NOT Supabase)
+
+  async function mirrorInternalQuoteToSheet(row){
+    if (!window.MIRROR_WEBAPP_URL) return console.warn("Missing MIRROR_WEBAPP_URL");
+    const body = new URLSearchParams({
+      secret: window.MIRROR_SECRET,
+      source: "internal",                 // tells Apps Script which tab to use
+      ...row
+    });
+
+    const res = await fetch(window.MIRROR_WEBAPP_URL, { method:"POST", body });
+    const text = await res.text();
+
+    try {
+      const json = JSON.parse(text);
+      if (!json.ok) console.error("Mirror failed:", json);
+      return json;
+    } catch {
+      console.error("Mirror non-JSON response:", text);
+      return { ok:false, raw:text };
+    }
+  }
+  </script>
+</body>
+</html>

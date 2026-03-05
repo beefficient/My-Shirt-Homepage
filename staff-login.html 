@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Staff Login — My Shirt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#f6fbff; --card:#fff; --text:#0f2a33; --muted:#47606a;
+      --border:#d7e7f7; --primary:#032d44; --sky:#eaf4ff;
+      --radius:16px; --shadow:0 10px 24px rgba(10,35,45,.08);
+      --max:540px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, #dfeeff 0%, #f6fbff 55%, #ffffff 100%);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+    }
+    .card{
+      width:100%;
+      max-width:var(--max);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    h1{
+      margin:0 0 6px;
+      font-family:"DM Sans", Inter, sans-serif;
+      font-size:26px;
+      color:var(--primary);
+    }
+    p{margin:0 0 14px;color:var(--muted);font-weight:600}
+    label{display:block;font-weight:800;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:12px 0 6px}
+    input{
+      width:100%;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      font:inherit;
+      outline:none;
+    }
+    input:focus{box-shadow:0 0 0 4px rgba(120,180,255,.18); border-color:#b9d9f7}
+    .row{display:grid; gap:10px}
+    .btn{
+      margin-top:14px;
+      width:100%;
+      padding:12px 14px;
+      border:none;
+      border-radius:999px;
+      background:var(--primary);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+      font-size:15px;
+    }
+    .btn:hover{filter:brightness(.98)}
+    .ghost{
+      margin-top:10px;
+      width:100%;
+      padding:11px 14px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-weight:900;
+      cursor:pointer;
+      color:var(--primary);
+    }
+    .ghost:hover{background:var(--sky)}
+    .msg{margin-top:12px; font-weight:800; color:var(--muted); white-space:pre-line}
+    .err{color:#a63a3a}
+    .small{font-size:12px;color:var(--muted);font-weight:700;margin-top:10px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;}
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Staff Login</h1>
+    <p>Internal access to invoices (Supabase Auth).</p>
+
+    <div class="row">
+      <div>
+        <label>Email</label>
+        <input id="email" type="email" autocomplete="username" placeholder="staff@myshirt..." />
+      </div>
+
+      <div>
+        <label>Password</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+      </div>
+    </div>
+
+    <button class="btn" id="btnLogin" type="button">Log in</button>
+    <button class="ghost" id="btnLogout" type="button">Log out</button>
+
+    <div class="msg" id="msg"></div>
+    <div class="small">
+      Redirect after login:
+      <span class="mono" id="redirectText">invoice.html</span>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ====== SET THESE (same as invoice.html) ======
+    const SUPABASE_URL = "https://YOURPROJECT.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+
+    // Where to send staff after login:
+    const REDIRECT_TO = "invoice.html";
+
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const $ = (id) => document.getElementById(id);
+    function setMsg(text, isErr=false){
+      const el = $("msg");
+      el.textContent = text || "";
+      el.className = "msg" + (isErr ? " err" : "");
+    }
+
+    async function refreshStatus(){
+      $("redirectText").textContent = REDIRECT_TO;
+
+      const { data } = await sb.auth.getSession();
+      const userEmail = data?.session?.user?.email || "";
+      if (userEmail){
+        setMsg("Logged in as: " + userEmail + "\nRedirecting to " + REDIRECT_TO + " ...");
+        // small delay so staff sees confirmation
+        setTimeout(() => window.location.href = REDIRECT_TO, 400);
+      } else {
+        setMsg("Not logged in.");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      refreshStatus();
+
+      $("btnLogin").addEventListener("click", async () => {
+        setMsg("Logging in...");
+        const email = ($("email").value || "").trim();
+        const password = ($("password").value || "").trim();
+
+        if (!email || !email.includes("@")) return setMsg("Enter a valid email.", true);
+        if (!password) return setMsg("Enter a password.", true);
+
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+        if (error){
+          console.error(error);
+          return setMsg("Login failed: " + error.message, true);
+        }
+
+        const userEmail = data?.user?.email || email;
+        setMsg("Logged in as: " + userEmail + "\nRedirecting to " + REDIRECT_TO + " ...");
+        setTimeout(() => window.location.href = REDIRECT_TO, 400);
+      });
+
+      $("btnLogout").addEventListener("click", async () => {
+        setMsg("Logging out...");
+        const { error } = await sb.auth.signOut();
+        if (error){
+          console.error(error);
+          return setMsg("Logout failed: " + error.message, true);
+        }
+        setMsg("Logged out.");
+      });
+    });
+  </script>
+</body>
+</html>

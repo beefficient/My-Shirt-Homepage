@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Invoice — My Shirt Printing</title>
 
-  <!-- Same fonts as your index.html -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
-    /* === Theme copied to match your index.html palette & feel === */
     :root{
       --bg: #f6fbff;
       --sky: #eaf4ff;
@@ -25,7 +23,6 @@
       --radius: 16px;
       --shadow: 0 10px 24px rgba(10,35,45,.08);
       --max: 1120px;
-
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
     }
     *{box-sizing:border-box}
@@ -39,7 +36,6 @@
     a{color:inherit;text-decoration:none}
     .container{max-width:var(--max);margin:0 auto;padding:0 20px}
 
-    /* Top Nav (kept consistent with your site) */
     header{
       position: sticky;
       top: 0;
@@ -67,7 +63,6 @@
     nav a:hover{background:var(--sky)}
     nav a.active{border-bottom:2px solid var(--primary); border-radius:0; padding-bottom:6px}
 
-    /* Buttons (same style) */
     .btn{
       display:inline-flex; align-items:center; justify-content:center;
       padding:11px 16px; border-radius:var(--pill);
@@ -81,7 +76,6 @@
     .btn.ghost:hover{background:var(--sky)}
     .btn.small{padding:9px 12px; font-size:13px}
 
-    /* Page */
     .hero{
       padding: 26px 0 12px;
       position: relative;
@@ -112,9 +106,7 @@
       letter-spacing: -.4px;
       color: var(--primary-2);
     }
-    .page-title p{margin:4px 0 0; color: var(--muted); font-weight:600; font-size:14px}
 
-    /* Invoice shell */
     .sheet{
       position: relative;
       z-index: 1;
@@ -125,7 +117,6 @@
       overflow: hidden;
     }
 
-    /* Skynova-style action bar */
     .actionbar{
       display:flex;
       align-items:center;
@@ -183,12 +174,11 @@
     }
     .menuPanel button:hover{background: var(--sky);}
 
-    /* Content layout */
     .content{padding: 18px;}
     .topgrid{
       display:grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap: 16px;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 20px;
       align-items:start;
     }
     .box{
@@ -217,7 +207,8 @@
       width:100%;
       border:1px solid var(--border);
       border-radius: 12px;
-      padding: 10px 12px;
+      padding: 16px 20px;
+      font-size: 18px;
       font: inherit;
       background:#fff;
       color: var(--text);
@@ -225,11 +216,49 @@
     }
     .field:focus{box-shadow: 0 0 0 4px rgba(120,180,255,.18); border-color:#b9d9f7}
     textarea.field{min-height: 92px; resize: vertical;}
-    .row2{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    .row1{display:grid; grid-template-columns: 1fr; gap: 14px;}
+    .row2{display:grid; grid-template-columns: 1.2fr 1fr; gap:10px;}
+    .row2 > div {min-width: 0;}
     .row3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;}
     .mono{font-family: var(--mono);}
 
-    /* Items table */
+    .wide-input{
+      min-width: 160px;
+      width: 100%;
+      font-size: 16px;
+      padding: 12px 14px;
+    }
+
+    /* ✅ FIX: prevent grid columns from squeezing / overflow */
+    .topgrid > .box,
+    .box,
+    .field {
+      min-width: 0;
+    }
+
+    /* ✅ FIX: make the two columns more stable on medium screens */
+    .topgrid{
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* ✅ FIX: stack to ONE column earlier (tablet / small laptop) */
+    @media (max-width: 1120px){
+      .topgrid{ grid-template-columns: 1fr; }
+    }
+
+    /* ✅ FIX: email should not look “cut off” on mobile */
+    #bizEmail{
+      font-size: 14px;
+      padding: 12px 12px;
+    }
+    #bizEmailDisplay{ word-break: break-all; }
+
+    .quote-action-row{
+      display:flex;
+      gap:12px;
+      align-items:flex-end;
+    }
+
     .tableWrap{
       margin-top: 14px;
       border:1px solid var(--border);
@@ -255,11 +284,6 @@
     }
     tbody tr:last-child td{border-bottom:none;}
     .t-right{text-align:right;}
-    .w-type{width:160px;}
-    .w-unit{width:130px;}
-    .w-qty{width:110px;}
-    .w-amt{width:140px;}
-    .w-del{width:56px;}
 
     .iconbtn{
       border:1px solid var(--border);
@@ -272,18 +296,6 @@
     }
     .iconbtn:hover{background: var(--sky);}
 
-    .toolbar{
-      display:flex;
-      justify-content: space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      padding: 12px;
-      border-top:1px solid var(--border);
-      background: rgba(234,244,255,.55);
-    }
-
-    /* Totals */
     .bottomgrid{
       display:grid;
       grid-template-columns: 1fr 360px;
@@ -312,58 +324,108 @@
     .trow.total{background: rgba(234,244,255,.6);}
     .trow.balance{background: var(--primary); color:#fff;}
     .trow.balance .value{color:#fff;}
-    .trow input{
-      width: 120px;
-      text-align:right;
+    .trow input{ width: 120px; text-align:right; }
+
+    .loadMsg{
+      margin-top:10px;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      color:var(--primary-2);
+      font-weight:700;
+      display:none;
+    }
+    .loadMsg.error{
+      border-color:#f3b9b9;
+      background:#fff5f5;
+      color:#8a1f1f;
     }
 
-    /* Status pill */
-    .status{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 8px 12px;
-      border-radius: var(--pill);
-      border: 1px solid var(--border);
-      background: #fff;
-      font-weight: 800;
-      color: var(--primary-2);
-      font-size: 13px;
+    /* From section tweaks */
+    #bizName, #bizEmail, #bizAddr, #bizCity, #bizPhone{
+      font-size: 16px;
+      padding: 12px 14px;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
-    .dot{
-      width:10px;height:10px;border-radius:50%;
-      background:#ffd77a;border:1px solid rgba(0,0,0,.06);
+    #bizEmail{
+      overflow-x: auto;
+      text-overflow: clip;
+      white-space: nowrap;
     }
-    .dot.sent{background:#9ad7ff}
-    .dot.paid{background:#9ff0bf}
 
-    /* Responsive */
     @media (max-width: 920px){
       .topgrid{grid-template-columns: 1fr;}
       .bottomgrid{grid-template-columns: 1fr;}
-      .actionbar{position: sticky; top: 70px; z-index: 40;} /* keeps actions visible */
+      .actionbar{position: sticky; top: 70px; z-index: 40;}
     }
 
-    /* Print/PDF */
     @media print{
       header, .actionbar { display:none !important; }
       .noPrint{ display:none !important; }
       #contactSearch, #contactResults, #btnAddNewCustomer { display:none !important; }
-      .noPrint, .noPrint *{
-        display:none !important;
-        visibility:hidden !important;
-      }
+      .noPrint, .noPrint *{ display:none !important; visibility:hidden !important; }
+      .entry-row{ display:none !important; } /* ✅ hide add-item row in PDF/Print */
       body{ background:#fff; }
       .hero{ padding: 0; }
       .sheet{ border:none; box-shadow:none; }
       *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
+
+    .descStack { display:flex; flex-direction:column; gap:4px; }
+    .descMain { font-weight:700; }
+    .descMeta { font-size:12px; color: var(--muted); font-weight:700; }
+    .linkBtn {
+      background: transparent;
+      border: 0;
+      padding: 0;
+      color: var(--primary-2);
+      font-weight: 900;
+      cursor: pointer;
+      text-decoration: underline;
+      align-self: flex-start;
+    }
+
+    /* Size modal */
+    .sizeModalBackdrop{
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .sizeModal{
+      width: min(520px, calc(100vw - 40px));
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .sizeCell label{
+      display:block;
+      font-size:12px;
+      font-weight:900;
+      color: var(--muted);
+      margin-bottom: 4px;
+      letter-spacing:.06em;
+    }
+    .sizeCell input{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+    }
+
     @page { size: Letter; margin: 14mm; }
   </style>
 </head>
 
 <body>
-  <!-- NAV (matches your site) -->
   <header>
     <div class="container">
       <div class="navwrap">
@@ -371,7 +433,6 @@
           <img src="logo.png" alt="My Shirt Printing logo" />
           <div class="name">My Shirt Printing and embroidery</div>
         </a>
-
         <nav aria-label="Main menu">
           <a href="index.html">Home</a>
           <a class="active" href="invoice.html">Invoices</a>
@@ -384,22 +445,20 @@
   <section class="hero">
     <div class="container">
       <div class="page-title">
-        <div>
-          <h1>Invoice</h1>
-          <p>Skynova-style actions + form/calculator editing.</p>
-        </div>
-        <span class="status" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Draft</span></span>
+        <div><h1>Invoice</h1></div>
       </div>
 
       <div class="sheet" role="document" aria-label="Invoice editor">
-        <!-- Action bar (Skynova options) -->
         <div class="actionbar">
           <div class="action-left">
             <button class="btn ghost" type="button" id="btnEdit">Edit</button>
             <button class="btn ghost" type="button" id="btnPrint">Print</button>
             <button class="btn ghost" type="button" id="btnPdf">PDF</button>
+
             <button class="btn primary" type="button" id="btnSend">Send</button>
             <button class="btn ghost" type="button" id="btnPaid">Mark as Paid</button>
+            <button class="btn primary" type="button" id="btnSaveDraft">Save Draft</button>
+            <button class="btn ghost" type="button" id="btnRestoreDraft">Restore Draft</button>
           </div>
 
           <div class="action-right">
@@ -415,21 +474,23 @@
         </div>
 
         <div class="content">
-          <!-- Top info -->
           <div class="topgrid">
+
+            <!-- LEFT: FROM -->
             <div class="box">
               <h3>From</h3>
-              <div class="row2">
+              <div class="row1">
                 <div>
                   <label class="label">Business name</label>
                   <input class="field" id="bizName" value="My Shirt Company" />
                 </div>
                 <div>
                   <label class="label">Email</label>
-                  <input class="field" id="bizEmail" value="myshirtcustomerservice@gmail.com" />
+                  <input class="field" id="bizEmail" value="myshirtcustomerservice@gmail.com" title="myshirtcustomerservice@gmail.com" />
                 </div>
               </div>
-              <div style="margin-top:10px" class="row2">
+
+              <div style="margin-top:10px" class="row1">
                 <div>
                   <label class="label">Address</label>
                   <input class="field" id="bizAddr" value="3331 Edward Avenue" />
@@ -439,18 +500,17 @@
                   <input class="field" id="bizCity" value="Santa Clara, CA 95054" />
                 </div>
               </div>
+
               <div style="margin-top:10px">
                 <label class="label">Phone</label>
                 <input class="field" id="bizPhone" value="669-231-9059" />
               </div>
-              <div style="margin-top:10px">
-                <label class="label">Payment Link</label>
-                <input class="field" id="bizPaymentLink" value="https://square.link/u/HE22n772" readonly style="font-size:13px;" />
-              </div>
             </div>
 
+            <!-- RIGHT: INVOICE DETAILS -->
             <div class="box">
               <h3>Invoice Details</h3>
+
               <div class="row3">
                 <div>
                   <label class="label">Invoice #</label>
@@ -460,7 +520,30 @@
                   <label class="label">Invoice Date</label>
                   <input class="field" id="invDate" type="date" value="" />
                 </div>
+                <div></div>
               </div>
+
+              <div style="margin-top:10px" class="row3 noPrint">
+                <div>
+                  <label class="label">Quote #</label>
+                  <input class="field mono wide-input" id="quoteNoInput" placeholder="e.g. 45" />
+                </div>
+
+                <div style="display:flex; align-items:flex-end; gap:10px; justify-content:flex-start;">
+                  <button class="btn ghost" type="button" id="btnLoadQuote">Load Quote</button>
+                  <button class="btn primary" type="button" id="btnCreateInvoice" disabled>Create Invoice</button>
+                </div>
+
+                <div>
+                  <label class="label">Load Invoice #</label>
+                  <div class="quote-action-row">
+                    <input class="field mono wide-input" id="invoiceNoInput" placeholder="Inv-1002" inputmode="numeric" pattern="[0-9]*" />
+                    <button class="btn ghost" type="button" id="btnLoadInvoice">Load</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="loadMsg" class="loadMsg" aria-live="polite"></div>
 
               <div style="margin-top:10px" class="noPrint">
                 <label class="label">Find contact</label>
@@ -473,7 +556,6 @@
                       max-height: 260px; overflow:auto;
                     "></div>
                 </div>
-
                 <div style="margin-top:10px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
                   <button class="btn ghost small" type="button" id="btnAddNewCustomer">Add New Customer</button>
                 </div>
@@ -483,6 +565,7 @@
                 <label class="label">Bill To (client)</label>
                 <input class="field" id="clientName" value="" />
               </div>
+
               <div style="margin-top:10px" class="row2">
                 <div>
                   <label class="label">Client email</label>
@@ -493,6 +576,7 @@
                   <input class="field" id="clientAddr" value="" />
                 </div>
               </div>
+
               <div style="margin-top:10px" class="row2">
                 <div>
                   <label class="label">Client phone</label>
@@ -506,62 +590,95 @@
             </div>
           </div>
 
-          <!-- Line items -->
           <div class="tableWrap" aria-label="Line items">
             <table class="items-table">
               <thead>
                 <tr>
                   <th>Item</th>
                   <th>Description</th>
-                  <th class="right">Unit Price</th>
-                  <th class="right">Quantity</th>
-                  <th class="right">Amount</th>
-                  <th></th>
+                  <th class="t-right">Unit Price</th>
+                  <th class="t-right">Quantity</th>
+                  <th class="t-right">Amount</th>
+                  <th class="t-right">Tax</th>
+                  <th class="t-right"></th>
                 </tr>
               </thead>
 
-              <!-- Entry row (horizontal) -->
               <tbody>
-                <tr class="entry-row">
-                  <td>
-                    <select id="itemType" class="cell-select">
-                      <option value="Product">Product</option>
-                      <option value="Services">Services</option>
-                      <option value="Discount">Discount</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </td>
+<tr class="entry-row">
+  <td>
+    <select id="itemType" class="field">
+      <option value="Product">Product</option>
+      <option value="Services">Services</option>
+      <option value="Discount">Discount</option>
+      <option value="Other">Other</option>
+    </select>
 
-                  <td>
-                    <input id="itemDesc" class="cell-input" placeholder="printing / shirts / setup..." />
-                  </td>
+    <!-- ✅ shown for Product OR Services -->
+    <div id="productKindWrap" style="margin-top:8px; display:none;">
+      <label class="label">Product kind</label>
+      <select id="productKind" class="field">
+        <option value="non_garment">Non-garment (banner, etc.)</option>
+        <option value="garment" selected>Garment (sizes)</option>
+      </select>
+    </div>
 
-                  <td class="right">
-                    <input id="itemPrice" class="cell-input right" inputmode="decimal" placeholder="0.00" />
-                  </td>
+    <div id="sizesWrap" style="margin-top:10px; display:none;">
+      <button type="button" class="btn ghost small" id="btnEntryEditSizes">Edit Sizes</button>
+      <span id="sizesSummary" style="margin-left:10px; font-weight:800; color:var(--muted);"></span>
+    </div>
+  </td>
 
-                  <td class="right">
-                    <input id="itemQty" class="cell-input right" inputmode="numeric" value="1" />
-                  </td>
+  <td>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <input id="itemProduct" class="field" placeholder="PC850H Fan Favorite Fleece Hoodie" />
+      <div id="itemColorWrap">
+        <input id="itemColor" class="field" placeholder="Color (e.g. Black)" />
+      </div>
+    </div>
+  </td>
 
-                  <td class="right">
-                    <input id="itemAmount" class="cell-input right" placeholder="0.00" disabled />
-                  </td>
+  <td class="t-right">
+    <input id="itemPrice" class="field mono" inputmode="decimal" placeholder="0.00" />
 
-                  <td class="right">
-                    <button type="button" class="btn" id="addItemBtn">Add</button>
-                  </td>
-                </tr>
+    <div id="discountWrap" style="display:none; margin-top:8px;">
+      <label class="label">Discount</label>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <select id="discountMode" class="field" style="max-width:160px;">
+          <option value="amount">$ Amount off</option>
+          <option value="percent">% Percent off</option>
+        </select>
+
+        <input id="discountValue" class="field mono" inputmode="decimal"
+               placeholder="e.g. 25 or 10" style="max-width:180px;" />
+
+        <span style="font-weight:800; color:var(--muted);" id="discountHint"></span>
+      </div>
+    </div>
+  </td>
+
+  <td class="t-right">
+    <input id="itemQty" class="field mono" inputmode="numeric" value="1" />
+  </td>
+
+  <td class="t-right">
+    <input id="itemAmount" class="field mono" placeholder="0.00" disabled />
+  </td>
+
+  <td class="t-right">
+    <input type="checkbox" id="itemTaxable" checked />
+  </td>
+
+  <td class="t-right">
+    <button type="button" class="btn ghost" id="addItemBtn">Add</button>
+  </td>
+</tr>
               </tbody>
 
-              <!-- Actual added lines go here -->
               <tbody id="itemsBody"></tbody>
             </table>
-
-            <div id="addItemHint" class="small" style="margin-top:10px; font-weight:800; color:var(--muted);"></div>
           </div>
 
-          <!-- Notes + Totals -->
           <div class="bottomgrid">
             <div class="box" style="background: rgba(234,244,255,.45);">
               <h3>Notes / Terms</h3>
@@ -571,7 +688,7 @@
               <div style="height:10px"></div>
 
               <label class="label">Terms</label>
-              <textarea class="field" id="terms"></textarea>
+              <textarea class="field" id="terms" placeholder="All sales are final. We do not offer refunds; store credit will be issued for eligible returns. Any misprints or production errors on our part will be corrected or refunded accordingly."></textarea>
             </div>
 
             <div class="totals" aria-label="Totals">
@@ -615,489 +732,1270 @@
     </div>
   </section>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
-    const API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
-    const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
-    const RANGE_A1 = "contacts!A1:J5000";
+    (function () {
+      // ===========================
+      // CONFIG
+      // ===========================
+      const INVOICE_SYNC_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwCH648WscPI-obyqhOPSq0jiqwXzzWI2v9ZBv1UCejr5X6L5Y3FLHROOA_0x43aMN8/exec";
+      const INVOICE_SYNC_SECRET = "inv_sync_2026_03_01__L0ndonbrides!2vR9pX7aL1nY4zW";
 
-    const COL = {
-      first: "First Name",
-      last: "Last Name",
-      contact: "Contact Name",
-      phone: "Phone",
-      email1: "Email 1",
-      email2: "Email 2",
-      address: "Address"
-    };
+      const EMAIL_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwCH648WscPI-obyqhOPSq0jiqwXzzWI2v9ZBv1UCejr5X6L5Y3FLHROOA_0x43aMN8/exec";
+      const EMAIL_WEBAPP_SECRET = "inv_sync_2026_03_01__L0ndonbrides!2vR9pX7aL1nY4zW";
 
-    const $ = (id) => document.getElementById(id);
+      const SUPABASE_URL = "https://tvtyjmeedapbsaopeebh.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHlqbWVlZGFwYnNhb3BlZWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzQ3MzUsImV4cCI6MjA4NzIxMDczNX0.VKNQc9G18OgJndoN3eiv5wcLWaAmqOcQ9qA4ve2tNsQ";
 
-    function esc(s){
-      return String(s ?? "")
-        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-    }
+      const $ = (id) => document.getElementById(id);
 
-    function fullName(c){
-      const first = (c[COL.first] || "").trim();
-      const last  = (c[COL.last] || "").trim();
-      return last ? `${first} ${last}`.trim() : first;
-    }
-
-    function hideResults(resultsEl){
-      resultsEl.style.display = "none";
-      resultsEl.innerHTML = "";
-    }
-
-    function matches(c, q){
-      const query = q.trim().toLowerCase();
-      if (!query) return false;
-      const hay = [
-        c[COL.first], c[COL.last], c[COL.contact],
-        c[COL.email1], c[COL.email2], c[COL.phone], c[COL.address]
-      ].join(" ").toLowerCase();
-      return hay.includes(query);
-    }
-
-    function pickContact(c){
-      $("clientName").value  = fullName(c);
-      $("clientEmail").value = ((c[COL.email1] || "").trim() || (c[COL.email2] || "").trim());
-      $("clientAddr").value  = (c[COL.address] || "").trim();
-      $("clientPhone").value = (c[COL.phone] || "").trim();
-
-      const wrap = $("clientContactWrap");
-      const contactEl = $("clientContact");
-      const contactName = (c[COL.contact] || "").trim();
-      if (wrap && contactEl) {
-        if (contactName) { wrap.style.display = "block"; contactEl.value = contactName; }
-        else { wrap.style.display = "none"; contactEl.value = ""; }
+      if (!window.supabase) {
+        console.error("Supabase library did not load.");
+        return;
       }
-    }
+      window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function loadContacts(){
-      const url =
-        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SPREADSHEET_ID)}` +
-        `/values/${encodeURIComponent(RANGE_A1)}?key=${encodeURIComponent(API_KEY)}`;
+      // ===========================
+      // STATE
+      // ===========================
+      window.__LOADING_QUOTE = false;
+      window.CURRENT_QUOTE = null;
+      window.CURRENT_QUOTE_ID = null;
+      window.CURRENT_INVOICE_ID = null;
 
-      const res = await fetch(url, { cache: "no-store" });
-      const data = await res.json();
+      // ===========================
+      // UI HELPERS
+      // ===========================
+      function setLoadMsg(msg, isError = false) {
+        const el = $("loadMsg");
+        if (!el) return;
 
-      if (!res.ok) throw new Error(data?.error?.message || `Sheets error ${res.status}`);
+        const text = (msg || "").trim();
+        el.textContent = text;
 
-      const values = data.values || [];
-      if (values.length < 2) return [];
-
-      const headers = values[0].map(h => String(h || "").trim());
-      return values.slice(1).map(row => {
-        const obj = {};
-        headers.forEach((h, i) => obj[h] = String(row[i] ?? "").trim());
-        return obj;
-      }).filter(r => r[COL.first] || r[COL.email1] || r[COL.phone]);
-    }
-
-    window.addEventListener("DOMContentLoaded", async () => {
-      const searchEl  = $("contactSearch");
-      const resultsEl = $("contactResults");
-      if (!searchEl || !resultsEl) return;
-
-      let CONTACTS = [];
-      let CONTACTS_ERROR = "";
-
-      try {
-        CONTACTS = await loadContacts();
-        CONTACTS_ERROR = "";
-      } catch (e) {
-        CONTACTS = [];
-        CONTACTS_ERROR = e?.message || "Could not load contacts.";
+        if (!text) {
+          el.style.display = "none";
+          el.classList.remove("error");
+          return;
+        }
+        el.style.display = "block";
+        el.classList.toggle("error", !!isError);
       }
 
-      function showMessage(msg){
-        resultsEl.innerHTML = `<div style="padding:10px 12px; font-weight:800; color:var(--muted);">${esc(msg)}</div>`;
-        resultsEl.style.display = "block";
+      function setCreateEnabled(on) {
+        const b = $("btnCreateInvoice");
+        if (b) b.disabled = !on;
       }
 
-      function showResults(list){
-        resultsEl.innerHTML = "";
-        list.slice(0, 12).forEach(c => {
-          const top = fullName(c) || "Unnamed";
-          const sub = [c[COL.email1] || c[COL.email2] || "", c[COL.phone] || ""].filter(Boolean).join(" • ");
+      function normalizeQuoteNo(v) {
+        return String(v ?? "").trim().replace(/^#/, "");
+      }
 
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.style.width = "100%";
-          btn.style.textAlign = "left";
-          btn.style.border = "0";
-          btn.style.background = "transparent";
-          btn.style.padding = "10px 12px";
-          btn.style.borderRadius = "12px";
-          btn.style.cursor = "pointer";
-          btn.innerHTML = `
-            <div style="font-weight:900; color:var(--primary-2);">${esc(top)}</div>
-            <div style="font-size:12px; font-weight:800; color:var(--muted); margin-top:2px;">${esc(sub)}</div>
-          `;
-          btn.addEventListener("mouseenter", () => btn.style.background = "var(--sky)");
-          btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
-          btn.addEventListener("click", () => {
-            pickContact(c);
-            hideResults(resultsEl);
+      function normalizeInvoiceNo(v) {
+        const raw = String(v ?? "").trim();
+        if (!raw) return "";
+        if (/^\d+$/.test(raw)) return "Inv-" + raw;
+        if (/^inv-\d+$/i.test(raw)) return "Inv-" + raw.split("-")[1];
+        return raw;
+      }
+
+      function asNum(v) {
+        const n = Number(String(v ?? "").replace(/[^0-9.-]/g, ""));
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function centsToDollars(v) {
+        const n = asNum(v);
+        return n > 0 ? (n / 100) : 0;
+      }
+
+      function moneyUSD(n) {
+        const x = Number(n);
+        const safe = Number.isFinite(x) ? x : 0;
+        return safe.toLocaleString(undefined, { style: "currency", currency: "USD" });
+      }
+
+      function esc(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+      }
+
+      // ===========================
+      // CONTACT SEARCH (GOOGLE SHEETS)
+      // ===========================
+      (function(){
+        const API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
+        const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
+        const RANGE_A1 = "contacts!A1:J5000";
+
+        const COL = {
+          first: "First Name",
+          last: "Last Name",
+          contact: "Contact Name",
+          phone: "Phone",
+          email1: "Email 1",
+          email2: "Email 2",
+          address: "Address"
+        };
+
+        const $ = (id) => document.getElementById(id);
+
+        function esc(s){
+          return String(s ?? "")
+            .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+        }
+
+        function fullName(c){
+          return [c[COL.first], c[COL.last]].filter(Boolean).join(" ").trim();
+        }
+
+        function hideResults(resultsEl){
+          resultsEl.style.display = "none";
+          resultsEl.innerHTML = "";
+        }
+
+        function pickContact(c){
+          $("clientName").value  = fullName(c);
+          $("clientEmail").value = ((c[COL.email1] || "").trim() || (c[COL.email2] || "").trim());
+          $("clientAddr").value  = (c[COL.address] || "").trim();
+          $("clientPhone").value = (c[COL.phone] || "").trim();
+
+          const wrap = $("clientContactWrap");
+          const contactEl = $("clientContact");
+          const contactName = (c[COL.contact] || "").trim();
+          if (wrap && contactEl) {
+            if (contactName) { wrap.style.display = "block"; contactEl.value = contactName; }
+            else { wrap.style.display = "none"; contactEl.value = ""; }
+          }
+        }
+
+        async function loadContacts(){
+          const url =
+            `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SPREADSHEET_ID)}` +
+            `/values/${encodeURIComponent(RANGE_A1)}?key=${encodeURIComponent(API_KEY)}`;
+
+          const res = await fetch(url, { cache: "no-store" });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data?.error?.message || `Sheets error ${res.status}`);
+
+          const values = data.values || [];
+          if (values.length < 2) return [];
+
+          const headers = values[0].map(h => String(h || "").trim());
+          return values.slice(1).map(row => {
+            const obj = {};
+            headers.forEach((h, i) => obj[h] = String(row[i] ?? "").trim());
+            return obj;
           });
-          resultsEl.appendChild(btn);
-        });
-        resultsEl.style.display = list.length ? "block" : "none";
-      }
+        }
 
-      let t = null;
-      searchEl.addEventListener("input", () => {
-        const q = searchEl.value.trim();
-        clearTimeout(t);
-        t = setTimeout(() => {
-          if (!q) return hideResults(resultsEl);
-          if (CONTACTS_ERROR) return showMessage("Contacts not available (check API key + sheet sharing).");
+        document.addEventListener("DOMContentLoaded", async () => {
+          const searchEl  = $("contactSearch");
+          const resultsEl = $("contactResults");
+          if (!searchEl || !resultsEl) return;
 
-          const q1 = q[0]?.toLowerCase() || "";
-          const list = CONTACTS
-            .filter(c => matches(c, q))
-            .sort((a, b) => {
-              const aFirst = (a[COL.first] || "").trim().toLowerCase();
-              const bFirst = (b[COL.first] || "").trim().toLowerCase();
-              const aStarts = q1 && aFirst.startsWith(q1) ? 0 : 1;
-              const bStarts = q1 && bFirst.startsWith(q1) ? 0 : 1;
-              return aStarts - bStarts || aFirst.localeCompare(bFirst);
+          let CONTACTS = [];
+          let CONTACTS_ERROR = "";
+
+          try { CONTACTS = await loadContacts(); CONTACTS_ERROR = ""; }
+          catch (e){ CONTACTS = []; CONTACTS_ERROR = e?.message || "Could not load contacts."; console.error(CONTACTS_ERROR); }
+
+          function showMessage(msg){
+            resultsEl.innerHTML = `<div style="padding:10px 12px; font-weight:800; color:var(--muted);">${esc(msg)}</div>`;
+            resultsEl.style.display = "block";
+          }
+
+          function showResults(list){
+            resultsEl.innerHTML = "";
+            list.slice(0, 12).forEach(c => {
+              const top = fullName(c) || "Unnamed";
+              const sub = [c[COL.email1] || c[COL.email2] || "", c[COL.phone] || ""].filter(Boolean).join(" • ");
+
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.style.width = "100%";
+              btn.style.textAlign = "left";
+              btn.style.border = "0";
+              btn.style.background = "transparent";
+              btn.style.padding = "10px 12px";
+              btn.style.borderRadius = "12px";
+              btn.style.cursor = "pointer";
+              btn.innerHTML = `
+                <div style="font-weight:900; color:var(--primary-2);">${esc(top)}</div>
+                <div style="font-size:12px; font-weight:800; color:var(--muted); margin-top:2px;">${esc(sub)}</div>
+              `;
+              btn.addEventListener("mouseenter", () => btn.style.background = "var(--sky)");
+              btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
+              btn.addEventListener("click", () => { pickContact(c); hideResults(resultsEl); });
+              resultsEl.appendChild(btn);
             });
 
-          if (!list.length) return showMessage(`No matches for "${q}"`);
-          showResults(list);
-        }, 60);
-      });
+            resultsEl.style.display = list.length ? "block" : "none";
+          }
 
-      window.addEventListener("click", (e) => {
-        const within = resultsEl.contains(e.target) || searchEl.contains(e.target);
-        if (!within) hideResults(resultsEl);
-      });
-    })();
-  </script>
+          function matches(c, q){
+            const query = q.trim().toLowerCase();
+            if (!query) return false;
+            const hay = [
+              c[COL.first], c[COL.last], c[COL.contact],
+              c[COL.email1], c[COL.email2], c[COL.phone], c[COL.address]
+            ].join(" ").toLowerCase();
+            return hay.includes(query);
+          }
 
-  <!-- Entry-row calculator -->
-  <script>
-    (() => {
-      function toNum(v){
+          let t = null;
+          searchEl.addEventListener("input", () => {
+            const q = searchEl.value.trim();
+            clearTimeout(t);
+            t = setTimeout(() => {
+              if (!q) return hideResults(resultsEl);
+              if (CONTACTS_ERROR) return showMessage("Contacts not available (check API key + sheet sharing).");
+
+              const list = CONTACTS.filter(c => matches(c, q));
+              if (!list.length) return showMessage(`No matches for "${q}"`);
+              showResults(list);
+            }, 70);
+          });
+
+          window.addEventListener("click", (e) => {
+            const within = resultsEl.contains(e.target) || searchEl.contains(e.target);
+            if (!within) hideResults(resultsEl);
+          });
+        });
+      })();
+
+      // ===========================
+      // BUSINESS DISPLAY SYNC (kept; safe even if display elements don't exist)
+      // ===========================
+      function syncBizInfoDisplay() {
+        const name = $("bizName")?.value || "";
+        const addr = $("bizAddr")?.value || "";
+        const city = $("bizCity")?.value || "";
+        const phone = $("bizPhone")?.value || "";
+        const email = $("bizEmail")?.value || "";
+    
+
+        if ($("bizNameDisplay")) $("bizNameDisplay").textContent = name;
+        if ($("bizAddrDisplay")) $("bizAddrDisplay").textContent = addr;
+        if ($("bizCityDisplay")) $("bizCityDisplay").textContent = city;
+        if ($("bizPhoneDisplay")) $("bizPhoneDisplay").textContent = phone;
+
+        const emailEl = $("bizEmailDisplay");
+        if (emailEl) {
+          emailEl.textContent = email;
+          emailEl.href = email ? ("mailto:" + email) : "#";
+        }
+
+    
+
+        const bizEmailInput = $("bizEmail");
+        if (bizEmailInput) bizEmailInput.title = bizEmailInput.value || "";
+      }
+
+      // ===========================
+      // LINE ITEMS + TOTALS
+      // ===========================
+      function toNum(v) {
         const s = String(v ?? "").trim().replace(/[^0-9.-]/g, "");
         const n = parseFloat(s);
         return Number.isFinite(n) ? n : 0;
       }
-      function money2(n){
-        const x = Number(n);
-        return Number.isFinite(x) ? x.toFixed(2) : "0.00";
+
+      function recalcTotals() {
+        const body = $("itemsBody");
+        if (!body) return;
+
+        const rows = Array.from(body.querySelectorAll("tr"));
+        let subtotal = 0;
+        let taxableSubtotal = 0;
+
+        rows.forEach(tr => {
+          const amt = toNum(tr.dataset.amount);
+          subtotal += amt;
+          if (tr.dataset.taxable === "1") taxableSubtotal += amt;
+        });
+
+        const taxRate = toNum($("taxRate")?.value) / 100;
+        const tax = taxableSubtotal * (Number.isFinite(taxRate) ? taxRate : 0);
+
+        const total = subtotal + tax;
+        const paid = toNum($("amountPaid")?.value);
+        const balance = total - paid;
+
+        $("subtotal").textContent = moneyUSD(subtotal);
+        $("taxAmount").textContent = moneyUSD(tax);
+        $("total").textContent = moneyUSD(total);
+        $("balance").textContent = moneyUSD(balance);
       }
 
-      function wireEntryRowCalc(){
-        const typeEl  = document.getElementById("itemType");
-        const priceEl = document.getElementById("itemPrice");
-        const qtyEl   = document.getElementById("itemQty");
-        const amtEl   = document.getElementById("itemAmount");
+      function clearItems() {
+        if ($("itemsBody")) $("itemsBody").innerHTML = "";
+        recalcTotals();
+      }
 
-        // If any are missing, we can't wire it.
-        if (!priceEl || !qtyEl || !amtEl) return;
+      // ===========================
+      // GARMENT SIZES
+      // ===========================
+      const GARMENT_SIZES = ["XS", "S", "M", "L", "XL", "2X", "3X", "4X"];
+      let sizeModalSaveHandler_ = null;
 
-        function recalc(){
-          const type  = typeEl ? typeEl.value : "Product";
-          const price = toNum(priceEl.value);
-          const qty   = Math.max(0, toNum(qtyEl.value || 1));
-          let amt = price * qty;
+      function sanitizeSizeQty_(v) {
+        const n = parseInt(String(v ?? "").replace(/[^\d]/g, ""), 10);
+        return Number.isFinite(n) && n > 0 ? n : 0;
+      }
 
-          // Discounts should reduce totals
-          if (type === "Discount" && amt > 0) amt = -amt;
+      function normalizeSizesMap_(sizes) {
+        const src = sizes && typeof sizes === "object" ? sizes : {};
+        const out = {};
+        GARMENT_SIZES.forEach((sz) => {
+          const q = sanitizeSizeQty_(src[sz]);
+          if (q > 0) out[sz] = q;
+        });
+        return out;
+      }
 
-          amtEl.value = money2(amt);
+      function sumSizeQty_(sizes) {
+        return Object.values(normalizeSizesMap_(sizes)).reduce((a, b) => a + b, 0);
+      }
+
+      function buildSizeText_(sizes) {
+        const cleaned = normalizeSizesMap_(sizes);
+        return GARMENT_SIZES
+          .filter((sz) => cleaned[sz] > 0)
+          .map((sz) => `${sz}-${cleaned[sz]}`)
+          .join(", ");
+      }
+
+      function parseSizesDataset_(value) {
+        if (!value) return {};
+        try {
+          return normalizeSizesMap_(JSON.parse(value));
+        } catch {
+          return {};
+        }
+      }
+
+      function parseSizeText_(sizeText) {
+        const out = {};
+        const raw = String(sizeText || "");
+        if (!raw) return out;
+        raw.split(",").forEach((part) => {
+          const m = part.trim().match(/^([A-Za-z0-9]+)\s*-\s*(\d+)$/);
+          if (!m) return;
+          const key = m[1].toUpperCase();
+          if (!GARMENT_SIZES.includes(key)) return;
+          const q = sanitizeSizeQty_(m[2]);
+          if (q > 0) out[key] = q;
+        });
+        return normalizeSizesMap_(out);
+      }
+
+      function openSizeModal_(initialSizes, onSave) {
+        const backdrop = $("sizeModalBackdrop");
+        const grid = $("sizeGrid");
+        if (!backdrop || !grid) return;
+
+        const sizes = normalizeSizesMap_(initialSizes);
+        grid.innerHTML = GARMENT_SIZES.map((sz) => `
+          <div class="sizeCell">
+            <label for="modalSize_${sz}">${esc(sz)}</label>
+            <input id="modalSize_${sz}" data-size-key="${esc(sz)}" class="mono" inputmode="numeric" value="${sizes[sz] || ""}" />
+          </div>
+        `).join("");
+
+        sizeModalSaveHandler_ = typeof onSave === "function" ? onSave : null;
+        backdrop.style.display = "flex";
+        grid.querySelector("input")?.focus();
+      }
+
+      function closeSizeModal_() {
+        const backdrop = $("sizeModalBackdrop");
+        if (!backdrop) return;
+        backdrop.style.display = "none";
+        sizeModalSaveHandler_ = null;
+      }
+
+      function wireSizeModal_() {
+        const backdrop = $("sizeModalBackdrop");
+        const grid = $("sizeGrid");
+        if (!backdrop || !grid) return;
+
+        // prevent double-binding
+        if (backdrop.dataset.wired === "1") return;
+        backdrop.dataset.wired = "1";
+
+        $("sizeCloseBtn")?.addEventListener("click", closeSizeModal_);
+        $("sizeCancelBtn")?.addEventListener("click", closeSizeModal_);
+        backdrop.addEventListener("click", (e) => {
+          if (e.target === backdrop) closeSizeModal_();
+        });
+
+        $("sizeSaveBtn")?.addEventListener("click", () => {
+          const sizes = {};
+          grid.querySelectorAll("input[data-size-key]").forEach((el) => {
+            const key = el.getAttribute("data-size-key");
+            if (!key) return;
+            const q = sanitizeSizeQty_(el.value);
+            if (q > 0) sizes[key] = q;
+          });
+          if (sizeModalSaveHandler_) sizeModalSaveHandler_(normalizeSizesMap_(sizes));
+          closeSizeModal_();
+        });
+      }
+
+      // ===========================
+      // RENDERED LINE ITEMS (supports garment sizes for ANY type if sizes exist)
+      // ===========================
+      function addRenderedLine({ type, product, desc, color, sizes, sizeText, unit_price, qty, taxable }) {
+        const body = $("itemsBody");
+        if (!body) return;
+
+        const t = String(type || "Services");
+        const p = String(product || desc || "");
+        const c = String(color || "");
+        const u = asNum(unit_price || 0);
+
+        const normalizedSizes = normalizeSizesMap_(sizes);
+        const fallbackSizes = parseSizeText_(sizeText);
+        const effectiveSizes = Object.keys(normalizedSizes).length ? normalizedSizes : fallbackSizes;
+
+        const hasSizes = sumSizeQty_(effectiveSizes) > 0;
+        const derivedSizeText = buildSizeText_(effectiveSizes);
+        const st = String(sizeText || derivedSizeText || "");
+
+        const q = hasSizes ? sumSizeQty_(effectiveSizes) : Math.max(1, asNum(qty || 1));
+
+        let amount = u * q;
+        if (t === "Discount" && amount > 0) amount = -amount;
+
+        const isTaxable = taxable !== false;
+
+        const tr = document.createElement("tr");
+        tr.dataset.amount = String(amount);
+        tr.dataset.taxable = isTaxable ? "1" : "0";
+        tr.dataset.type = t;
+        tr.dataset.product = p;
+        tr.dataset.color = c;
+        tr.dataset.unitPrice = String(u);
+        tr.dataset.qty = String(q);
+        tr.dataset.sizes = JSON.stringify(effectiveSizes);
+
+        tr.innerHTML = `
+          <td>${esc(t)}</td>
+          <td>
+            <div class="descStack">
+              <div class="descMain">${esc(p || "")}${c ? " — " + esc(c) : ""}</div>
+              ${st ? `<div class="descMeta rowSizeText">Sizes: ${esc(st)}</div>` : ``}
+              ${hasSizes ? `<button type="button" class="linkBtn editSizesBtn">[ Edit Sizes ]</button>` : ``}
+            </div>
+          </td>
+          <td class="t-right">${moneyUSD(u)}</td>
+          <td class="t-right rowQty">${q}</td>
+          <td class="t-right rowAmount">${moneyUSD(amount)}</td>
+          <td class="t-right">
+            <input type="checkbox" class="rowTax" ${isTaxable ? "checked" : ""} aria-label="Taxable" />
+          </td>
+          <td class="t-right"><button type="button" class="iconbtn" aria-label="Remove">✕</button></td>
+        `;
+
+        tr.querySelector(".rowTax")?.addEventListener("change", (e) => {
+          tr.dataset.taxable = e.target.checked ? "1" : "0";
+          recalcTotals();
+        });
+
+        tr.querySelector(".editSizesBtn")?.addEventListener("click", () => {
+          const current = parseSizesDataset_(tr.dataset.sizes);
+          openSizeModal_(current, (savedSizes) => {
+            const cleaned = normalizeSizesMap_(savedSizes);
+            const newQty = Math.max(1, sumSizeQty_(cleaned));
+            const unit = asNum(tr.dataset.unitPrice || 0);
+
+            let newAmount = unit * newQty;
+            if ((tr.dataset.type || "") === "Discount" && newAmount > 0) newAmount = -newAmount;
+
+            tr.dataset.sizes = JSON.stringify(cleaned);
+            tr.dataset.qty = String(newQty);
+            tr.dataset.amount = String(newAmount);
+
+            const nextSizeText = buildSizeText_(cleaned);
+            const sizeTextEl = tr.querySelector(".rowSizeText");
+            if (sizeTextEl) sizeTextEl.textContent = nextSizeText ? `Sizes: ${nextSizeText}` : "";
+
+            const qtyEl = tr.querySelector(".rowQty");
+            if (qtyEl) qtyEl.textContent = String(newQty);
+
+            const amtEl = tr.querySelector(".rowAmount");
+            if (amtEl) amtEl.textContent = moneyUSD(newAmount);
+
+            recalcTotals();
+          });
+        });
+
+        tr.querySelector(".iconbtn")?.addEventListener("click", () => {
+          tr.remove();
+          recalcTotals();
+        });
+
+        body.appendChild(tr);
+        recalcTotals();
+      }
+
+      function renderItems(items) {
+        clearItems();
+        (items || []).forEach(it => addRenderedLine(it));
+        recalcTotals();
+      }
+
+      // ===========================
+      // ENTRY ROW (Add Item) — RESTORED GARMENT SIZE LOGIC (Product + Services)
+      // ===========================
+      function wireEntryRow() {
+        const entryTr = document.querySelector("tr.entry-row");
+        if (!entryTr) return;
+
+        // prevent double-binding (causes “weird resets”)
+        if (entryTr.dataset.wired === "1") return;
+        entryTr.dataset.wired = "1";
+
+        const $in = (id) => entryTr.querySelector("#" + id);
+        let draftSizes_ = {};
+
+        function isTypeWithGarments_() {
+          const type = ($in("itemType")?.value || "Product");
+          return type === "Product" || type === "Services";
         }
 
-        // Listen to everything (covers typing, spinner arrows, focus changes)
-        ["input","change","keyup","blur"].forEach(ev => {
-          priceEl.addEventListener(ev, recalc);
-          qtyEl.addEventListener(ev, recalc);
+        function isGarment_() {
+          if (!isTypeWithGarments_()) return false;
+          const kind = $in("productKind")?.value || "non_garment";
+          return kind === "garment";
+        }
+
+        function updateSizesSummary_() {
+          const sum = $in("sizesSummary");
+          if (!sum) return;
+          const txt = buildSizeText_(draftSizes_);
+          sum.textContent = txt || "No sizes selected";
+        }
+
+        function updateEntryVisibility_() {
+          const type = $in("itemType")?.value || "Product";
+          const garment = isGarment_();
+
+          const kindWrap = $in("productKindWrap");
+          if (kindWrap) kindWrap.style.display = (type === "Product" || type === "Services") ? "" : "none";
+
+          const sizesWrap = $in("sizesWrap");
+          if (sizesWrap) sizesWrap.style.display = garment ? "" : "none";
+
+          const colorWrap = $in("itemColorWrap");
+          if (colorWrap) colorWrap.style.display = garment ? "" : "none";
+
+          const discountWrap = $in("discountWrap");
+          if (discountWrap) discountWrap.style.display = (type === "Discount") ? "" : "none";
+
+          const qtyEl = $in("itemQty");
+          if (qtyEl) {
+            if (garment) {
+              qtyEl.disabled = true;
+              qtyEl.value = String(Math.max(1, sumSizeQty_(draftSizes_)));
+            } else {
+              qtyEl.disabled = (type === "Discount");
+              if (type === "Discount") qtyEl.value = "1";
+              if (!qtyEl.value || Number(qtyEl.value) <= 0) qtyEl.value = "1";
+            }
+          }
+        }
+
+        function recalcEntryAmount_() {
+          const type = $in("itemType")?.value || "Product";
+          const price = toNum($in("itemPrice")?.value);
+
+          updateSizesSummary_();
+          updateEntryVisibility_();
+
+          const qty = Math.max(1, toNum($in("itemQty")?.value || 1));
+          let amt = price * qty;
+          if (type === "Discount" && amt > 0) amt = -amt;
+
+          if ($in("itemAmount")) $in("itemAmount").value = amt.toFixed(2);
+        }
+
+        function resetEntry_() {
+          draftSizes_ = {};
+          updateSizesSummary_();
+
+          $in("itemProduct") && ($in("itemProduct").value = "");
+          $in("itemColor") && ($in("itemColor").value = "");
+          $in("itemPrice") && ($in("itemPrice").value = "");
+          $in("itemTaxable") && ($in("itemTaxable").checked = true);
+
+          if ($in("itemType")) $in("itemType").value = "Product";
+          if ($in("productKind")) $in("productKind").value = "garment";
+          if ($in("itemQty")) $in("itemQty").value = "1";
+
+          updateEntryVisibility_();
+          recalcEntryAmount_();
+        }
+
+        $in("btnEntryEditSizes")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (!isGarment_()) return;
+          openSizeModal_(draftSizes_, (savedSizes) => {
+            draftSizes_ = normalizeSizesMap_(savedSizes);
+            recalcEntryAmount_();
+          });
         });
-        typeEl && typeEl.addEventListener("change", recalc);
 
-        // Initialize once on load
-        recalc();
+        ["input", "change", "keyup", "blur"].forEach((ev) => {
+          $in("itemPrice")?.addEventListener(ev, recalcEntryAmount_);
+          $in("itemQty")?.addEventListener(ev, recalcEntryAmount_);
+        });
+
+        $in("itemType")?.addEventListener("change", () => {
+          // if they changed away from garment-capable type, clear sizes
+          if (!isTypeWithGarments_()) draftSizes_ = {};
+          updateEntryVisibility_();
+          recalcEntryAmount_();
+        });
+
+        $in("productKind")?.addEventListener("change", () => {
+          // switching from garment -> non_garment clears sizes
+          if (!isGarment_()) draftSizes_ = {};
+          updateEntryVisibility_();
+          recalcEntryAmount_();
+        });
+
+        $in("addItemBtn")?.addEventListener("click", (e) => {
+          e.preventDefault();
+
+          const type = $in("itemType")?.value || "Product";
+          const garment = isGarment_();
+
+          const product = ($in("itemProduct")?.value || "").trim();
+          const color = garment ? ($in("itemColor")?.value || "").trim() : "";
+          const unit_price = toNum($in("itemPrice")?.value);
+          const taxable = $in("itemTaxable")?.checked ?? true;
+
+          const sizes = garment ? normalizeSizesMap_(draftSizes_) : {};
+          const garmentQty = sumSizeQty_(sizes);
+          const qty = garment ? Math.max(1, garmentQty) : Math.max(1, toNum($in("itemQty")?.value || 1));
+          const sizeText = garment ? buildSizeText_(sizes) : "";
+
+          // Validation
+          if ((type === "Product" || type === "Services") && !product) return;
+          if (garment && garmentQty <= 0) {
+            alert("Set at least one garment size quantity.");
+            return;
+          }
+
+          addRenderedLine({
+            type,
+            product,
+            color,
+            sizes,
+            sizeText,
+            unit_price,
+            qty,
+            taxable
+          });
+
+          resetEntry_();
+          recalcTotals();
+          $in("itemProduct")?.focus();
+        });
+
+        ["input", "change", "keyup", "blur"].forEach((ev) => {
+          $("taxRate")?.addEventListener(ev, recalcTotals);
+          $("amountPaid")?.addEventListener(ev, recalcTotals);
+        });
+
+        updateSizesSummary_();
+        updateEntryVisibility_();
+        recalcEntryAmount_();
+        recalcTotals();
       }
 
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", wireEntryRowCalc);
-      } else {
-        wireEntryRowCalc();
+      // ===========================
+      // DRAFT (LOCAL) — ONE CLEAN VERSION (no duplicates)
+      // ===========================
+      const DRAFT_KEY = "invoiceDraftBackup_v2";
+
+      function getItemsFromTable() {
+        const rows = Array.from(document.querySelectorAll("#itemsBody tr"));
+        return rows.map(tr => {
+          let sizesObj = {};
+          try { sizesObj = tr.dataset.sizes ? JSON.parse(tr.dataset.sizes) : {}; } catch { sizesObj = {}; }
+
+          return {
+            type: tr.dataset.type || "Services",
+            product: tr.dataset.product || "",
+            color: tr.dataset.color || "",
+            unit_price: toNum(tr.dataset.unitPrice || "0"),
+            qty: toNum(tr.dataset.qty || "1"),
+            taxable: tr.dataset.taxable === "1",
+            sizes: sizesObj,
+            sizeText: buildSizeText_(sizesObj)
+          };
+        });
       }
+
+      function getInvoiceDraftObject() {
+        return {
+          invoice_no: ($("invNo")?.value || "").trim(),
+          invoice_date: ($("invDate")?.value || "").trim(),
+          client_name: ($("clientName")?.value || "").trim(),
+          client_email: ($("clientEmail")?.value || "").trim(),
+          client_phone: ($("clientPhone")?.value || "").trim(),
+          client_addr: ($("clientAddr")?.value || "").trim(),
+          notes: ($("notes")?.value || "").trim(),
+          terms: ($("terms")?.value || "").trim(),
+          tax_rate: toNum($("taxRate")?.value),
+          amount_paid: toNum($("amountPaid")?.value),
+          items_json: getItemsFromTable()
+        };
+      }
+
+      function applyDraftObject(d) {
+        if (!d) return;
+
+        $("invNo").value = d.invoice_no || "";
+        $("invDate").value = d.invoice_date || "";
+
+        $("clientName").value = d.client_name || "";
+        $("clientEmail").value = d.client_email || "";
+        $("clientPhone").value = d.client_phone || "";
+        $("clientAddr").value = d.client_addr || "";
+        $("notes").value = d.notes || "";
+        $("terms").value = d.terms || "";
+ 
+
+        if ($("taxRate")) $("taxRate").value = (d.tax_rate ?? 9.375);
+        if ($("amountPaid")) $("amountPaid").value = (d.amount_paid ?? 0);
+
+        renderItems(Array.isArray(d.items_json) ? d.items_json : []);
+        recalcTotals();
+      }
+
+      function saveDraftToLocalStorage() {
+        try {
+          const draft = getInvoiceDraftObject();
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        } catch (e) {
+          console.warn("Could not save draft locally:", e);
+        }
+      }
+
+      function loadDraftFromLocalStorage() {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (!raw) return null;
+        try { return JSON.parse(raw); } catch { return null; }
+      }
+
+      // console helper
+      window.loadDraftFromObject = applyDraftObject;
+
+      // ===========================
+      // SAVE DRAFT TO SUPABASE (CREATE OR UPDATE)
+      // ===========================
+      async function saveDraftToSupabase() {
+        const draft = getInvoiceDraftObject();
+
+        if (!draft.items_json.length) {
+          alert("No line items yet. Add at least one item before saving.");
+          return;
+        }
+
+        setLoadMsg("Saving draft...");
+
+        // If we already loaded/created an invoice row earlier, update it.
+        if (window.CURRENT_INVOICE_ID) {
+          const { error } = await window.sb
+            .from("invoices")
+            .update({
+              invoice_date: draft.invoice_date || null,
+              client_name: draft.client_name || null,
+              client_email: draft.client_email || null,
+              client_phone: draft.client_phone || null,
+            
+              notes: draft.notes || null,
+              terms: draft.terms || null,
+              items_json: draft.items_json
+            })
+            .eq("id", window.CURRENT_INVOICE_ID);
+
+          if (error) {
+            console.error(error);
+            setLoadMsg(error.message || "Could not save draft.", true);
+            return;
+          }
+
+          setLoadMsg("Draft saved.");
+          return;
+        }
+
+        // Otherwise: if invNo is filled, try updating by invoice_no first
+        if (draft.invoice_no) {
+          const { data: found, error: findErr } = await window.sb
+            .from("invoices")
+            .select("id, invoice_no")
+            .eq("invoice_no", draft.invoice_no)
+            .limit(1)
+            .maybeSingle();
+
+          if (findErr) console.error(findErr);
+
+          if (found?.id) {
+            window.CURRENT_INVOICE_ID = found.id;
+            return await saveDraftToSupabase();
+          }
+        }
+
+        // Else create a new invoice row
+        const insertRow = {
+          status: "draft",
+          invoice_date: draft.invoice_date || null,
+          client_name: draft.client_name || null,
+          client_email: draft.client_email || null,
+          client_phone: draft.client_phone || null,
+         
+          notes: draft.notes || null,
+          terms: draft.terms || null,
+          items_json: draft.items_json
+        };
+
+        const { data, error } = await window.sb
+          .from("invoices")
+          .insert(insertRow)
+          .select("*")
+          .single();
+
+        if (error) {
+          console.error(error);
+          setLoadMsg(error.message || "Could not create invoice.", true);
+          return;
+        }
+
+        window.CURRENT_INVOICE_ID = data.id;
+        $("invNo").value = data.invoice_no || "";
+        setLoadMsg(`Draft saved as ${data.invoice_no}`);
+      }
+
+      // ===========================
+      // QUOTE -> ITEMS
+      // ===========================
+      function buildInvoiceItemsFromQuote(quote) {
+        const p = quote?.payload || {};
+
+        const qty = Math.max(1, asNum(p.qty ?? quote?.qty ?? 1));
+        const totalEstimate = asNum(p.total_estimate ?? quote?.total_estimate ?? 0);
+        const garmentsSubtotal = centsToDollars(p.garments_subtotal_cents ?? 0);
+
+        const printingSubtotal = Math.max(0, totalEstimate - garmentsSubtotal);
+        const items = [];
+
+        if (garmentsSubtotal > 0) {
+          items.push({
+            type: "Product",
+            desc: `Garments (${qty} pcs)`,
+            unit_price: garmentsSubtotal / qty,
+            qty,
+            taxable: true
+          });
+        }
+
+        if (printingSubtotal > 0) {
+          items.push({
+            type: "Services",
+            desc: "Printing",
+            unit_price: printingSubtotal,
+            qty: 1,
+            taxable: true
+          });
+        }
+
+        if (!items.length && totalEstimate > 0) {
+          items.push({
+            type: "Services",
+            desc: "Printing Order (Total Estimate)",
+            unit_price: totalEstimate,
+            qty: 1,
+            taxable: true
+          });
+        }
+
+        if (!items.length) {
+          items.push({ type: "Services", desc: "Quote (pricing not found)", unit_price: 0, qty: 1, taxable: true });
+        }
+
+        return items;
+      }
+
+      // ===========================
+      // SUPABASE: LOAD QUOTE
+      // ===========================
+      async function loadQuoteByNumber(quoteNoRaw) {
+        const quoteNo = normalizeQuoteNo(quoteNoRaw);
+        if (!quoteNo) throw new Error("Enter a quote number first.");
+
+        const { data, error } = await window.sb
+          .from("customer_quotes")
+          .select("*")
+          .eq("quote_no", quoteNo)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) throw new Error("Quote not found: " + quoteNo);
+
+        try {
+          if (typeof data.payload === "string") data.payload = JSON.parse(data.payload);
+        } catch {
+          data.payload = {};
+        }
+        if (!data.payload || typeof data.payload !== "object") data.payload = {};
+
+        window.CURRENT_QUOTE = data;
+        window.CURRENT_QUOTE_ID = data.id;
+        return data;
+      }
+
+      // ===========================
+      // SUPABASE: LOAD INVOICE (load + enable editing via Save Draft)
+      // ===========================
+      async function loadInvoiceByNumber(invoiceNoRaw){
+        const invoiceNo = normalizeInvoiceNo(invoiceNoRaw);
+        if (!invoiceNo) throw new Error("Enter an invoice number first.");
+
+        setLoadMsg(`Loading invoice ${invoiceNo}...`);
+
+        let { data, error } = await window.sb
+          .from("invoices")
+          .select("*")
+          .eq("invoice_no", invoiceNo)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+          const { data: data2, error: error2 } = await window.sb
+            .from("invoices")
+            .select("*")
+            .ilike("invoice_no", invoiceNo)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (error2) throw error2;
+          data = data2;
+        }
+
+        if (!data) throw new Error("Invoice not found: " + invoiceNo);
+
+        window.CURRENT_INVOICE_ID = data.id || null;
+
+        // Apply
+        $("invNo").value = data.invoice_no || "";
+        $("invDate").value = (data.invoice_date || "").slice(0,10) || "";
+
+        $("clientName").value = data.client_name || "";
+        $("clientEmail").value = data.client_email || "";
+        $("clientPhone").value = data.client_phone || "";
+
+        
+        $("notes").value = data.notes || "";
+        $("terms").value = data.terms || "";
+
+        syncBizInfoDisplay();
+
+        const items = Array.isArray(data.items_json) ? data.items_json : [];
+        renderItems(items);
+
+        // Save to local too, so a Live Server reload won't wipe it.
+        saveDraftToLocalStorage();
+
+        setLoadMsg(`Invoice ${data.invoice_no} loaded. Edit it and click "Save Draft".`);
+        return data;
+      }
+
+      // ===========================
+      // FLOW 1: LOAD QUOTE (PREVIEW)
+      // ===========================
+      async function loadQuotePreviewFlow() {
+        if (window.__LOADING_QUOTE) return;
+        window.__LOADING_QUOTE = true;
+
+        try {
+          setCreateEnabled(false);
+
+          const quoteNo = $("quoteNoInput")?.value?.trim() || "";
+          setLoadMsg("Loading quote...");
+
+          const quote = await loadQuoteByNumber(quoteNo);
+
+          // New invoice context
+          window.CURRENT_INVOICE_ID = null;
+          $("invNo").value = "";
+
+          $("clientName").value  = quote.name  || "";
+          $("clientEmail").value = quote.email || "";
+          $("clientPhone").value = quote.phone || "";
+          $("notes").value = quote.notes || "";
+
+          const previewItems = buildInvoiceItemsFromQuote(quote);
+          renderItems(previewItems);
+
+          setLoadMsg(`Quote #${quote.quote_no} loaded (preview). Click "Create Invoice" to generate an invoice.`);
+          setCreateEnabled(true);
+        } catch (err) {
+          console.error(err);
+          setLoadMsg(err?.message || "Could not load quote.", true);
+          window.CURRENT_QUOTE = null;
+          window.CURRENT_QUOTE_ID = null;
+          setCreateEnabled(false);
+        } finally {
+          window.__LOADING_QUOTE = false;
+        }
+      }
+
+      // ===========================
+      // SHEET SYNC
+      // ===========================
+      async function syncSheetNow() {
+        if (!INVOICE_SYNC_WEBAPP_URL) return;
+
+        try {
+          const body = new URLSearchParams({
+            secret: INVOICE_SYNC_SECRET,
+            action: "sync",
+            // If your GAS expects additional info, add it here later
+          });
+
+          const res = await fetch(INVOICE_SYNC_WEBAPP_URL, {
+            method: "POST",
+            body,
+            cache: "no-store",
+            // IMPORTANT: do NOT set Content-Type manually
+          });
+
+          const text = await res.text();
+          let data = null;
+          try { data = JSON.parse(text); } catch {}
+
+          if (!res.ok || !data?.ok) {
+            console.warn("Sheet sync failed:", data || text);
+            setLoadMsg("Invoice created, but sheet sync returned an error (check console).", true);
+            return;
+          }
+
+          setLoadMsg("Invoice created + synced to sheet.");
+        } catch (err) {
+          console.error("Sheet sync fetch failed:", err);
+          setLoadMsg("Invoice created, but sheet sync could not connect (check Network/CORS).", true);
+        }
+      }
+      window.syncSheetNow = syncSheetNow;
+
+      // ===========================
+      // FLOW 2: CREATE INVOICE
+      // ===========================
+      async function createInvoiceFromLoadedQuote() {
+        const quote = window.CURRENT_QUOTE;
+        if (!quote) {
+          alert("Load a quote first.");
+          return;
+        }
+
+        try {
+          setCreateEnabled(false);
+          setLoadMsg("Creating invoice...");
+
+          const items = buildInvoiceItemsFromQuote(quote);
+
+          const insertRow = {
+            quote_id: quote.id,
+            quote_no: String(quote.quote_no || ""),
+            status: "draft",
+            client_name: quote.name || null,
+            client_email: quote.email || null,
+            client_phone: quote.phone || null,
+            
+            items_json: items,
+            notes: quote.notes || null,
+          };
+
+          const { data, error } = await window.sb
+            .from("invoices")
+            .insert(insertRow)
+            .select("*")
+            .single();
+
+          if (error) throw error;
+
+          window.CURRENT_INVOICE_ID = data.id;
+          $("invNo").value = data.invoice_no || "";
+          $("clientEmail").value = data.client_email || quote.email || "";
+
+          // Save to local so refresh doesn't wipe it
+          saveDraftToLocalStorage();
+
+          setLoadMsg(`Invoice created: ${data.invoice_no} (edit it, then click "Save Draft").`);
+
+          syncSheetNow(); // don’t await
+        } catch (err) {
+          console.error(err);
+          setLoadMsg(err?.message || "Could not create invoice.", true);
+          setCreateEnabled(true);
+        }
+      }
+
+      // ===========================
+      // EMAIL
+      // ===========================
+      async function sendInvoiceEmailNow() {
+        const to = $("clientEmail")?.value?.trim() || "";
+        if (!to) throw new Error("Client email is empty.");
+
+        const invNo = $("invNo")?.value?.trim() || "";
+        const subject = invNo ? `Invoice ${invNo} — My Shirt Printing` : "Invoice — My Shirt Printing";
+
+        const html = `
+          <div style="font-family:Arial,sans-serif;line-height:1.4">
+            <h2>${subject}</h2>
+            <p>Your invoice is ready.</p>
+            <p><b>Invoice #:</b> ${esc(invNo || "(not set)")}</p>
+          </div>
+        `;
+
+        const body = new URLSearchParams({
+          secret: EMAIL_WEBAPP_SECRET,
+          to,
+          subject,
+          html
+        });
+
+        const res = await fetch(EMAIL_WEBAPP_URL, { method: "POST", body });
+        const text = await res.text();
+        let data = null;
+        try { data = JSON.parse(text); } catch {}
+
+        if (!data?.ok) throw new Error(data?.error || "Email send failed");
+        return true;
+      }
+
+      // ===========================
+      // WIRE BUTTONS
+      // ===========================
+      document.addEventListener("DOMContentLoaded", () => {
+        setCreateEnabled(false);
+        wireSizeModal_();
+        wireEntryRow();
+
+        // Biz sync (safe even if display els aren't in DOM)
+        ["bizName","bizAddr","bizCity","bizPhone","bizEmail"].forEach((id) => {
+          $(id)?.addEventListener("input", syncBizInfoDisplay);
+        });
+        syncBizInfoDisplay();
+
+        // Save Draft button: local backup first, then Supabase (creates or updates)
+        $("btnSaveDraft")?.addEventListener("click", async () => {
+          try {
+            saveDraftToLocalStorage();
+            await saveDraftToSupabase();
+          } catch (e) {
+            console.error(e);
+            setLoadMsg(e?.message || "Save failed.", true);
+          }
+        });
+
+        // Restore Draft button: restore from local backup
+        $("btnRestoreDraft")?.addEventListener("click", () => {
+          const d = loadDraftFromLocalStorage();
+          if (!d) return alert("No local draft found on this browser.");
+          applyDraftObject(d);
+          setLoadMsg("Draft restored from this browser.");
+        });
+
+        // Auto-backup so Live Server reloads don’t wipe you out
+        setInterval(saveDraftToLocalStorage, 2000);
+        window.addEventListener("beforeunload", saveDraftToLocalStorage);
+
+        // On first load, if there's a draft and the page is empty, restore it
+        const existingDraft = loadDraftFromLocalStorage();
+        if (
+          existingDraft &&
+          !($("invNo")?.value || "").trim() &&
+          document.querySelectorAll("#itemsBody tr").length === 0
+        ) {
+          applyDraftObject(existingDraft);
+          setLoadMsg("Recovered draft from this browser.");
+        }
+
+        $("btnLoadQuote")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          loadQuotePreviewFlow();
+        });
+
+        $("btnCreateInvoice")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          createInvoiceFromLoadedQuote();
+        });
+
+        $("btnLoadInvoice")?.addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            const invNo = $("invoiceNoInput")?.value?.trim() || "";
+            await loadInvoiceByNumber(invNo);
+          } catch (err) {
+            console.error(err);
+            setLoadMsg(err?.message || "Could not load invoice.", true);
+          }
+        });
+
+        $("btnSend")?.addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            await sendInvoiceEmailNow();
+            setLoadMsg("Email sent.");
+          } catch (err) {
+            console.error("Send error:", err);
+            setLoadMsg("Email failed: " + (err?.message || err), true);
+          }
+        });
+
+        $("btnPrint")?.addEventListener("click", () => window.print());
+        $("btnPdf")?.addEventListener("click", () => window.print());
+      });
+
     })();
   </script>
 
-  <script>
-(() => {
-  // ---- helpers ----
-  function toNum(v){
-    const s = String(v ?? "").trim().replace(/[^0-9.-]/g, "");
-    const n = parseFloat(s);
-    return Number.isFinite(n) ? n : 0;
-  }
-  function money2(n){
-    const x = Number(n);
-    return Number.isFinite(x) ? x.toFixed(2) : "0.00";
-  }
-  function moneyUSD(n){
-    const x = Number(n);
-    const safe = Number.isFinite(x) ? x : 0;
-    return safe.toLocaleString(undefined, { style:"currency", currency:"USD" });
-  }
-  function esc(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-  }
+  <!-- Size modal -->
+  <div class="sizeModalBackdrop" id="sizeModalBackdrop" style="
+    position:fixed; inset:0; background:rgba(0,0,0,.35);
+    display:none; align-items:center; justify-content:center; z-index:9999;">
+    <div class="sizeModal" style="
+      width:min(520px, calc(100vw - 40px));
+      background:#fff; border:1px solid var(--border); border-radius:18px;
+      box-shadow: var(--shadow); padding:14px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <h4 style="margin:0; font-family:'DM Sans', Inter, sans-serif; color:var(--primary-2);">Edit Sizes</h4>
+        <button type="button" class="iconbtn" id="sizeCloseBtn" aria-label="Close">✕</button>
+      </div>
 
-  function getEls(){
-    return {
-      typeEl: document.getElementById("itemType"),
-      descEl: document.getElementById("itemDesc"),
-      priceEl: document.getElementById("itemPrice"),
-      qtyEl: document.getElementById("itemQty"),
-      amtEl: document.getElementById("itemAmount"),
-      addBtn: document.getElementById("addItemBtn"),
-      itemsBody: document.getElementById("itemsBody"),
-      subtotalEl: document.getElementById("subtotal"),
-      taxRateEl: document.getElementById("taxRate"),
-      taxAmtEl: document.getElementById("taxAmount"),
-      totalEl: document.getElementById("total"),
-      paidEl: document.getElementById("amountPaid"),
-      balanceEl: document.getElementById("balance"),
-    };
-  }
+      <div id="sizeGrid" style="margin-top:12px; display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;"></div>
 
-  function recalcEntryAmount(){
-    const { typeEl, priceEl, qtyEl, amtEl } = getEls();
-    if (!priceEl || !qtyEl || !amtEl) return;
-
-    const type  = typeEl ? typeEl.value : "Product";
-    const price = toNum(priceEl.value);
-    const qty   = Math.max(0, toNum(qtyEl.value || 1));
-    let amt = price * qty;
-    if (type === "Discount" && amt > 0) amt = -amt;
-
-    amtEl.value = money2(amt);
-  }
-
-  function recalcTotals(){
-    const { itemsBody, subtotalEl, taxRateEl, taxAmtEl, totalEl, paidEl, balanceEl } = getEls();
-    if (!itemsBody || !subtotalEl || !taxRateEl || !taxAmtEl || !totalEl || !paidEl || !balanceEl) return;
-
-    const rows = Array.from(itemsBody.querySelectorAll("tr"));
-    const subtotal = rows.reduce((sum, tr) => sum + toNum(tr.dataset.amount), 0);
-
-    const taxRate = toNum(taxRateEl.value) / 100;
-    const tax = subtotal * (Number.isFinite(taxRate) ? taxRate : 0);
-
-    const total = subtotal + tax;
-    const paid = toNum(paidEl.value);
-    const balance = total - paid;
-
-    subtotalEl.textContent = moneyUSD(subtotal);
-    taxAmtEl.textContent   = moneyUSD(tax);
-    totalEl.textContent    = moneyUSD(total);
-    balanceEl.textContent  = moneyUSD(balance);
-  }
-
-  function addLine(){
-    const { typeEl, descEl, priceEl, qtyEl, amtEl, itemsBody } = getEls();
-    if (!typeEl || !descEl || !priceEl || !qtyEl || !amtEl || !itemsBody) {
-      alert("Add failed: missing one of itemType/itemDesc/itemPrice/itemQty/itemAmount/itemsBody");
-      return;
-    }
-
-    const type = typeEl.value;
-    const desc = descEl.value.trim();
-    const price = toNum(priceEl.value);
-    const qty = Math.max(0, toNum(qtyEl.value || 1));
-
-    if (!desc) return; // keep UI clean
-
-    let amount = toNum(amtEl.value);
-    if (!Number.isFinite(amount)) amount = price * qty;
-    if (type === "Discount" && amount > 0) amount = -amount;
-
-    const tr = document.createElement("tr");
-    tr.dataset.amount = String(amount);
-    tr.innerHTML = `
-      <td>${esc(type)}</td>
-      <td>${esc(desc)}</td>
-      <td class="t-right">${moneyUSD(price)}</td>
-      <td class="t-right">${qty}</td>
-      <td class="t-right">${moneyUSD(amount)}</td>
-      <td class="t-right"><button type="button" class="iconbtn" aria-label="Remove">✕</button></td>
-    `;
-
-    tr.querySelector("button").addEventListener("click", () => {
-      tr.remove();
-      recalcTotals();
-    });
-
-    itemsBody.appendChild(tr);
-
-    // reset entry
-    descEl.value = "";
-    priceEl.value = "";
-    qtyEl.value = "1";
-    typeEl.value = "Product";
-    amtEl.value = "0.00";
-
-    recalcTotals();
-    descEl.focus();
-  }
-
-  function wire(){
-    const { addBtn, priceEl, qtyEl, typeEl, taxRateEl, paidEl } = getEls();
-    if (!addBtn) {
-      alert("Cannot wire Add: #addItemBtn not found");
-      return;
-    }
-
-    // Keep entry amount live
-    ["input","change","keyup","blur"].forEach(ev => {
-      priceEl && priceEl.addEventListener(ev, recalcEntryAmount);
-      qtyEl && qtyEl.addEventListener(ev, recalcEntryAmount);
-    });
-    typeEl && typeEl.addEventListener("change", recalcEntryAmount);
-
-    // Totals update
-    ["input","change","keyup","blur"].forEach(ev => {
-      taxRateEl && taxRateEl.addEventListener(ev, recalcTotals);
-      paidEl && paidEl.addEventListener(ev, recalcTotals);
-    });
-
-    // HARD OVERRIDE: capture-phase handler that beats other listeners
-    addBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation(); // <- key line: prevents other click handlers
-      addLine();
-    }, true);
-
-    // initialize
-    recalcEntryAmount();
-    recalcTotals();
-  }
-
-  const CONTACTS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzeCDuKCpxYfS_Eefrn4Skf6G0XasekzgsJxn1cVZhu2wbrokqc9zIwApr4MWcNDALI/exec";
-  const CONTACTS_SECRET = "msp-invoice-contacts-2026-m@g0wie!!!";
-  const CONTACTS_SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
-
-  function getVal(id){ return (document.getElementById(id)?.value || "").trim(); }
-
-  async function addNewCustomerToSheet(){
-    console.log("=== ADD CUSTOMER CLICKED ===");
-    
-    const firstName = getVal("clientName");
-    const lastName  = "";
-    const phone     = getVal("clientPhone");
-    const contactName = getVal("clientContact");
-    const email     = getVal("clientEmail");
-    const address   = getVal("clientAddr");
-    const notes     = "";
-
-    console.log("Form values:", { firstName, lastName, phone, contactName, email, address, notes });
-
-    if (!firstName) { 
-      console.log("Validation failed: no firstName");
-      alert("Please enter a name / business name."); 
-      return; 
-    }
-    if (!email && !phone) { 
-      console.log("Validation failed: no email or phone");
-      alert("Please add at least an email or phone."); 
-      return; 
-    }
-
-    const payload = {
-      secret: CONTACTS_SECRET,
-      spreadsheetId: CONTACTS_SPREADSHEET_ID,
-      firstName,
-      lastName,
-      phone,
-      contactName,
-      email,
-      address,
-      notes
-    };
-
-    console.log("Payload:", payload);
-
-    const form = new URLSearchParams(payload);
-    console.log("URLSearchParams body:", form.toString());
-
-    let res, text, data;
-    try {
-      console.log("Fetching:", CONTACTS_WEBAPP_URL);
-      res = await fetch(CONTACTS_WEBAPP_URL, {
-        method: "POST",
-        body: form
-      });
-      console.log("Response status:", res.status);
-      console.log("Response ok:", res.ok);
-      
-      text = await res.text();
-      console.log("Response text:", text);
-      
-      data = JSON.parse(text);
-      console.log("Parsed data:", data);
-    } catch (err) {
-      console.error("FETCH ERROR:", err);
-      console.error("Error stack:", err.stack);
-      alert("Could not add customer (network/CORS). Check console for details.");
-      return;
-    }
-
-    if (!res.ok || !data.ok) {
-      const msg = data?.error || `HTTP ${res.status}`;
-      console.error("Server error:", msg);
-      alert("Could not add customer. " + msg);
-      return;
-    }
-
-    console.log("SUCCESS! Customer added.");
-    alert("Customer added to your contact list.");
-  }
-
-  const btnAddCustomer = document.getElementById("btnAddNewCustomer");
-  console.log("Button found:", btnAddCustomer);
-  
-  if (btnAddCustomer) {
-    btnAddCustomer.addEventListener("click", (e) => {
-      console.log("Button click event fired");
-      e.preventDefault();
-      e.stopPropagation();
-      addNewCustomerToSheet();
-    });
-  } else {
-    console.error("btnAddNewCustomer not found in DOM!");
-  }
-  document.getElementById("btnAddNewCustomer")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    addNewCustomerToSheet();
-  });
-
-  if (document.readyState === "loading") {
-    window.addEventListener("DOMContentLoaded", wire);
-  } else {
-    wire();
-  }
-
-  // Wire up Print button
-  document.getElementById("btnPrint")?.addEventListener("click", () => {
-    window.print();
-  });
-
-  // Wire up PDF button (uses print dialog)
-  document.getElementById("btnPdf")?.addEventListener("click", () => {
-    window.print();
-  });
-})();
-</script>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+        <button type="button" class="btn ghost" id="sizeCancelBtn">Cancel</button>
+        <button type="button" class="btn primary" id="sizeSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

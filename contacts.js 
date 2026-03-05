@@ -1,0 +1,153 @@
+// contacts.js  (Google Sheets master contact list)
+(function () {
+  const API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
+  const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
+  const RANGE_A1 = "contacts!A1:J5000"; // adjust if needed
+
+  const COL = {
+    first: "First Name",
+    last: "Last Name",
+    contact: "Contact Name",
+    phone: "Phone",
+    email1: "Email 1",
+    email2: "Email 2",
+    address: "Address"
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  function esc(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  function fullName(c){
+    const first = (c[COL.first] || "").trim();
+    const last  = (c[COL.last] || "").trim();
+    return (last ? `${first} ${last}` : first).trim();
+  }
+
+  function matches(c, q){
+    const query = q.trim().toLowerCase();
+    if (!query) return false;
+    const hay = [
+      c[COL.first], c[COL.last], c[COL.contact],
+      c[COL.email1], c[COL.email2], c[COL.phone], c[COL.address]
+    ].join(" ").toLowerCase();
+    return hay.includes(query);
+  }
+
+  function pickContact(c){
+    $("clientName").value  = fullName(c);
+    $("clientEmail").value = ((c[COL.email1] || "").trim() || (c[COL.email2] || "").trim());
+    $("clientAddr").value  = (c[COL.address] || "").trim();
+    $("clientPhone").value = (c[COL.phone] || "").trim();
+
+    const wrap = $("clientContactWrap");
+    const contactEl = $("clientContact");
+    const contactName = (c[COL.contact] || "").trim();
+    if (wrap && contactEl) {
+      if (contactName) { wrap.style.display = "block"; contactEl.value = contactName; }
+      else { wrap.style.display = "none"; contactEl.value = ""; }
+    }
+  }
+
+  async function loadContacts(){
+    const url =
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SPREADSHEET_ID)}` +
+      `/values/${encodeURIComponent(RANGE_A1)}?key=${encodeURIComponent(API_KEY)}`;
+
+    const res = await fetch(url, { cache: "no-store" });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data?.error?.message || `Sheets error ${res.status}`);
+
+    const values = data.values || [];
+    if (values.length < 2) return [];
+
+    const headers = values[0].map(h => String(h || "").trim());
+    return values.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = String(row[i] ?? "").trim());
+      return obj;
+    }).filter(r => r[COL.first] || r[COL.email1] || r[COL.phone]);
+  }
+
+  function hideResults(resultsEl){
+    resultsEl.style.display = "none";
+    resultsEl.innerHTML = "";
+  }
+
+  window.initContactSearch = async function initContactSearch(){
+    const searchEl  = $("contactSearch");
+    const resultsEl = $("contactResults");
+    if (!searchEl || !resultsEl) return;
+
+    let CONTACTS = [];
+    let CONTACTS_ERROR = "";
+
+    try {
+      CONTACTS = await loadContacts();
+      CONTACTS_ERROR = "";
+    } catch (e) {
+      CONTACTS = [];
+      CONTACTS_ERROR = e?.message || "Could not load contacts.";
+      console.error("Contacts load failed:", CONTACTS_ERROR);
+    }
+
+    function showMessage(msg){
+      resultsEl.innerHTML = `<div style="padding:10px 12px; font-weight:800; color:#47606a;">${esc(msg)}</div>`;
+      resultsEl.style.display = "block";
+    }
+
+    function showResults(list){
+      resultsEl.innerHTML = "";
+      list.slice(0, 12).forEach(c => {
+        const top = fullName(c) || "Unnamed";
+        const sub = [c[COL.email1] || c[COL.email2] || "", c[COL.phone] || ""].filter(Boolean).join(" • ");
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.style.width = "100%";
+        btn.style.textAlign = "left";
+        btn.style.border = "0";
+        btn.style.background = "transparent";
+        btn.style.padding = "10px 12px";
+        btn.style.borderRadius = "12px";
+        btn.style.cursor = "pointer";
+        btn.innerHTML = `
+          <div style="font-weight:900; color:#0b3f5b;">${esc(top)}</div>
+          <div style="font-size:12px; font-weight:800; color:#47606a; margin-top:2px;">${esc(sub)}</div>
+        `;
+        btn.addEventListener("mouseenter", () => btn.style.background = "#eaf4ff");
+        btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
+        btn.addEventListener("click", () => {
+          pickContact(c);
+          hideResults(resultsEl);
+        });
+        resultsEl.appendChild(btn);
+      });
+      resultsEl.style.display = list.length ? "block" : "none";
+    }
+
+    let t = null;
+    searchEl.addEventListener("input", () => {
+      const q = searchEl.value.trim();
+      clearTimeout(t);
+      t = setTimeout(() => {
+        if (!q) return hideResults(resultsEl);
+        if (CONTACTS_ERROR) return showMessage("Contacts not available (check API key + sheet sharing).");
+
+        const list = CONTACTS.filter(c => matches(c, q));
+        if (!list.length) return showMessage(`No matches for "${q}"`);
+        showResults(list);
+      }, 60);
+    });
+
+    window.addEventListener("click", (e) => {
+      const within = resultsEl.contains(e.target) || searchEl.contains(e.target);
+      if (!within) hideResults(resultsEl);
+    });
+  };
+})();
