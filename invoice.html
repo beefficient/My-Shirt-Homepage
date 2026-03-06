@@ -225,8 +225,8 @@
     .wide-input{
       min-width: 160px;
       width: 100%;
-      font-size: 16px;
-      padding: 12px 14px;
+      font-size: 20px; /* larger so numbers are easier to read */
+      padding: 14px 16px;
     }
 
     /* ✅ FIX: prevent grid columns from squeezing / overflow */
@@ -328,18 +328,24 @@
 
     .loadMsg{
       margin-top:10px;
-      padding:10px 12px;
+      padding:14px 16px; /* larger bubble padding */
       border:1px solid var(--border);
-      border-radius:12px;
+      border-radius:14px;
       background:#fff;
       color:var(--primary-2);
-      font-weight:700;
+      font-weight:800;
+      font-size:18px; /* make the message and numbers more readable */
       display:none;
     }
     .loadMsg.error{
       border-color:#f3b9b9;
       background:#fff5f5;
       color:#8a1f1f;
+    }
+
+    @media print {
+      .loadMsg { display: none !important; }
+      #btnClearAll { display: none !important; }
     }
 
     /* From section tweaks */
@@ -449,6 +455,9 @@
       </div>
 
       <div class="sheet" role="document" aria-label="Invoice editor">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+          <button class="btn danger" id="btnClearAll" type="button" style="background:#c62828;color:#fff;">Clear All</button>
+        </div>
         <div class="actionbar">
           <div class="action-left">
             <button class="btn ghost" type="button" id="btnEdit">Edit</button>
@@ -675,7 +684,7 @@
 </tr>
               </tbody>
 
-              <tbody id="itemsBody"></tbody>
+              <tbody id="itemsTbody"></tbody>
             </table>
           </div>
 
@@ -732,9 +741,20 @@
     </div>
   </section>
 
+
+  <script src="quotes.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
+    // Clear All button handler
+    document.addEventListener("DOMContentLoaded", function() {
+      const btn = document.getElementById("btnClearAll");
+      if (btn) btn.addEventListener("click", function() {
+        if (confirm("Are you sure you want to clear all invoice data? This cannot be undone.")) {
+          clearItems();
+        }
+      });
+    });
     (function () {
       // ===========================
       // CONFIG
@@ -1005,7 +1025,7 @@
       }
 
       function recalcTotals() {
-        const body = $("itemsBody");
+        const body = $("itemsTbody");
         if (!body) return;
 
         const rows = Array.from(body.querySelectorAll("tr"));
@@ -1032,7 +1052,19 @@
       }
 
       function clearItems() {
-        if ($("itemsBody")) $("itemsBody").innerHTML = "";
+        if ($("itemsTbody")) $("itemsTbody").innerHTML = "";
+        // Clear client/info fields
+        if ($("clientName")) $("clientName").value = "";
+        if ($("clientEmail")) $("clientEmail").value = "";
+        if ($("clientPhone")) $("clientPhone").value = "";
+        if ($("clientAddr")) $("clientAddr").value = "";
+        if ($("notes")) $("notes").value = "";
+        if ($("terms")) $("terms").value = "";
+        // Remove draft from localStorage and set a cleared flag so reload won't auto-restore
+        try { localStorage.removeItem(DRAFT_KEY); localStorage.setItem('invoiceDraftCleared', '1'); } catch {}
+        // Reset in-memory quote variables if present
+        if (window.CURRENT_QUOTE) window.CURRENT_QUOTE = null;
+        if (window.CURRENT_QUOTE_ID) window.CURRENT_QUOTE_ID = null;
         recalcTotals();
       }
 
@@ -1150,7 +1182,7 @@
       // RENDERED LINE ITEMS (supports garment sizes for ANY type if sizes exist)
       // ===========================
       function addRenderedLine({ type, product, desc, color, sizes, sizeText, unit_price, qty, taxable }) {
-        const body = $("itemsBody");
+        const body = $("itemsTbody");
         if (!body) return;
 
         const t = String(type || "Services");
@@ -1425,7 +1457,7 @@
       const DRAFT_KEY = "invoiceDraftBackup_v2";
 
       function getItemsFromTable() {
-        const rows = Array.from(document.querySelectorAll("#itemsBody tr"));
+        const rows = Array.from(document.querySelectorAll("#itemsTbody tr"));
         return rows.map(tr => {
           let sizesObj = {};
           try { sizesObj = tr.dataset.sizes ? JSON.parse(tr.dataset.sizes) : {}; } catch { sizesObj = {}; }
@@ -1590,6 +1622,19 @@
       function buildInvoiceItemsFromQuote(quote) {
         const p = quote?.payload || {};
 
+        if (Array.isArray(p.items) && p.items.length) {
+          return p.items.map(it => ({
+            type: it.type || "Services",
+            product: it.product || "",
+            color: it.color || "",
+            unit_price: Number(it.price ?? 0),
+            qty: Number(it.qty ?? 1),
+            taxable: it.taxable !== false,
+            sizes: it.sizes || {},
+            sizeText: ""
+          }));
+        }
+
         const qty = Math.max(1, asNum(p.qty ?? quote?.qty ?? 1));
         const totalEstimate = asNum(p.total_estimate ?? quote?.total_estimate ?? 0);
         const garmentsSubtotal = centsToDollars(p.garments_subtotal_cents ?? 0);
@@ -1632,6 +1677,59 @@
         }
 
         return items;
+      }
+
+      // ===========================
+      // SHEETS: LOAD QUOTE (fallback loader)
+      // ===========================
+      const SHEETS_API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
+      const SHEETS_SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
+      const QUOTES_TAB_NAME = "customer_quotes";
+
+      async function loadQuoteByNumberFromSheet(quoteNoRaw) {
+        const quoteNo = String(quoteNoRaw || "").trim().replace(/^#/, "");
+        if (!quoteNo) throw new Error("Enter a quote number first.");
+
+        const range = `${QUOTES_TAB_NAME}!A:T`;
+        const url =
+          `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SHEETS_SPREADSHEET_ID)}` +
+          `/values/${encodeURIComponent(range)}?key=${encodeURIComponent(SHEETS_API_KEY)}`;
+
+        const res = await fetch(url, { cache: "no-store" });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data?.error?.message || `Sheets error ${res.status}`);
+        }
+
+        const rows = data.values || [];
+
+        // skip header row, search column B
+        const row = rows.slice(1).find(r => String(r[1] || "").trim() === quoteNo);
+        if (!row) throw new Error("Quote not found in Google Sheet: " + quoteNo);
+
+        // column T = index 19
+        const payloadCell = String(row[19] || "").trim();
+        if (!payloadCell) {
+          throw new Error(`Quote ${quoteNo} found, but payload_json is empty.`);
+        }
+
+        let payload = {};
+        try {
+          payload = JSON.parse(payloadCell);
+        } catch (e) {
+          throw new Error(`Quote ${quoteNo} found, but payload_json is invalid JSON.`);
+        }
+
+        return {
+          id: null,
+          quote_no: quoteNo,
+          name: String(row[2] || "").trim(),
+          email: String(row[3] || "").trim(),
+          phone: String(row[4] || "").trim(),
+          notes: String(row[17] || "").trim(),
+          payload
+        };
       }
 
       // ===========================
@@ -1738,6 +1836,8 @@
           setLoadMsg("Loading quote...");
 
           const quote = await loadQuoteByNumber(quoteNo);
+          window.CURRENT_QUOTE = quote;
+window.CURRENT_QUOTE_ID = quote.id;
 
           // New invoice context
           window.CURRENT_INVOICE_ID = null;
@@ -1807,7 +1907,23 @@
       // ===========================
       async function createInvoiceFromLoadedQuote() {
         const quote = window.CURRENT_QUOTE;
-        if (!quote) {
+        let q = quote;
+        if (!q) {
+          // Try to recover by loading from the quote number input if available
+          const quoteNo = $("quoteNoInput")?.value?.trim() || "";
+          if (quoteNo) {
+            try {
+              setLoadMsg("Reloading quote...");
+              q = await loadQuoteByNumber(quoteNo);
+              window.CURRENT_QUOTE = q;
+              window.CURRENT_QUOTE_ID = q?.id || null;
+            } catch (err) {
+              console.error("Recover load failed:", err);
+            }
+          }
+        }
+
+        if (!q) {
           alert("Load a quote first.");
           return;
         }
@@ -1816,18 +1932,18 @@
           setCreateEnabled(false);
           setLoadMsg("Creating invoice...");
 
-          const items = buildInvoiceItemsFromQuote(quote);
+          const items = buildInvoiceItemsFromQuote(q);
 
           const insertRow = {
-            quote_id: quote.id,
-            quote_no: String(quote.quote_no || ""),
+            quote_id: q.id,
+            quote_no: String(q.quote_no || ""),
             status: "draft",
-            client_name: quote.name || null,
-            client_email: quote.email || null,
-            client_phone: quote.phone || null,
+            client_name: q.name || null,
+            client_email: q.email || null,
+            client_phone: q.phone || null,
             
             items_json: items,
-            notes: quote.notes || null,
+            notes: q.notes || null,
           };
 
           const { data, error } = await window.sb
@@ -1865,6 +1981,14 @@
         const invNo = $("invNo")?.value?.trim() || "";
         const subject = invNo ? `Invoice ${invNo} — My Shirt Printing` : "Invoice — My Shirt Printing";
 
+        const loadEl = $("loadMsg");
+        const _prevLoadDisplay = loadEl ? loadEl.style.display : null;
+        const _prevLoadText = loadEl ? loadEl.textContent : null;
+        if (loadEl) loadEl.style.display = "none";
+        const clearBtn = $("btnClearAll");
+        const _prevClearBtnDisplay = clearBtn ? clearBtn.style.display : null;
+        if (clearBtn) clearBtn.style.display = "none";
+
         const html = `
           <div style="font-family:Arial,sans-serif;line-height:1.4">
             <h2>${subject}</h2>
@@ -1880,13 +2004,23 @@
           html
         });
 
-        const res = await fetch(EMAIL_WEBAPP_URL, { method: "POST", body });
-        const text = await res.text();
-        let data = null;
-        try { data = JSON.parse(text); } catch {}
+        try {
+          const res = await fetch(EMAIL_WEBAPP_URL, { method: "POST", body });
+          const text = await res.text();
+          let data = null;
+          try { data = JSON.parse(text); } catch {}
 
-        if (!data?.ok) throw new Error(data?.error || "Email send failed");
-        return true;
+          if (!data?.ok) throw new Error(data?.error || "Email send failed");
+          return true;
+        } finally {
+          if (loadEl) {
+            loadEl.style.display = _prevLoadDisplay || "";
+            loadEl.textContent = _prevLoadText || "";
+          }
+          if (clearBtn) {
+            clearBtn.style.display = _prevClearBtnDisplay || "";
+          }
+        }
       }
 
       // ===========================
@@ -1927,11 +2061,14 @@
         window.addEventListener("beforeunload", saveDraftToLocalStorage);
 
         // On first load, if there's a draft and the page is empty, restore it
+        // Skip restore if the user explicitly cleared the draft in this browser.
         const existingDraft = loadDraftFromLocalStorage();
+        const clearedFlag = (function(){ try { return localStorage.getItem('invoiceDraftCleared'); } catch { return null; } })();
         if (
+          !clearedFlag &&
           existingDraft &&
           !($("invNo")?.value || "").trim() &&
-          document.querySelectorAll("#itemsBody tr").length === 0
+          document.querySelectorAll("#itemsTbody tr").length === 0
         ) {
           applyDraftObject(existingDraft);
           setLoadMsg("Recovered draft from this browser.");
@@ -1971,10 +2108,103 @@
 
         $("btnPrint")?.addEventListener("click", () => window.print());
         $("btnPdf")?.addEventListener("click", () => window.print());
+        // Hide load message during manual print (for browsers that don't apply @media print immediately)
+        window.addEventListener('beforeprint', () => {
+          const el = $("loadMsg"); if (el) { el._prevDisplay = el.style.display; el.style.display = 'none'; }
+          const btn = $("btnClearAll"); if (btn) { btn._prevDisplay = btn.style.display; btn.style.display = 'none'; }
+        });
+        window.addEventListener('afterprint', () => {
+          const el = $("loadMsg"); if (el) { el.style.display = el._prevDisplay || ''; delete el._prevDisplay; }
+          const btn = $("btnClearAll"); if (btn) { btn.style.display = btn._prevDisplay || ''; delete btn._prevDisplay; }
+        });
       });
 
     })();
   </script>
+
+<script>
+const SHEETS_API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
+const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
+const TAB_NAME = "customer_quotes";
+
+async function loadQuoteByNumberFromSheet(quoteNoRaw) {
+  const quoteNo = String(quoteNoRaw || "").trim().replace(/^#/, "");
+  if (!quoteNo) throw new Error("Enter a quote number first.");
+
+  // A:T so column B and T are included
+  const range = `${TAB_NAME}!A:T`;
+  const url =
+    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SPREADSHEET_ID)}` +
+    `/values/${encodeURIComponent(range)}?key=${encodeURIComponent(SHEETS_API_KEY)}`;
+
+  const res = await fetch(url, { cache: "no-store" });
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data?.error?.message || `Sheets error ${res.status}`);
+  }
+
+  const rows = data.values || [];
+
+  // Skip header row, search column B (index 1)
+  const row = rows.slice(1).find(r => String(r[1] || "").trim() === quoteNo);
+
+  if (!row) {
+    throw new Error("Quote not found in sheet: " + quoteNo);
+  }
+
+  // Column T = index 19
+  const payloadCell = String(row[19] || "").trim();
+  if (!payloadCell) {
+    throw new Error(`Quote ${quoteNo} found, but payload_json in column T is empty.`);
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(payloadCell);
+  } catch (e) {
+    throw new Error(`Quote ${quoteNo} found, but payload_json is invalid JSON.`);
+  }
+
+  return {
+    quote_no: quoteNo,
+    name: String(row[2] || "").trim(),   // optional, if present
+    email: String(row[3] || "").trim(),  // optional, if present
+    phone: String(row[4] || "").trim(),  // optional, if present
+    notes: String(row[17] || "").trim(), // optional, adjust if needed
+    payload
+  };
+}
+</script>
+
+<script>
+(function () {
+  if (typeof window.loadQuoteByNumber !== "function") return;
+
+  const originalLoadQuoteByNumber = window.loadQuoteByNumber;
+
+  window.loadQuoteByNumber = async function (quoteNoRaw) {
+    const quoteNo = String(quoteNoRaw || "").trim().replace(/^#/, "");
+
+    try {
+      const quote = await loadQuoteByNumberFromSheet(quoteNo);
+      console.log("[sheet] Loaded quote", quoteNo);
+      return {
+        id: null,
+        quote_no: quote.quote_no,
+        name: quote.name || "",
+        email: quote.email || "",
+        phone: quote.phone || "",
+        notes: quote.notes || "",
+        payload: quote.payload || {}
+      };
+    } catch (err) {
+      console.log("[fallback] Sheet lookup failed, using original loader:", err.message);
+      return await originalLoadQuoteByNumber(quoteNoRaw);
+    }
+  };
+})();
+</script>
 
   <!-- Size modal -->
   <div class="sizeModalBackdrop" id="sizeModalBackdrop" style="
