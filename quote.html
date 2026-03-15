@@ -355,6 +355,8 @@
       .container, .wrap { padding-left:12px; padding-right:12px; }
       .navwrap { padding-left:0; padding-right:0; }
       .brand { min-width:0; max-width:60%; }
+      /* allow brand name to wrap on small screens (prevent it forcing width) */
+      .brand .name { white-space: normal; overflow-wrap: anywhere; }
       .brand img { max-width:100%; height:auto; }
       nav { min-width:0; }
       .grid, .row, .choices, .choice { min-width:0; }
@@ -375,7 +377,7 @@
       .card { padding:12px; }
       input, select, textarea, .pill input, .pill select { width:100%; max-width:100%; }
       .choice { flex-direction:column; align-items:stretch; }
-      .qMenu { min-width: unset; width:100%; }
+      .qMenu { min-width: unset; width:100%; max-width: calc(100vw - 32px); }
       .container { padding:0 12px; }
       /* Ensure core containers can't force horizontal overflow */
       .brand, .navwrap, .grid, .row, .card, .wrap, .container { min-width:0; }
