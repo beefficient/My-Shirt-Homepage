@@ -408,14 +408,6 @@
 
         <div class="row">
           <div>
-            <label for="reorder">Reorder?</label>
-            <select id="reorder" autocomplete="off">
-              <option value="" selected disabled>Select one</option>
-              <option value="new">New order</option>
-              <option value="reorder">Reorder</option>
-            </select>
-          </div>
-          <div>
             <label for="rush">Requested In-Hand Date</label>
             <select id="rush" autocomplete="off">
               <option value="" selected disabled>Select one</option>
@@ -447,6 +439,12 @@
                 <span class="pill">Ink colors:
                   <input class="inkNotes" data-loc="Front Center" placeholder="ex: black, red, pink" autocomplete="off" />
                 </span>
+                <span class="pill">Artwork status:
+                  <select class="artworkStatus" data-loc="Front Center">
+                    <option value="new" selected>New</option>
+                    <option value="reorder">Reorder</option>
+                  </select>
+                </span>
               </div>
             </div>
           </div>
@@ -464,6 +462,12 @@
                 </span>
                 <span class="pill">Ink colors:
                   <input class="inkNotes" data-loc="Back Center" placeholder="ex: black" autocomplete="off" />
+                </span>
+                <span class="pill">Artwork status:
+                  <select class="artworkStatus" data-loc="Back Center">
+                    <option value="new" selected>New</option>
+                    <option value="reorder">Reorder</option>
+                  </select>
                 </span>
               </div>
             </div>
@@ -483,6 +487,12 @@
                 <span class="pill">Ink colors:
                   <input class="inkNotes" data-loc="Left Sleeve" placeholder="ex: white" autocomplete="off" />
                 </span>
+                <span class="pill">Artwork status:
+                  <select class="artworkStatus" data-loc="Left Sleeve">
+                    <option value="new" selected>New</option>
+                    <option value="reorder">Reorder</option>
+                  </select>
+                </span>
               </div>
             </div>
           </div>
@@ -500,6 +510,12 @@
                 </span>
                 <span class="pill">Ink colors:
                   <input class="inkNotes" data-loc="Right Sleeve" placeholder="ex: white" autocomplete="off" />
+                </span>
+                <span class="pill">Artwork status:
+                  <select class="artworkStatus" data-loc="Right Sleeve">
+                    <option value="new" selected>New</option>
+                    <option value="reorder">Reorder</option>
+                  </select>
                 </span>
               </div>
             </div>
@@ -519,6 +535,12 @@
                 <span class="pill">Ink colors:
                   <input class="inkNotes" data-loc="Left Chest" placeholder="ex: small logo, black" autocomplete="off" />
                 </span>
+                <span class="pill">Artwork status:
+                  <select class="artworkStatus" data-loc="Left Chest">
+                    <option value="new" selected>New</option>
+                    <option value="reorder">Reorder</option>
+                  </select>
+                </span>
               </div>
             </div>
           </div>
@@ -536,6 +558,12 @@
                 </span>
                 <span class="pill">Ink colors:
                   <input class="inkNotes" data-loc="Right Chest" placeholder="ex: small logo, white" autocomplete="off" />
+                </span>
+                <span class="pill">Artwork status:
+                  <select class="artworkStatus" data-loc="Right Chest">
+                    <option value="new" selected>New</option>
+                    <option value="reorder">Reorder</option>
+                  </select>
                 </span>
               </div>
             </div>
@@ -981,7 +1009,7 @@
     }
 
     function renderSummary({
-      qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,
+      qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,filmCount,
       perGarmentTotalAllLocations,printingOnlyTotal,discountLine,
       rushRate,rushFee,pricingLabel,total,garmentsSubtotal
     }){
@@ -991,7 +1019,7 @@
         <div class="line"><div class="k">Garments</div><div class="v">${isDark ? "Dark" : "Light"}</div></div>
         <div class="line"><div class="k">Total screens</div><div class="v">${totalScreens}</div></div>
         <div class="line"><div class="k">Setup fee</div><div class="v">${money(setupFee)} <span class="muted">(${money(setupRate)} per screen)</span></div></div>
-        <div class="line"><div class="k">Film fee</div><div class="v">${money(filmFee)} <span class="muted">(${totalScreens} film${totalScreens!==1?"s": ""} @ ${money(FILM_FEE)})</span></div></div>
+        <div class="line"><div class="k">Film fee</div><div class="v">${money(filmFee)} <span class="muted">(${filmCount} film${filmCount!==1?"s": ""} @ ${money(FILM_FEE)})</span></div></div>
         <div class="line"><div class="k">Per garment print total (all locations)</div><div class="v">${money(perGarmentTotalAllLocations)}</div></div>
         <div class="line"><div class="k">Garments print cost</div><div class="v">${money(printingOnlyTotal)}</div></div>
         ${(garmentsSubtotal && garmentsSubtotal > 0) ? `<div class="line"><div class="k">Garments subtotal</div><div class="v">${money(garmentsSubtotal)}</div></div>` : ""}
@@ -1011,7 +1039,6 @@
       const qtyRaw = document.getElementById("qty").value;
       const qty = Number(qtyRaw);
       const garmentTone = document.getElementById("garmentTone").value;
-      const reorder = document.getElementById("reorder").value;
       const rush = document.getElementById("rush").value;
       const discountCode = document.getElementById("discountCode").value;
       const codeNorm = normalizeCode(discountCode);
@@ -1022,14 +1049,18 @@
 
       if(!qtyRaw || !qty || qty <= 0){ errorEl.textContent = "Please enter a valid quantity."; hideResults(); return; }
       if(!garmentTone){ errorEl.textContent = "Please select Light or Dark garments."; hideResults(); return; }
-      if(!reorder){ errorEl.textContent = "Please select New order or Reorder."; hideResults(); return; }
       if(!rush){ errorEl.textContent = "Please select a Rush option."; hideResults(); return; }
 
       const isDark = garmentTone === "dark";
 
       const selected = [...document.querySelectorAll(".locCheck")]
         .filter(cb => cb.checked)
-        .map(cb => cb.dataset.loc);
+        .map(cb => {
+          const loc = cb.dataset.loc;
+          const artEl = document.querySelector(`.artworkStatus[data-loc="${loc}"]`);
+          const artwork_status = (artEl?.value || "new");
+          return { loc, artwork_status };
+        });
 
       if(selected.length === 0){ errorEl.textContent = "Please select at least one print location."; hideResults(); return; }
 
@@ -1040,10 +1071,15 @@
       let colorScreensTotal = 0;
       let underbaseScreensTotal = 0;
       let perGarmentTotalAllLocations = 0;
+      let setupFeeTotal = 0;
+      let filmFeeTotal = 0;
+      let filmCountTotal = 0;
 
       const breakdownLines = [];
 
-      for(const loc of selected){
+      for(const locObj of selected){
+        const loc = locObj.loc;
+        const artwork_status = locObj.artwork_status || "new";
         const colorsEl = document.querySelector(`.colors[data-loc="${loc}"]`);
         const colors = Number(colorsEl?.value || 1);
 
@@ -1069,13 +1105,28 @@
         }
         const dfForLoc = dfBase * dfMultiplier;
 
+
         const perGarmentLocTotal = perGarmentBase + dfForLoc;
         perGarmentTotalAllLocations += perGarmentLocTotal;
+
+        // screens for this location (colors + possible underbase)
+        const screensForLoc = colors + underbaseScreensForLoc;
+
+        // per-location setup rate (inline vs normal)
+        const setupRateForLoc = isInline
+          ? ((artwork_status === "reorder") ? INLINE_SCREEN_SETUP_FEE_REORDER : INLINE_SCREEN_SETUP_FEE_NEW)
+          : ((artwork_status === "reorder") ? SCREEN_SETUP_FEE_REORDER : SCREEN_SETUP_FEE_NEW);
+
+        setupFeeTotal += screensForLoc * setupRateForLoc;
+
+        // Film fees should only be charged for NEW artwork locations
+        const filmsForLoc = (artwork_status === "new") ? screensForLoc : 0;
+        filmCountTotal += filmsForLoc;
+        filmFeeTotal += filmsForLoc * FILM_FEE;
 
         const inkNotes = (document.querySelector(`.inkNotes[data-loc="${loc}"]`)?.value || "").trim();
         const labelInk = inkNotes ? `: ${inkNotes}` : "";
         const dfText = dfMultiplier === 0 ? "" : (dfMultiplier === 1 ? ` + D.F ${money(dfBase)}` : ` + D.F ${money(dfBase)} × ${dfMultiplier}`);
-
         breakdownLines.push(`
           <div class="loc">
             <strong>${loc}</strong> <span class="muted">(${colors} color${colors>1?"s":""})${labelInk}</span>
@@ -1083,20 +1134,17 @@
               Per garment: ${money(perGarmentBase)}${dfText} = <b>${money(perGarmentLocTotal)}</b>
             </div>
             ${isDark ? `<div class="muted">Underbase included for this location.</div>` : `<div class="muted">No underbase needed (light garment).</div>`}
+            <div class="muted">Films for this location: ${filmsForLoc}${filmsForLoc===0?" (reorder — no film fee)":""}</div>
           </div>
         `);
       }
 
       document.getElementById("breakdown").innerHTML = breakdownLines.join("");
-
       const totalScreens = colorScreensTotal + underbaseScreensTotal;
 
-      const setupRate = isInline
-        ? ((reorder === "reorder") ? INLINE_SCREEN_SETUP_FEE_REORDER : INLINE_SCREEN_SETUP_FEE_NEW)
-        : ((reorder === "reorder") ? SCREEN_SETUP_FEE_REORDER : SCREEN_SETUP_FEE_NEW);
-
-      const setupFee = totalScreens * setupRate;
-      const filmFee = (reorder === "reorder") ? 0 : totalScreens * FILM_FEE;
+      const setupFee = setupFeeTotal;
+      const filmFee = filmFeeTotal;
+      const filmCount = filmCountTotal;
       const printingOnlyTotal = qty * perGarmentTotalAllLocations;
 
       let subtotal = printingOnlyTotal + setupFee + filmFee;
@@ -1138,14 +1186,18 @@
 
       const pricingLabel = isInline ? "INLINE pricing" : "pricing";
 
+      // display average setup rate per screen for summary (preserves UI shape)
+      const setupRateDisplay = totalScreens ? (setupFeeTotal / totalScreens) : (isInline ? INLINE_SCREEN_SETUP_FEE_NEW : SCREEN_SETUP_FEE_NEW);
+
       renderSummary({
         qty,
         isDark,
         tierQty,
         totalScreens,
         setupFee,
-        setupRate,
+        setupRate: setupRateDisplay,
         filmFee,
+        filmCount,
         perGarmentTotalAllLocations,
         printingOnlyTotal,
         discountLine,
@@ -1165,7 +1217,6 @@
     function resetQuoteForm(){
       document.getElementById("qty").value = "";
       document.getElementById("garmentTone").value = "";
-      document.getElementById("reorder").value = "";
       document.getElementById("rush").value = "";
       document.getElementById("discountCode").value = "";
       document.getElementById("discMsg").textContent = "";
@@ -1174,6 +1225,7 @@
       document.querySelectorAll(".locCheck").forEach(cb => cb.checked = false);
       document.querySelectorAll(".colors").forEach(sel => sel.value = "1");
       document.querySelectorAll(".inkNotes").forEach(inp => inp.value = "");
+      document.querySelectorAll(".artworkStatus").forEach(sel => sel.value = "new");
 
       document.getElementById("error").textContent = "";
       document.getElementById("summary").innerHTML = "";
@@ -1781,11 +1833,11 @@
           phone: (document.getElementById("custPhone")?.value || "").trim(),
           qty: payloadObj.qty || "",
           garments: payloadObj.garment_tone || "",
-          reorder: payloadObj.reorder || "",
           rush: payloadObj.rush || "",
           discount_code: payloadObj.discount_code || "",
           locations: Array.isArray(payloadObj.locations) ? payloadObj.locations.join(", ") : "",
           ink_notes: JSON.stringify(payloadObj.ink_notes || {}),
+          location_artwork_status: JSON.stringify(payloadObj.location_artwork_status || {}),
           notes: payloadObj.customer_notes || "",
           total: payloadObj.total_estimate || "",
           supabase_id: data?.id || "",
@@ -1859,7 +1911,6 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
     const payload = {
       qty: document.getElementById("qty")?.value?.trim() || "",
       garment_tone: document.getElementById("garmentTone")?.value || "",
-      reorder: document.getElementById("reorder")?.value || "",
       rush: document.getElementById("rush")?.value || "",
       discount_code: document.getElementById("discountCode")?.value?.trim() || "",
       locations: Array.from(document.querySelectorAll(".locCheck"))
@@ -1868,6 +1919,10 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
       ink_notes: Object.fromEntries(
         Array.from(document.querySelectorAll(".inkNotes"))
           .map(inp => [inp.dataset.loc, (inp.value || "").trim()])
+      ),
+      location_artwork_status: Object.fromEntries(
+        Array.from(document.querySelectorAll(".artworkStatus"))
+          .map(s => [s.dataset.loc, (s.value || "new")])
       ),
       total_estimate: document.getElementById("totalEstimate")?.textContent || "",
       garments,

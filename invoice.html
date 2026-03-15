@@ -368,6 +368,87 @@
       .actionbar{position: sticky; top: 70px; z-index: 40;}
     }
 
+    /* Mobile (phones & small tablets) tweaks */
+    @media (max-width: 720px){
+      .navwrap{flex-direction:column; align-items:flex-start; gap:8px;}
+      .brand{min-width:0;}
+      .brand img{height:36px;}
+      .brand .name{font-size:14px;}
+      nav{display:flex; gap:8px; overflow:auto; width:100%;}
+
+      .page-title h1{font-size:22px;}
+      .hero::after{display:none}
+
+      /* Stack action bar controls and make buttons touch-friendly */
+      .actionbar{padding:10px; flex-direction:column; align-items:stretch; gap:10px;}
+      .action-left, .action-right{display:flex; flex-direction:column; gap:8px; width:100%;}
+      .action-left > .btn, .action-right > details, .action-right > .btn, .action-left > details{width:100%;}
+      .action-left .btn, .action-right .btn{justify-content:center}
+
+      /* Ensure grid children can shrink to avoid overflow */
+      .topgrid > .box, .box, .row2 > div, .row3 > div, .bottomgrid > .box{min-width:0}
+
+      /* Stack invoice details and From box to single column */
+      .topgrid{grid-template-columns:1fr}
+      .row2{grid-template-columns:1fr}
+      .row3{grid-template-columns:1fr}
+
+      /* Quote / load controls stack */
+      .quote-action-row{display:flex; flex-direction:column; gap:8px;}
+      .quote-action-row .field, .quote-action-row .btn{width:100%}
+
+      /* Table: allow horizontal scroll for saved items but keep entry-row stacked separately */
+      .tableWrap{overflow:auto; -webkit-overflow-scrolling:touch}
+      table{min-width:0}
+      thead th, tbody td{padding:8px; font-size:13px}
+
+      .btn{padding:9px 12px; font-size:14px}
+      .bottomgrid{grid-template-columns: 1fr}
+      .totals .trow input{width:100px}
+      .sheet{margin:0 -16px; border-radius:12px}
+    }
+
+    /* Small phones: convert only the entry row into a stacked card so saved rows keep table layout */
+    @media (max-width: 520px){
+      /* Prevent overflow from long text */
+      .field{min-width:0; overflow-wrap:anywhere; word-break:break-word}
+
+      /* Hide table header to avoid column sizing constraints for the entry card */
+      .items-table thead{display:none}
+
+      /* Convert only the first tbody (entry row) to block layout so it can stack */
+      .items-table tbody:first-of-type{display:block; width:100%}
+      .items-table tbody:first-of-type tr.entry-row{display:block; width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:12px; margin:10px 0; padding:10px; background:#fff}
+
+      /* Make each cell stack and be full width */
+      .items-table tbody:first-of-type tr.entry-row td{display:block; width:100%; padding:8px 0; border-bottom:none; box-sizing:border-box}
+
+      /* Force controls inside the entry row to fill the card width */
+      .items-table tbody:first-of-type tr.entry-row .field,
+      .items-table tbody:first-of-type tr.entry-row select,
+      .items-table tbody:first-of-type tr.entry-row input,
+      .items-table tbody:first-of-type tr.entry-row button,
+      .items-table tbody:first-of-type tr.entry-row .btn{
+        width:100% !important; max-width:100% !important; box-sizing:border-box;
+      }
+
+      /* Make internal wrappers behave (color, discount, sizes) */
+      #itemColorWrap, #discountWrap, #sizesWrap{display:block; width:100%}
+      #discountWrap select, #discountWrap .field{width:100%}
+
+      /* Ensure labels and spacing read well in stacked layout */
+      .items-table tbody:first-of-type tr.entry-row td label.label{display:block; margin-bottom:6px}
+
+      /* Make Add button full width */
+      .items-table tbody:first-of-type tr.entry-row td .btn{display:block; width:100%}
+
+      /* Prevent horizontal scrolling caused by the entry row */
+      .items-table, .tableWrap{overflow-x:visible}
+
+      /* Keep saved items tbody as table rows so saved rows and JS behavior remain unchanged */
+      .items-table tbody#itemsTbody, .items-table tbody#itemsTbody tr{display:table-row}
+    }
+
     @media print{
       header, .actionbar { display:none !important; }
       .noPrint{ display:none !important; }
