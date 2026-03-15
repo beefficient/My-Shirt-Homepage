@@ -361,6 +361,22 @@
       nav { min-width:0; }
       .grid, .row, .choices, .choice { min-width:0; }
       .card { overflow:hidden; }
+      /* Compact mobile header rules (match other pages) */
+      .navwrap{padding:8px 0; gap:10px}
+      .brand img{height:36px}
+      .mobile-menu-btn{font-size:20px;padding:4px 6px}
+      nav{padding:6px 8px}
+      nav.show{display:flex; flex-direction:column; align-items:stretch; position:fixed; left:0; right:0; top:64px; width:100vw; box-sizing:border-box; max-height:calc(100vh - 64px); overflow-y:auto; background:#fff; z-index:9999}
+      nav a{padding:8px 10px;font-size:15px; justify-content:flex-start}
+      details.quoteDrop > summary{padding:6px 8px;font-size:14px}
+      .qMenu{max-width:calc(100vw - 32px)}
+    @media (max-width:520px){
+      .inlineCheck{flex-direction:column;align-items:flex-start;gap:8px;padding:8px}
+      .inlineCheck label{margin:0;display:block;white-space:normal;overflow-wrap:break-word;word-break:break-word}
+      .inlineCheck .muted{white-space:normal;overflow-wrap:break-word;word-break:break-word;font-size:13px}
+      .inlineCheck input{flex:0 0 auto}
+      .inlineCheck *{min-width:0}
+    }
       .pill, .pill select, .pill input { max-width:100%; }
       img { max-width:100%; height:auto; }
     }
@@ -371,16 +387,35 @@
       .mobile-menu-btn { display:block; }
       nav { position:relative; display:none; }
       nav.show { display:flex; }
+      /* Make mobile nav span viewport and sit under header like other pages */
+      nav.show{display:flex; flex-direction:column; align-items:stretch; position:fixed; left:0; right:0; top:56px; width:100vw; box-sizing:border-box; max-height:calc(100vh - 56px); overflow-y:auto; background:#fff; z-index:9999}
+      /* ensure nav uses box-sizing and has consistent padding so submenu aligns */
+      nav, nav.show { box-sizing: border-box; padding-left:12px; padding-right:12px; overflow: visible; }
+      details.quoteDrop { position: static; width:100%; display:block; }
+      details.quoteDrop > summary{ display:flex; align-items:center; justify-content:flex-start; padding:6px 8px; width:100%; }
       .grid { grid-template-columns:1fr; }
       .row { grid-template-columns:1fr; }
       .wrap { padding:0 12px; }
       .card { padding:12px; }
       input, select, textarea, .pill input, .pill select { width:100%; max-width:100%; }
       .choice { flex-direction:column; align-items:stretch; }
-      .qMenu { min-width: unset; width:100%; max-width: calc(100vw - 32px); }
+      /* Make the Quote submenu a sensible mobile block: allow it to size to its
+         content (within viewport limits) and wrap by words only — no letter-splitting. */
+      /* Anchor submenu to the nav column and keep it compact and readable */
+      .qMenu { position:static; box-shadow:none; border-radius:10px; padding:6px; margin-top:6px; width:100%; max-width:calc(100vw - 32px); }
+      .qMenu a{ display:block; padding:9px 10px; font-size:14px; line-height:1.2; white-space:normal; word-break:normal; overflow-wrap:normal }
       .container { padding:0 12px; }
       /* Ensure core containers can't force horizontal overflow */
       .brand, .navwrap, .grid, .row, .card, .wrap, .container { min-width:0; }
+    }
+
+    /* Mobile: ensure sharing-images/info box wraps and doesn't overflow */
+    @media (max-width: 520px){
+      .inlineCheck{flex-direction:column;align-items:flex-start;gap:8px;padding:8px}
+      .inlineCheck label{margin:0;display:block;white-space:normal;overflow-wrap:break-word;word-break:break-word}
+      .inlineCheck .muted{white-space:normal;overflow-wrap:break-word;word-break:break-word;font-size:13px}
+      .inlineCheck input{flex:0 0 auto}
+      .inlineCheck *{min-width:0}
     }
   </style>
 </head>
