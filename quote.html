@@ -349,6 +349,37 @@
       .btn{font-size:14px;padding:10px 12px}
       input,select,textarea{font-size:16px;padding:12px}
     }
+
+    /* Targeted mobile overflow fixes (keep desktop unchanged) */
+    @media (max-width: 768px){
+      .container, .wrap { padding-left:12px; padding-right:12px; }
+      .navwrap { padding-left:0; padding-right:0; }
+      .brand { min-width:0; max-width:60%; }
+      .brand img { max-width:100%; height:auto; }
+      nav { min-width:0; }
+      .grid, .row, .choices, .choice { min-width:0; }
+      .card { overflow:hidden; }
+      .pill, .pill select, .pill input { max-width:100%; }
+      img { max-width:100%; height:auto; }
+    }
+
+    @media (max-width: 520px){
+      .brand { min-width:0; max-width:48%; }
+      .navwrap { gap:8px; }
+      .mobile-menu-btn { display:block; }
+      nav { position:relative; display:none; }
+      nav.show { display:flex; }
+      .grid { grid-template-columns:1fr; }
+      .row { grid-template-columns:1fr; }
+      .wrap { padding:0 12px; }
+      .card { padding:12px; }
+      input, select, textarea, .pill input, .pill select { width:100%; max-width:100%; }
+      .choice { flex-direction:column; align-items:stretch; }
+      .qMenu { min-width: unset; width:100%; }
+      .container { padding:0 12px; }
+      /* Ensure core containers can't force horizontal overflow */
+      .brand, .navwrap, .grid, .row, .card, .wrap, .container { min-width:0; }
+    }
   </style>
 </head>
 
