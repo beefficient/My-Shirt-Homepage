@@ -1,5 +1,26 @@
-.vscode/
-lib/
-test/
-*.log
+# Next.js / build files
+.next/
+out/
+build/
+dist/
+
+# Node
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
 .DS_Store
+
+# Env
+.env
+.env.local
+
+# VSCode
+.vscode/
+
+# Cache
+.cache/

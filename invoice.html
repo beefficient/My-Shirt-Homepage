@@ -864,6 +864,7 @@
       window.CURRENT_QUOTE = null;
       window.CURRENT_QUOTE_ID = null;
       window.CURRENT_INVOICE_ID = null;
+      window.CURRENT_PAYMENT_LINK = null;
 
       // ===========================
       // UI HELPERS
@@ -921,6 +922,72 @@
         return String(s ?? "")
           .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+      }
+
+      function pickFirstNonEmpty_(...vals) {
+        for (const v of vals) {
+          const s = String(v ?? "").trim();
+          if (s) return s;
+        }
+        return "";
+      }
+
+      function normalizeCustomerFields_(src, payload) {
+        const s = src && typeof src === "object" ? src : {};
+        const p = payload && typeof payload === "object" ? payload : {};
+        const c = p.customer && typeof p.customer === "object" ? p.customer : {};
+        const billTo = p.bill_to && typeof p.bill_to === "object" ? p.bill_to : {};
+
+        return {
+          client_name: pickFirstNonEmpty_(
+            s.client_name, s.customer_name, s.name, s.client, s.bill_to,
+            p.client_name, p.customer_name, p.name,
+            c.name, c.client_name,
+            billTo.name, billTo.client_name
+          ),
+          client_email: pickFirstNonEmpty_(
+            s.client_email, s.customer_email, s.email,
+            p.client_email, p.customer_email, p.email,
+            c.email, c.client_email,
+            billTo.email, billTo.client_email
+          ),
+          client_phone: pickFirstNonEmpty_(
+            s.client_phone, s.customer_phone, s.phone,
+            p.client_phone, p.customer_phone, p.phone,
+            c.phone, c.client_phone,
+            billTo.phone, billTo.client_phone
+          ),
+          client_addr: pickFirstNonEmpty_(
+            s.client_addr, s.client_address, s.customer_address, s.address, s.billing_address,
+            p.client_addr, p.client_address, p.customer_address, p.address, p.billing_address,
+            c.address, c.client_addr, c.client_address,
+            billTo.address, billTo.client_addr, billTo.client_address
+          ),
+          client_contact: pickFirstNonEmpty_(
+            s.client_contact, s.contact_name, s.contact, s.customer_contact,
+            p.client_contact, p.contact_name, p.contact, p.customer_contact,
+            c.contact_name, c.client_contact,
+            billTo.contact_name, billTo.client_contact
+          )
+        };
+      }
+
+      function setClientContactUI_(value) {
+        const wrap = $("clientContactWrap");
+        const input = $("clientContact");
+        if (!input) return;
+        const v = String(value || "").trim();
+        input.value = v;
+        if (wrap) wrap.style.display = v ? "block" : "none";
+      }
+
+      function applyCustomerFieldsToForm_(src, payload) {
+        const n = normalizeCustomerFields_(src, payload);
+        if ($("clientName")) $("clientName").value = n.client_name;
+        if ($("clientEmail")) $("clientEmail").value = n.client_email;
+        if ($("clientPhone")) $("clientPhone").value = n.client_phone;
+        if ($("clientAddr")) $("clientAddr").value = n.client_addr;
+        setClientContactUI_(n.client_contact);
       }
 
       // ===========================
@@ -1139,6 +1206,7 @@
         if ($("clientEmail")) $("clientEmail").value = "";
         if ($("clientPhone")) $("clientPhone").value = "";
         if ($("clientAddr")) $("clientAddr").value = "";
+        setClientContactUI_("");
         if ($("notes")) $("notes").value = "";
         if ($("terms")) $("terms").value = "";
         // Remove draft from localStorage and set a cleared flag so reload won't auto-restore
@@ -1357,7 +1425,7 @@
       }
 
       function renderItems(items) {
-        clearItems();
+        if ($("itemsTbody")) $("itemsTbody").innerHTML = "";
         (items || []).forEach(it => addRenderedLine(it));
         recalcTotals();
       }
@@ -1557,13 +1625,22 @@
       }
 
       function getInvoiceDraftObject() {
+        const normalizedCustomer = normalizeCustomerFields_({
+          client_name: $("clientName")?.value,
+          client_email: $("clientEmail")?.value,
+          client_phone: $("clientPhone")?.value,
+          client_addr: $("clientAddr")?.value,
+          client_contact: $("clientContact")?.value
+        });
+
         return {
           invoice_no: ($("invNo")?.value || "").trim(),
           invoice_date: ($("invDate")?.value || "").trim(),
-          client_name: ($("clientName")?.value || "").trim(),
-          client_email: ($("clientEmail")?.value || "").trim(),
-          client_phone: ($("clientPhone")?.value || "").trim(),
-          client_addr: ($("clientAddr")?.value || "").trim(),
+          client_name: normalizedCustomer.client_name,
+          client_email: normalizedCustomer.client_email,
+          client_phone: normalizedCustomer.client_phone,
+          client_addr: normalizedCustomer.client_addr,
+          client_contact: normalizedCustomer.client_contact,
           notes: ($("notes")?.value || "").trim(),
           terms: ($("terms")?.value || "").trim(),
           tax_rate: toNum($("taxRate")?.value),
@@ -1578,10 +1655,7 @@
         $("invNo").value = d.invoice_no || "";
         $("invDate").value = d.invoice_date || "";
 
-        $("clientName").value = d.client_name || "";
-        $("clientEmail").value = d.client_email || "";
-        $("clientPhone").value = d.client_phone || "";
-        $("clientAddr").value = d.client_addr || "";
+        applyCustomerFieldsToForm_(d, d?.payload);
         $("notes").value = d.notes || "";
         $("terms").value = d.terms || "";
  
@@ -1624,20 +1698,21 @@
 
         setLoadMsg("Saving draft...");
 
+        const safePayload = {
+          invoice_date: draft.invoice_date || null,
+          client_name: draft.client_name || null,
+          client_email: draft.client_email || null,
+          client_phone: draft.client_phone || null,
+          payment_link: window.CURRENT_PAYMENT_LINK || null,
+          notes: draft.notes || null,
+          items_json: draft.items_json
+        };
+
         // If we already loaded/created an invoice row earlier, update it.
         if (window.CURRENT_INVOICE_ID) {
           const { error } = await window.sb
             .from("invoices")
-            .update({
-              invoice_date: draft.invoice_date || null,
-              client_name: draft.client_name || null,
-              client_email: draft.client_email || null,
-              client_phone: draft.client_phone || null,
-            
-              notes: draft.notes || null,
-              terms: draft.terms || null,
-              items_json: draft.items_json
-            })
+            .update(safePayload)
             .eq("id", window.CURRENT_INVOICE_ID);
 
           if (error) {
@@ -1669,15 +1744,7 @@
 
         // Else create a new invoice row
         const insertRow = {
-          status: "draft",
-          invoice_date: draft.invoice_date || null,
-          client_name: draft.client_name || null,
-          client_email: draft.client_email || null,
-          client_phone: draft.client_phone || null,
-         
-          notes: draft.notes || null,
-          terms: draft.terms || null,
-          items_json: draft.items_json
+          ...safePayload
         };
 
         const { data, error } = await window.sb
@@ -1693,6 +1760,7 @@
         }
 
         window.CURRENT_INVOICE_ID = data.id;
+        window.CURRENT_PAYMENT_LINK = data.payment_link || null;
         $("invNo").value = data.invoice_no || "";
         setLoadMsg(`Draft saved as ${data.invoice_no}`);
       }
@@ -1878,6 +1946,7 @@
         if (!data) throw new Error("Invoice not found: " + invoiceNo);
 
         window.CURRENT_INVOICE_ID = data.id || null;
+        window.CURRENT_PAYMENT_LINK = data.payment_link || null;
 
         // Apply
         $("invNo").value = data.invoice_no || "";
@@ -1886,6 +1955,11 @@
         $("clientName").value = data.client_name || "";
         $("clientEmail").value = data.client_email || "";
         $("clientPhone").value = data.client_phone || "";
+        $("clientAddr").value = "";
+        if (data.client_addr) {
+          $("clientAddr").value = data.client_addr;
+        }
+        setClientContactUI_("");
 
         
         $("notes").value = data.notes || "";
@@ -1924,9 +1998,7 @@ window.CURRENT_QUOTE_ID = quote.id;
           window.CURRENT_INVOICE_ID = null;
           $("invNo").value = "";
 
-          $("clientName").value  = quote.name  || "";
-          $("clientEmail").value = quote.email || "";
-          $("clientPhone").value = quote.phone || "";
+          applyCustomerFieldsToForm_(quote, quote?.payload);
           $("notes").value = quote.notes || "";
 
           const previewItems = buildInvoiceItemsFromQuote(quote);
@@ -2015,13 +2087,16 @@ window.CURRENT_QUOTE_ID = quote.id;
 
           const items = buildInvoiceItemsFromQuote(q);
 
+          const customer = normalizeCustomerFields_(q, q?.payload);
+
           const insertRow = {
             quote_id: q.id,
             quote_no: String(q.quote_no || ""),
             status: "draft",
-            client_name: q.name || null,
-            client_email: q.email || null,
-            client_phone: q.phone || null,
+            client_name: customer.client_name || null,
+            client_email: customer.client_email || null,
+            client_phone: customer.client_phone || null,
+            payment_link: null,
             
             items_json: items,
             notes: q.notes || null,
@@ -2036,8 +2111,9 @@ window.CURRENT_QUOTE_ID = quote.id;
           if (error) throw error;
 
           window.CURRENT_INVOICE_ID = data.id;
+          window.CURRENT_PAYMENT_LINK = data.payment_link || null;
           $("invNo").value = data.invoice_no || "";
-          $("clientEmail").value = data.client_email || quote.email || "";
+          applyCustomerFieldsToForm_(data, q?.payload);
 
           // Save to local so refresh doesn't wipe it
           saveDraftToLocalStorage();
@@ -2115,6 +2191,9 @@ window.CURRENT_QUOTE_ID = quote.id;
         // Biz sync (safe even if display els aren't in DOM)
         ["bizName","bizAddr","bizCity","bizPhone","bizEmail"].forEach((id) => {
           $(id)?.addEventListener("input", syncBizInfoDisplay);
+        });
+        $("clientContact")?.addEventListener("input", () => {
+          setClientContactUI_($("clientContact")?.value || "");
         });
         syncBizInfoDisplay();
 
