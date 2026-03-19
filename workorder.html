@@ -100,7 +100,9 @@
     /* Print */
     @media print{
       .noPrint{display:none !important}
-      body{background:#fff; font-size:11px; line-height:1.25}
+      body{background:#fff; font-size:12.5px; line-height:1.35}
+
+      .printOnly{font-size:12.5px; line-height:1.35}
 
       /* Try to keep to one page */
       @page { margin: 0.35in; } /* tight margins */
@@ -154,7 +156,7 @@
   </style>
 </head>
 
-<body>
+<body autocomplete="off">
   <div class="container noPrint">
     <div class="topbar">
       <div>
@@ -164,11 +166,17 @@
 
       <div class="btnRow">
         <span class="pill"><b>Status:</b> <span id="statusPill">Draft</span></span>
+        <button class="btn" id="saveWO">Save Work Order</button>
+        <input id="loadWONumber" placeholder="Enter Work Order #" aria-label="Load work order number" style="max-width:190px">
+        <button class="btn secondary" id="loadWO">Load</button>
+        <button class="btn secondary" id="createVendorWO">Create Vendor Work Order</button>
         <button class="btn secondary" id="newWO">New Work Order</button>
         <button class="btn secondary" id="previewCustomer">Preview Customer View</button>
         <button class="btn" id="printBtn">Print / Save PDF</button>
       </div>
     </div>
+    <div class="muted" id="workorderLoadMsg" style="margin-top:8px;min-height:22px"></div>
+    <div id="workorderSearchResults" class="hidden" style="margin-top:8px;border:1px solid var(--border);border-radius:12px;background:#fff;padding:8px"></div>
 
     <div class="grid">
       <!-- LEFT -->
@@ -197,7 +205,10 @@
           <div class="row">
             <div>
               <label>Customer Name <span class="reqMark">*</span></label>
-              <input id="customerName" placeholder="Full name" required>
+              <div style="position:relative;">
+                <input id="customerName" placeholder="Full name" autocomplete="off" required>
+                <div id="customerLookupResults" style="position:absolute; left:0; right:0; top:calc(100% + 8px); background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); padding:6px; display:none; z-index:1000; max-height:260px; overflow:auto;"></div>
+              </div>
             </div>
             <div>
               <label>Company</label>
@@ -256,6 +267,70 @@
               <div>
                 <label>Internal Notes (Shop only) <span class="reqMark">*</span></label>
                 <textarea id="notesInternal" placeholder="Press notes, special handling, vendor notes, etc." required></textarea>
+              </div>
+            </div>
+
+            <div id="vendorPanel" class="itemCard hidden" style="margin-top:12px">
+              <div class="itemTop">
+                <div>
+                  <div style="font-weight:900">Vendor Work Order (Internal Only)</div>
+                  <div class="muted" id="vendorPanelHint">Used only for outsourced/vendor production routing.</div>
+                </div>
+                <span class="badge" id="vendorTypeBadge">Customer Work Order</span>
+              </div>
+
+              <div class="row" style="margin-top:8px">
+                <div>
+                  <label>Vendor Name</label>
+                  <input id="vendorName" placeholder="Vendor / shop name">
+                </div>
+                <div>
+                  <label>Vendor Contact</label>
+                  <input id="vendorContact" placeholder="Contact person">
+                </div>
+              </div>
+
+              <div class="row" style="margin-top:2px">
+                <div>
+                  <label>Vendor Email</label>
+                  <input id="vendorEmail" placeholder="vendor@email.com">
+                </div>
+                <div>
+                  <label>Vendor Phone</label>
+                  <input id="vendorPhone" placeholder="(555) 555-5555">
+                </div>
+              </div>
+
+              <div class="row" style="margin-top:2px">
+                <div>
+                  <label>Vendor Method</label>
+                  <input id="vendorMethod" placeholder="Embroidery, Heat Transfer, DTG, etc.">
+                </div>
+                <div>
+                  <label>Vendor Status</label>
+                  <select id="vendorStatus">
+                    <option value="draft">Draft</option>
+                    <option value="sent">Sent to Vendor</option>
+                    <option value="in-production">In Production</option>
+                    <option value="received">Received Back</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Parent Work Order</label>
+                  <div class="pill" id="vendorParentRef" style="min-height:42px;justify-content:flex-start">-</div>
+                </div>
+              </div>
+
+              <label>Vendor Notes</label>
+              <textarea id="vendorNotes" placeholder="Notes for vendor production details."></textarea>
+
+              <label>Internal Vendor Notes</label>
+              <textarea id="internalVendorNotes" placeholder="Internal routing notes for this vendor only."></textarea>
+
+              <div id="relatedVendorWrap" style="margin-top:8px">
+                <label style="margin-top:0">Related Vendor Work Orders</label>
+                <div id="relatedVendorList" class="help">None yet.</div>
               </div>
             </div>
           </div>
@@ -349,6 +424,7 @@
 
   <div id="toast" class="toast hidden noPrint"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
   // ====== CONFIG ======
@@ -372,22 +448,78 @@
   const DEFAULT_SIZES = ["XS","S","M","L","XL","2XL","3XL","4XL"];
 
   const DRAFT_KEY = "workorder_mvp_html_v4_required_fields";
+  const SAVED_WORKORDERS_KEY = "workorder_saved_records_v1";
+  const LOAD_MODE_KEY = "WORKORDER_LOAD_MODE";
+  const LOAD_TARGET_KEY = "WORKORDER_LOAD_TARGET";
+  const LOAD_INTENT_KEY = "WORKORDER_EXPLICIT_LOAD_INTENT";
+  const SUPABASE_URL = "https://tvtyjmeedapbsaopeebh.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHlqbWVlZGFwYnNhb3BlZWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzQ3MzUsImV4cCI6MjA4NzIxMDczNX0.VKNQc9G18OgJndoN3eiv5wcLWaAmqOcQ9qA4ve2tNsQ";
+  const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
   // ====== HELPERS ======
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
   const isGarment = (type) => GARMENT_SERVICES.has(String(type||""));
+  const pickFirstNonEmpty_ = (...vals) => {
+    for(const v of vals){
+      const s = String(v ?? "").trim();
+      if(s) return s;
+    }
+    return "";
+  };
   const todayISO = () => {
     const d = new Date();
     const pad = (v)=>String(v).padStart(2,"0");
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   };
+  const deepClone_ = (value) => {
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (e) {
+      return value;
+    }
+  };
+  const normalizeWorkOrderNo_ = (value) => String(value ?? "")
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/[^A-Za-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toUpperCase();
+  const workOrderNoComparable_ = (value) => normalizeWorkOrderNo_(value).replace(/[^A-Z0-9]/g, "");
+  const parseObject_ = (value) => {
+    if (!value) return {};
+    if (typeof value === "object") return value;
+    if (typeof value !== "string") return {};
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  };
+  const setLoadMsg = (msg, isError = false) => {
+    const el = $("workorderLoadMsg");
+    if (!el) return;
+    el.textContent = msg || "";
+    el.style.color = isError ? "var(--danger)" : "var(--muted)";
+  };
+  const formatDateLabel_ = (value) => {
+    const raw = String(value || "").trim();
+    if (!raw) return "-";
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) return raw;
+    return d.toLocaleString();
+  };
+  const formatWorkOrderSequence_ = (year, seq) => `WO-${year}-${String(Math.max(1, Number(seq) || 1)).padStart(6,"0")}`;
+  const parseWorkOrderSequence_ = (value) => {
+    const s = normalizeWorkOrderNo_(value);
+    const m = s.match(/^WO-(\d{4})-(\d{6})(?:-V\d+)?$/i);
+    if (!m) return null;
+    return { year: Number(m[1]), seq: Number(m[2]) };
+  };
   const buildWONumber = () => {
-    const d = new Date();
-    const pad = (v)=>String(v).padStart(2,"0");
-    const ymd = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
-    const rand = Math.floor(Math.random()*9000+1000);
-    return `WO-${ymd}-${rand}`;
+    const year = new Date().getFullYear();
+    return formatWorkOrderSequence_(year, 1);
   };
   const toast = (msg, type="success", ms=2500) => {
     const t = $("toast");
@@ -399,6 +531,15 @@
   };
   const newSizeBreakdown = () => DEFAULT_SIZES.map(s => ({ size:s, enabled:false, qty:0 }));
   const sizeTotal = (rows) => Array.isArray(rows) ? rows.reduce((sum,r)=>sum + (r.enabled ? Number(r.qty||0) : 0), 0) : 0;
+  // Reuse the same business identity values used across invoice/internal quote pages.
+  const SHOP_SENDER = {
+    name: "My Shirt Company",
+    email: "myshirtcustomerservice@gmail.com",
+    phone: "669-231-9059"
+  };
+  const isVendorWorkOrder_ = (state) => String(state?.workOrderType || "customer") === "vendor";
+  const isCustomerWorkOrder_ = (state) => !isVendorWorkOrder_(state);
+  const escapeRegExp_ = (s) => String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
   const readFileAsDataUrl = (file) => new Promise((resolve,reject)=>{
     const r = new FileReader();
@@ -406,6 +547,209 @@
     r.onerror = reject;
     r.readAsDataURL(file);
   });
+
+  function normalizeCustomerFields_(src, payload) {
+    const s = src && typeof src === "object" ? src : {};
+    const p = payload && typeof payload === "object" ? payload : {};
+    const c = p.customer && typeof p.customer === "object" ? p.customer : {};
+    const billTo = p.bill_to && typeof p.bill_to === "object" ? p.bill_to : {};
+
+    return {
+      client_name: pickFirstNonEmpty_(
+        s.client_name, s.customer_name, s.name, s.client, s.bill_to,
+        p.client_name, p.customer_name, p.name,
+        c.name, c.client_name,
+        billTo.name, billTo.client_name
+      ),
+      client_email: pickFirstNonEmpty_(
+        s.client_email, s.customer_email, s.email,
+        p.client_email, p.customer_email, p.email,
+        c.email, c.client_email,
+        billTo.email, billTo.client_email
+      ),
+      client_phone: pickFirstNonEmpty_(
+        s.client_phone, s.customer_phone, s.phone,
+        p.client_phone, p.customer_phone, p.phone,
+        c.phone, c.client_phone,
+        billTo.phone, billTo.client_phone
+      ),
+      client_addr: pickFirstNonEmpty_(
+        s.client_addr, s.client_address, s.customer_address, s.address, s.billing_address,
+        p.client_addr, p.client_address, p.customer_address, p.address, p.billing_address,
+        c.address, c.client_addr, c.client_address,
+        billTo.address, billTo.client_addr, billTo.client_address
+      ),
+      client_contact: pickFirstNonEmpty_(
+        s.client_contact, s.contact_name, s.contact, s.customer_contact,
+        p.client_contact, p.contact_name, p.contact, p.customer_contact,
+        c.contact_name, c.client_contact,
+        billTo.contact_name, billTo.client_contact
+      )
+    };
+  }
+
+  function applyCustomerFieldsToWorkOrder_(src, payload){
+    const n = normalizeCustomerFields_(src, payload);
+    if ($("customerName")) $("customerName").value = n.client_name;
+    if ($("email")) $("email").value = n.client_email;
+    if ($("phone")) $("phone").value = n.client_phone;
+    if ($("billingAddress")) $("billingAddress").value = n.client_addr;
+
+    if (wo) {
+      wo.customerName = n.client_name;
+      wo.email = n.client_email;
+      wo.phone = n.client_phone;
+      wo.billingAddress = n.client_addr;
+      updateSummary();
+      saveDraft();
+    }
+  }
+
+  function bindCustomerLookup_(){
+    const API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
+    const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
+    const RANGE_A1 = "contacts!A1:J5000";
+
+    const COL = {
+      first: "First Name",
+      last: "Last Name",
+      contact: "Contact Name",
+      phone: "Phone",
+      email1: "Email 1",
+      email2: "Email 2",
+      address: "Address"
+    };
+
+    const searchEl = $("customerName");
+    const resultsEl = $("customerLookupResults");
+    if (!searchEl || !resultsEl) return;
+
+    function fullName(c){
+      return [c[COL.first], c[COL.last]].filter(Boolean).join(" ").trim();
+    }
+
+    function hideResults(){
+      resultsEl.style.display = "none";
+      resultsEl.innerHTML = "";
+    }
+
+    function pickContact(c){
+      const pickedName = fullName(c);
+      const pickedEmail = ((c[COL.email1] || "").trim() || (c[COL.email2] || "").trim());
+      const pickedAddr = (c[COL.address] || "").trim();
+      const pickedPhone = (c[COL.phone] || "").trim();
+
+      if ($("customerName")) $("customerName").value = pickedName;
+      if ($("email")) $("email").value = pickedEmail;
+      if ($("billingAddress")) $("billingAddress").value = pickedAddr;
+      if ($("phone")) $("phone").value = pickedPhone;
+
+      if (wo) {
+        wo.customerName = pickedName;
+        wo.email = pickedEmail;
+        wo.billingAddress = pickedAddr;
+        wo.phone = pickedPhone;
+        updateSummary();
+        saveDraft();
+      }
+    }
+
+    async function loadContacts(){
+      const url =
+        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SPREADSHEET_ID)}` +
+        `/values/${encodeURIComponent(RANGE_A1)}?key=${encodeURIComponent(API_KEY)}`;
+
+      const res = await fetch(url, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error?.message || `Sheets error ${res.status}`);
+
+      const values = data.values || [];
+      if (values.length < 2) return [];
+
+      const headers = values[0].map(h => String(h || "").trim());
+      return values.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = String(row[i] ?? "").trim());
+        return obj;
+      });
+    }
+
+    let CONTACTS = [];
+    let CONTACTS_ERROR = "";
+
+    (async () => {
+      try {
+        CONTACTS = await loadContacts();
+        CONTACTS_ERROR = "";
+      } catch (e) {
+        CONTACTS = [];
+        CONTACTS_ERROR = e?.message || "Could not load contacts.";
+        console.error(CONTACTS_ERROR);
+      }
+    })();
+
+    function showMessage(msg){
+      resultsEl.innerHTML = `<div style="padding:10px 12px; font-weight:800; color:var(--muted);">${esc(msg)}</div>`;
+      resultsEl.style.display = "block";
+    }
+
+    function showResults(list){
+      resultsEl.innerHTML = "";
+      list.slice(0, 12).forEach(c => {
+        const top = fullName(c) || "Unnamed";
+        const sub = [c[COL.email1] || c[COL.email2] || "", c[COL.phone] || ""].filter(Boolean).join(" • ");
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.style.width = "100%";
+        btn.style.textAlign = "left";
+        btn.style.border = "0";
+        btn.style.background = "transparent";
+        btn.style.padding = "10px 12px";
+        btn.style.borderRadius = "12px";
+        btn.style.cursor = "pointer";
+        btn.innerHTML = `
+          <div style="font-weight:900; color:var(--accent);">${esc(top)}</div>
+          <div style="font-size:12px; font-weight:800; color:var(--muted); margin-top:2px;">${esc(sub)}</div>
+        `;
+        btn.addEventListener("mouseenter", () => btn.style.background = "var(--accent2)");
+        btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
+        btn.addEventListener("click", () => { pickContact(c); hideResults(); });
+        resultsEl.appendChild(btn);
+      });
+
+      resultsEl.style.display = list.length ? "block" : "none";
+    }
+
+    function matches(c, q){
+      const query = q.trim().toLowerCase();
+      if (!query) return false;
+      const hay = [
+        c[COL.first], c[COL.last], c[COL.contact],
+        c[COL.email1], c[COL.email2], c[COL.phone], c[COL.address]
+      ].join(" ").toLowerCase();
+      return hay.includes(query);
+    }
+
+    let t = null;
+    searchEl.addEventListener("input", () => {
+      const q = searchEl.value.trim();
+      clearTimeout(t);
+      t = setTimeout(() => {
+        if (!q) return hideResults();
+        if (CONTACTS_ERROR) return showMessage("Contacts not available (check API key + sheet sharing).");
+
+        const list = CONTACTS.filter(c => matches(c, q));
+        if (!list.length) return showMessage(`No matches for "${q}"`);
+        showResults(list);
+      }, 70);
+    });
+
+    window.addEventListener("click", (e) => {
+      const within = resultsEl.contains(e.target) || searchEl.contains(e.target);
+      if (!within) hideResults();
+    });
+  }
 
   function artworkKeyForItem(item){
     const ids = Array.isArray(item.artworkIds) ? item.artworkIds : [];
@@ -447,6 +791,227 @@
 
   // ====== STATE ======
   let wo = null;
+  window.CURRENT_WORKORDER_ID = null;
+  window.CURRENT_WORKORDER_SOURCE = null;
+  window.CURRENT_WORKORDER_MODE = "new"; // "new" | "edit"
+  let SAVED_WORKORDERS_MEMORY = {};
+  const SESSION_WO_HIGH_WATER = {};
+
+  function getHighestWorkOrderSequenceFromRows_(rows, year){
+    let maxSeq = 0;
+    for (const row of rows || []) {
+      const variants = getWorkOrderNumberVariants_(row);
+      for (const v of variants) {
+        const parsed = parseWorkOrderSequence_(v);
+        if (!parsed) continue;
+        if (Number(parsed.year) !== Number(year)) continue;
+        if (parsed.seq > maxSeq) maxSeq = parsed.seq;
+      }
+    }
+    return maxSeq;
+  }
+
+  async function getNextCanonicalWorkOrderNumber_(){
+    const year = new Date().getFullYear();
+    const localRows = Object.values(getSavedWorkOrdersLocal_() || {});
+    const localMax = getHighestWorkOrderSequenceFromRows_(localRows, year);
+    const sessionMax = Number(SESSION_WO_HIGH_WATER[year] || 0);
+
+    let supabaseMax = 0;
+    let source = "local";
+    if (sb) {
+      try {
+        const supabaseRows = await fetchSupabaseWorkOrderRows_();
+        supabaseMax = getHighestWorkOrderSequenceFromRows_(supabaseRows, year);
+        source = "supabase";
+      } catch (error) {
+        console.warn("Could not fetch Supabase rows for next WO number:", error);
+      }
+    }
+
+    const highest = Math.max(localMax, supabaseMax, sessionMax);
+    const nextSeq = highest + 1;
+    SESSION_WO_HIGH_WATER[year] = nextSeq;
+    const nextNo = formatWorkOrderSequence_(year, nextSeq);
+    console.log("NEXT WO fetched from Supabase", {
+      source,
+      year,
+      supabaseMax,
+      localMax,
+      sessionMax,
+      next: nextNo
+    });
+    return nextNo;
+  }
+
+  async function assignCanonicalWorkOrderNumber_({ force = false, reason = "" } = {}){
+    if (!wo) wo = newWO();
+    if (isVendorWorkOrder_(wo)) return normalizeWorkOrderNo_(wo.woNumber || "");
+
+    const current = normalizeWorkOrderNo_(wo.woNumber || "");
+    const parsed = parseWorkOrderSequence_(current);
+    if (!force && parsed) return current;
+
+    const nextNo = await getNextCanonicalWorkOrderNumber_();
+    wo.woNumber = nextNo;
+    if ($("loadWONumber")) $("loadWONumber").value = nextNo;
+    console.log("NEW canonical WO number", { reason: reason || "assign", workOrderNo: nextNo });
+    return nextNo;
+  }
+
+  function workOrderDebugFields_(record){
+    const payload = parseObject_(record?.payload);
+    const variants = getWorkOrderNumberVariants_(record);
+    const woNo = variants[0] || "";
+    return {
+      id: record?.id || null,
+      wo_number: record?.wo_number || "",
+      work_order_no: record?.work_order_no || "",
+      payload_woNumber: payload?.woNumber || "",
+      payload_wo_number: payload?.wo_number || "",
+      payload_work_order_no: payload?.work_order_no || "",
+      variants,
+      variantComparables: variants.map(v => workOrderNoComparable_(v)),
+      normalized: normalizeWorkOrderNo_(woNo),
+      comparable: workOrderNoComparable_(woNo)
+    };
+  }
+
+  function getWorkOrderNumberVariants_(record){
+    const payload = parseObject_(record?.payload);
+    const raw = [
+      record?.wo_number,
+      record?.work_order_no,
+      record?.workorder_no,
+      payload?.woNumber,
+      payload?.wo_number,
+      payload?.work_order_no
+    ];
+    const set = new Set();
+    for (const value of raw) {
+      const normalized = normalizeWorkOrderNo_(value);
+      if (normalized) set.add(normalized);
+    }
+    return Array.from(set);
+  }
+
+  function workOrderRecordMatches_(record, queryRaw){
+    const queryComparable = workOrderNoComparable_(queryRaw);
+    if (!queryComparable) return false;
+    const variants = getWorkOrderNumberVariants_(record);
+    return variants.some((no) => workOrderNoComparable_(no) === queryComparable);
+  }
+
+  function getVisibleWorkOrderNumber_(){
+    const fromState = normalizeWorkOrderNo_(wo?.woNumber || "");
+    const fromInput = normalizeWorkOrderNo_($("loadWONumber")?.value || "");
+    return fromState || fromInput || buildWONumber();
+  }
+
+  function hasCanonicalWONumber_(record, canonicalNo){
+    const canonicalComparable = workOrderNoComparable_(canonicalNo);
+    if (!canonicalComparable) return false;
+    return getWorkOrderNumberVariants_(record).some((v) => workOrderNoComparable_(v) === canonicalComparable);
+  }
+
+  function clearLegacyLoadKeys_(){
+    try { sessionStorage.removeItem(LOAD_MODE_KEY); } catch (e) {}
+    try { sessionStorage.removeItem(LOAD_TARGET_KEY); } catch (e) {}
+    try { sessionStorage.removeItem(LOAD_INTENT_KEY); } catch (e) {}
+  }
+
+  function getExplicitUrlLoadTarget_(){
+    let urlWorkOrderNo = "";
+    let urlWorkOrderId = "";
+    let urlMode = "";
+    let urlIntent = "";
+    let urlAutoload = "";
+
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      urlWorkOrderNo = normalizeWorkOrderNo_(params.get("workorder") || params.get("loadWorkOrder") || "");
+      urlWorkOrderId = String(params.get("workorder_id") || params.get("workOrderId") || "").trim();
+      urlMode = String(params.get("mode") || "").trim().toLowerCase();
+      urlIntent = String(params.get("intent") || "").trim().toLowerCase();
+      urlAutoload = String(params.get("autoload") || "").trim().toLowerCase();
+    } catch (e) {}
+
+    const hasUrlTarget = !!(urlWorkOrderNo || urlWorkOrderId);
+    const hasValidMode = !urlMode || urlMode === "saved" || urlMode === "edit";
+    const hasUrlIntentFlag = urlIntent === "load" || urlIntent === "edit" || urlAutoload === "1" || urlAutoload === "true";
+    const workOrderNo = hasUrlTarget ? urlWorkOrderNo : "";
+    const workOrderId = hasUrlTarget ? urlWorkOrderId : "";
+    const mode = hasUrlTarget ? urlMode : "";
+    const intentional = hasUrlTarget && hasValidMode && hasUrlIntentFlag;
+
+    return { workOrderNo, workOrderId, mode, intentional };
+  }
+
+  function clearDraftStorage_(){
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch (e) {}
+  }
+
+  function clearWorkOrderSearchResults_(){
+    const box = $("workorderSearchResults");
+    if (!box) return;
+    box.innerHTML = "";
+    box.classList.add("hidden");
+  }
+
+  function syncWorkOrderUrl_(workOrderNo, workOrderId){
+    try {
+      const url = new URL(window.location.href);
+      if (workOrderNo) url.searchParams.set("workorder", workOrderNo);
+      else url.searchParams.delete("workorder");
+
+      if (workOrderId) url.searchParams.set("workorder_id", workOrderId);
+      else url.searchParams.delete("workorder_id");
+
+      if (workOrderNo || workOrderId) url.searchParams.set("mode", "edit");
+      else url.searchParams.delete("mode");
+
+      // Never persist explicit auto-load flags in the URL.
+      url.searchParams.delete("intent");
+      url.searchParams.delete("autoload");
+
+      history.replaceState({}, "", url.toString());
+    } catch (e) {}
+  }
+
+  function clearWorkOrderLoadState_(){
+    window.CURRENT_WORKORDER_ID = null;
+    window.CURRENT_WORKORDER_SOURCE = null;
+    window.CURRENT_WORKORDER_MODE = "new";
+    clearLegacyLoadKeys_();
+    syncWorkOrderUrl_("", "");
+    clearDraftStorage_();
+    clearWorkOrderSearchResults_();
+    setLoadMsg("");
+  }
+
+  async function resetToNewWorkOrder_(){
+    clearWorkOrderLoadState_();
+    wo = newWO();
+    await assignCanonicalWorkOrderNumber_({ force:true, reason:"new-work-order" });
+    if ($("loadWONumber")) $("loadWONumber").value = wo.woNumber || "";
+    renderAll();
+  }
+
+  function disableBrowserFormRestore_(){
+    document.querySelectorAll("input, textarea, select").forEach((el) => {
+      if (el.type === "file") return;
+      if (!el.hasAttribute("autocomplete") || el.getAttribute("autocomplete") !== "off") {
+        el.setAttribute("autocomplete", "off");
+      }
+      if (el.tagName === "TEXTAREA" || el.type === "text" || el.type === "email" || el.type === "tel") {
+        el.setAttribute("autocapitalize", "off");
+        el.setAttribute("autocorrect", "off");
+        el.setAttribute("spellcheck", "false");
+      }
+    });
+  }
 
   const defaultItem = () => ({
     id: crypto.randomUUID(),
@@ -463,7 +1028,21 @@
   });
 
   const newWO = () => ({
-    woNumber: buildWONumber(),
+    woNumber: "",
+    workOrderType: "customer",
+    parentWorkOrderId: null,
+    parentWorkOrderNo: "",
+    vendorName: "",
+    vendorType: "",
+    vendorContact: "",
+    vendorEmail: "",
+    vendorPhone: "",
+    vendorMethod: "",
+    vendorNotes: "",
+    vendorStatus: "draft",
+    internalVendorNotes: "",
+    vendorItemIds: [],
+    relatedVendorWorkorders: [],
     createdDate: todayISO(),
     dueDate: "",
     customerName: "",
@@ -479,60 +1058,1314 @@
     approval: { approved:false, approvedName:"", approvedDate:"", termsAccepted:false }
   });
 
+  function hydrateWorkOrderState_(input){
+    const parsed = input && typeof input === "object" ? deepClone_(input) : {};
+    const next = { ...newWO(), ...parsed };
+
+    next.woNumber = normalizeWorkOrderNo_(next.woNumber) || buildWONumber();
+    next.workOrderType = String(next.workOrderType || "customer").toLowerCase() === "vendor" ? "vendor" : "customer";
+    next.parentWorkOrderId = next.parentWorkOrderId || null;
+    next.parentWorkOrderNo = normalizeWorkOrderNo_(next.parentWorkOrderNo || "");
+    next.vendorName = String(next.vendorName || "");
+    next.vendorType = String(next.vendorType || next.vendor_type || "");
+    next.vendorContact = String(next.vendorContact || "");
+    next.vendorEmail = String(next.vendorEmail || "");
+    next.vendorPhone = String(next.vendorPhone || "");
+    next.vendorMethod = String(next.vendorMethod || next.vendor_method || next.vendorType || "");
+    next.vendorNotes = String(next.vendorNotes || next.vendor_notes || next.internalVendorNotes || next.internal_vendor_notes || "");
+    if (!next.vendorType && next.vendorMethod) next.vendorType = next.vendorMethod;
+    if (!next.internalVendorNotes && next.vendorNotes) next.internalVendorNotes = next.vendorNotes;
+    next.vendorStatus = String(next.vendorStatus || "draft");
+    next.internalVendorNotes = String(next.internalVendorNotes || "");
+    next.vendorItemIds = Array.isArray(next.vendorItemIds) ? next.vendorItemIds.filter(Boolean) : [];
+    next.relatedVendorWorkorders = Array.isArray(next.relatedVendorWorkorders)
+      ? next.relatedVendorWorkorders.map((r) => ({
+          id: r?.id || null,
+          work_order_no: normalizeWorkOrderNo_(r?.work_order_no || r?.wo_number || ""),
+          vendor_name: String(r?.vendor_name || r?.vendorName || ""),
+          vendor_type: String(r?.vendor_type || r?.vendorType || ""),
+          status: String(r?.status || "draft")
+        })).filter(r => r.work_order_no)
+      : [];
+    next.createdDate = next.createdDate || todayISO();
+    next.dueDate = next.dueDate || "";
+    next.customerName = String(next.customerName || "");
+    next.company = String(next.company || "");
+    next.email = String(next.email || "");
+    next.phone = String(next.phone || "");
+    next.billingAddress = String(next.billingAddress || "");
+    next.shippingAddress = String(next.shippingAddress || "");
+    next.notesCustomer = String(next.notesCustomer || "");
+    next.notesInternal = String(next.notesInternal || "");
+
+    if(!Array.isArray(next.artworks)) next.artworks = [];
+    next.artworks = next.artworks
+      .filter(a => a && a.dataUrl)
+      .map(a => ({
+        id: a.id || crypto.randomUUID(),
+        name: a.name || "artwork",
+        dataUrl: a.dataUrl
+      }));
+
+    const items = Array.isArray(parsed.items) && parsed.items.length ? parsed.items : next.items;
+    next.items = Array.isArray(items) && items.length ? items.map(it => {
+      const item = {
+        ...defaultItem(),
+        ...it,
+        id: it?.id || crypto.randomUUID(),
+        sizeBreakdown: Array.isArray(it?.sizeBreakdown) ? it.sizeBreakdown.map((row, idx) => ({
+          size: row?.size || DEFAULT_SIZES[idx] || `Size ${idx+1}`,
+          enabled: !!row?.enabled,
+          qty: Number(row?.qty || 0)
+        })) : newSizeBreakdown(),
+        quantity: Number(it?.quantity || 0),
+        artworkIds: Array.isArray(it?.artworkIds) ? it.artworkIds.filter(Boolean) : []
+      };
+
+      const legacyImgs = [];
+      if(item.image?.dataUrl) legacyImgs.push(item.image);
+      if(Array.isArray(item.images)) legacyImgs.push(...item.images);
+
+      for(const im of legacyImgs){
+        if(!im?.dataUrl) continue;
+        let existing = next.artworks.find(a => a.dataUrl === im.dataUrl);
+        if(!existing){
+          existing = { id: crypto.randomUUID(), name: im.name || "artwork", dataUrl: im.dataUrl };
+          next.artworks.push(existing);
+        }
+        if(!item.artworkIds.includes(existing.id)) item.artworkIds.push(existing.id);
+      }
+
+      delete item.image;
+      delete item.images;
+      delete item.dueDate;
+
+      if(isGarment(item.serviceType)){
+        item.quantity = sizeTotal(item.sizeBreakdown);
+      }
+
+      return item;
+    }) : [defaultItem()];
+
+    next.approval = {
+      approved: !!next.approval?.approved,
+      approvedName: String(next.approval?.approvedName || ""),
+      approvedDate: String(next.approval?.approvedDate || ""),
+      termsAccepted: !!next.approval?.termsAccepted
+    };
+
+    return next;
+  }
+
+  function getWorkOrderDraftObject(){
+    const state = hydrateWorkOrderState_(wo || newWO());
+    const workOrderNo = normalizeWorkOrderNo_(state.woNumber);
+    const payload = {
+      ...deepClone_(state),
+      woNumber: workOrderNo,
+      wo_number: workOrderNo,
+      work_order_no: workOrderNo
+    };
+    return {
+      wo_number: workOrderNo,
+      work_order_type: state.workOrderType || "customer",
+      parent_work_order_id: state.parentWorkOrderId || null,
+      parent_work_order_no: state.parentWorkOrderNo || null,
+      vendor_name: state.vendorName || null,
+      vendor_contact: state.vendorContact || null,
+      vendor_email: state.vendorEmail || null,
+      vendor_phone: state.vendorPhone || null,
+      vendor_type: state.vendorType || null,
+      vendor_method: state.vendorMethod || state.vendorType || null,
+      vendor_status: state.vendorStatus || "draft",
+      internal_vendor_notes: state.internalVendorNotes || null,
+      vendor_notes: state.vendorNotes || state.internalVendorNotes || null,
+      vendor_item_ids: deepClone_(state.vendorItemIds || []),
+      related_vendor_workorders: deepClone_(state.relatedVendorWorkorders || []),
+      created_date: state.createdDate || null,
+      due_date: state.dueDate || null,
+      customer_name: state.customerName || null,
+      company: state.company || null,
+      email: state.email || null,
+      phone: state.phone || null,
+      billing_address: state.billingAddress || null,
+      shipping_address: state.shippingAddress || null,
+      notes_customer: state.notesCustomer || null,
+      notes_internal: state.notesInternal || null,
+      status: state.approval?.approved ? "approved" : "draft",
+      approval: deepClone_(state.approval || {}),
+      items_json: deepClone_(state.items || []),
+      artworks_json: deepClone_(state.artworks || []),
+      payload
+    };
+  }
+
+  function extractWorkOrderNumber_(record){
+    const variants = getWorkOrderNumberVariants_(record);
+    return variants[0] || "";
+  }
+
+  function extractWorkOrderType_(record){
+    const payload = parseObject_(record?.payload);
+    const t = String(
+      record?.work_order_type ||
+      payload?.workOrderType ||
+      payload?.work_order_type ||
+      "customer"
+    ).toLowerCase();
+    return t === "vendor" ? "vendor" : "customer";
+  }
+
+  function extractWorkOrderCustomerName_(record){
+    const payload = parseObject_(record?.payload);
+    const customer = payload?.customer && typeof payload.customer === "object" ? payload.customer : {};
+    const billTo = payload?.bill_to && typeof payload.bill_to === "object" ? payload.bill_to : {};
+    return pickFirstNonEmpty_(
+      record?.customer_name,
+      record?.client_name,
+      record?.customer,
+      record?.vendor_name,
+      payload?.customerName,
+      payload?.customer_name,
+      payload?.client_name,
+      payload?.vendorName,
+      payload?.vendor_name,
+      payload?.name,
+      customer?.name,
+      customer?.customer_name,
+      customer?.client_name,
+      billTo?.name,
+      billTo?.client_name
+    );
+  }
+
+  function extractWorkOrderSortTime_(record){
+    const payload = parseObject_(record?.payload);
+    const candidates = [
+      record?.updated_at,
+      record?.created_at,
+      record?.saved_at,
+      record?.created_date,
+      payload?.updated_at,
+      payload?.created_at,
+      payload?.createdDate,
+      payload?.created_date
+    ];
+    for (const value of candidates) {
+      if (!value) continue;
+      const ts = new Date(value).getTime();
+      if (!Number.isNaN(ts)) return ts;
+    }
+    return 0;
+  }
+
+  function extractWorkOrderDateLabel_(record){
+    const payload = parseObject_(record?.payload);
+    return pickFirstNonEmpty_(
+      record?.updated_at,
+      record?.created_at,
+      record?.saved_at,
+      record?.created_date,
+      payload?.updated_at,
+      payload?.created_at,
+      payload?.createdDate,
+      payload?.created_date
+    );
+  }
+
+  function makeWorkOrderCandidate_(record, sourceHint = ""){
+    const workOrderNo = extractWorkOrderNumber_(record);
+    const currentId = record?.id || null;
+    const source = sourceHint || (currentId ? "supabase" : "local");
+    return {
+      record,
+      currentId,
+      source,
+      workOrderNo,
+      workOrderType: extractWorkOrderType_(record),
+      customerName: extractWorkOrderCustomerName_(record) || "(No customer)",
+      dateLabel: formatDateLabel_(extractWorkOrderDateLabel_(record)),
+      sortTime: extractWorkOrderSortTime_(record)
+    };
+  }
+
+  function collectUsedVendorSequenceNumbers_(parentWorkOrderNo, candidates){
+    const base = normalizeWorkOrderNo_(parentWorkOrderNo);
+    if (!base) return [];
+    const re = new RegExp(`^${escapeRegExp_(base)}-V(\\d+)$`, "i");
+    const nums = [];
+    for (const c of candidates || []) {
+      const no = normalizeWorkOrderNo_(c?.workOrderNo || "");
+      const m = no.match(re);
+      if (m) nums.push(Number(m[1]));
+    }
+    return nums.filter(n => Number.isFinite(n) && n > 0);
+  }
+
+  async function getNextVendorWorkOrderNumber_(parentWorkOrderNo){
+    const base = normalizeWorkOrderNo_(parentWorkOrderNo);
+    if (!base) {
+      const nextBase = await getNextCanonicalWorkOrderNumber_();
+      return `${nextBase}-V1`;
+    }
+    const { candidates } = await gatherSearchableWorkOrders_();
+    const used = collectUsedVendorSequenceNumbers_(base, candidates);
+    const next = (used.length ? Math.max(...used) : 0) + 1;
+    return `${base}-V${next}`;
+  }
+
+  function dedupeWorkOrderCandidates_(supabaseRows = [], localRows = []){
+    const map = new Map();
+    const add = (rows, source) => {
+      for (const row of rows || []) {
+        const c = makeWorkOrderCandidate_(row, source);
+        const key = c.workOrderNo || (c.currentId ? `id:${c.currentId}` : "");
+        if (!key) continue;
+        const existing = map.get(key);
+        if (!existing) {
+          map.set(key, c);
+          continue;
+        }
+        const preferIncoming = (existing.source !== "supabase" && c.source === "supabase") || c.sortTime > existing.sortTime;
+        if (preferIncoming) map.set(key, c);
+      }
+    };
+
+    add(localRows, "local");
+    add(supabaseRows, "supabase");
+
+    return Array.from(map.values()).sort((a, b) => {
+      if ((b.sortTime || 0) !== (a.sortTime || 0)) return (b.sortTime || 0) - (a.sortTime || 0);
+      return String(a.workOrderNo || "").localeCompare(String(b.workOrderNo || ""));
+    });
+  }
+
+  async function gatherSearchableWorkOrders_(){
+    let supabaseRows = [];
+    let supabaseError = null;
+
+    if (sb) {
+      try {
+        supabaseRows = await fetchSupabaseWorkOrderRows_();
+      } catch (error) {
+        supabaseError = error;
+        console.error("Supabase work order search failed:", error);
+      }
+    }
+
+    const localRows = Object.values(getSavedWorkOrdersLocal_() || {});
+    return {
+      supabaseRows,
+      localRows,
+      supabaseError,
+      candidates: dedupeWorkOrderCandidates_(supabaseRows, localRows)
+    };
+  }
+
+  function applyWorkOrderCandidate_(candidate){
+    if (!candidate || !candidate.record) return;
+    applyWorkOrderObject(candidate.record, {
+      currentId: candidate.currentId || null,
+      source: candidate.source || (candidate.currentId ? "supabase" : "local")
+    });
+    if (candidate.record) saveWorkOrderRecordLocally_(candidate.record);
+    clearWorkOrderSearchResults_();
+  }
+
+  function showWorkOrderMatchList_(matches, query){
+    const box = $("workorderSearchResults");
+    if (!box) return;
+
+    box.innerHTML = "";
+    const header = document.createElement("div");
+    header.className = "muted";
+    header.style.fontWeight = "800";
+    header.style.margin = "2px 4px 8px";
+    header.textContent = `Found ${matches.length} matches for "${query}". Choose one:`;
+    box.appendChild(header);
+
+    const limit = Math.min(matches.length, 25);
+    for (let i = 0; i < limit; i++) {
+      const m = matches[i];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn secondary";
+      btn.style.width = "100%";
+      btn.style.textAlign = "left";
+      btn.style.marginBottom = i === limit - 1 ? "0" : "6px";
+      btn.innerHTML = `
+        <div style="font-weight:900">${esc(m.workOrderNo || "(No Number)")}</div>
+        <div class="help" style="margin-top:2px">${esc(m.customerName)} • ${esc(m.dateLabel)}${m.workOrderType === "vendor" ? " • Vendor" : ""}</div>
+      `;
+      btn.addEventListener("click", () => applyWorkOrderCandidate_(m));
+      box.appendChild(btn);
+    }
+
+    box.classList.remove("hidden");
+  }
+
+  function buildWorkOrderStateFromRecord_(record){
+    const payload = parseObject_(record?.payload);
+    if (payload && Object.keys(payload).length) {
+      payload.woNumber = payload.woNumber || extractWorkOrderNumber_(record);
+      if (!payload.workOrderType && record?.work_order_type) payload.workOrderType = record.work_order_type;
+      return hydrateWorkOrderState_(payload);
+    }
+
+    return hydrateWorkOrderState_({
+      woNumber: extractWorkOrderNumber_(record),
+      workOrderType: extractWorkOrderType_(record),
+      parentWorkOrderId: record?.parent_work_order_id || null,
+      parentWorkOrderNo: record?.parent_work_order_no || "",
+      vendorName: record?.vendor_name || "",
+      vendorContact: record?.vendor_contact || "",
+      vendorEmail: record?.vendor_email || "",
+      vendorPhone: record?.vendor_phone || "",
+      vendorType: record?.vendor_type || "",
+      vendorMethod: record?.vendor_method || record?.vendor_type || "",
+      vendorStatus: record?.vendor_status || "draft",
+      internalVendorNotes: record?.internal_vendor_notes || "",
+      vendorNotes: record?.vendor_notes || record?.internal_vendor_notes || "",
+      vendorItemIds: Array.isArray(record?.vendor_item_ids) ? record.vendor_item_ids : [],
+      relatedVendorWorkorders: Array.isArray(record?.related_vendor_workorders) ? record.related_vendor_workorders : [],
+      createdDate: record?.created_date || "",
+      dueDate: record?.due_date || "",
+      customerName: record?.customer_name || "",
+      company: record?.company || "",
+      email: record?.email || "",
+      phone: record?.phone || "",
+      billingAddress: record?.billing_address || "",
+      shippingAddress: record?.shipping_address || "",
+      notesCustomer: record?.notes_customer || "",
+      notesInternal: record?.notes_internal || "",
+      approval: record?.approval || { approved:false, approvedName:"", approvedDate:"", termsAccepted:false },
+      items: Array.isArray(record?.items_json) ? record.items_json : [],
+      artworks: Array.isArray(record?.artworks_json) ? record.artworks_json : []
+    });
+  }
+
+  function applyWorkOrderObject(record, options = {}){
+    const state = buildWorkOrderStateFromRecord_(record);
+    wo = state;
+    window.CURRENT_WORKORDER_ID = options.currentId ?? record?.id ?? null;
+    window.CURRENT_WORKORDER_SOURCE = options.source || (window.CURRENT_WORKORDER_ID ? "supabase" : "local");
+    window.CURRENT_WORKORDER_MODE = "edit";
+
+    if ($("loadWONumber")) $("loadWONumber").value = state.woNumber || "";
+
+    if (options.preserveLoadState !== false) {
+      syncWorkOrderUrl_(state.woNumber || "", window.CURRENT_WORKORDER_ID || "");
+    }
+
+    renderAll();
+    const kind = isVendorWorkOrder_(state) ? "vendor work order" : "work order";
+    setLoadMsg(`${kind.charAt(0).toUpperCase() + kind.slice(1)} ${state.woNumber} loaded. Edit it and click "Save Work Order".`);
+  }
+
+  function getSavedWorkOrdersLocal_(){
+    let parsed = {};
+    try {
+      const raw = localStorage.getItem(SAVED_WORKORDERS_KEY);
+      parsed = raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      parsed = {};
+    }
+
+    const fromStorage = parsed && typeof parsed === "object" ? parsed : {};
+    SAVED_WORKORDERS_MEMORY = { ...fromStorage, ...SAVED_WORKORDERS_MEMORY };
+    return { ...SAVED_WORKORDERS_MEMORY };
+  }
+
+  function setSavedWorkOrdersLocal_(records){
+    const next = records && typeof records === "object" ? records : {};
+    SAVED_WORKORDERS_MEMORY = { ...next };
+
+    try {
+      localStorage.setItem(SAVED_WORKORDERS_KEY, JSON.stringify(next));
+      const verifyRaw = localStorage.getItem(SAVED_WORKORDERS_KEY);
+      const verify = verifyRaw ? JSON.parse(verifyRaw) : {};
+      const ok = !!(verify && typeof verify === "object");
+      if (!ok) throw new Error("Local saved-record registry verification failed.");
+      return true;
+    } catch (e) {
+      console.warn("Could not store saved work orders locally:", e);
+      return false;
+    }
+  }
+
+  function saveWorkOrderRecordLocally_(record){
+    const records = getSavedWorkOrdersLocal_();
+    const workOrderNo = extractWorkOrderNumber_(record) || normalizeWorkOrderNo_(record?.payload?.woNumber);
+    if (!workOrderNo) return;
+
+    records[workOrderNo] = {
+      ...record,
+      wo_number: workOrderNo,
+      work_order_no: workOrderNo,
+      saved_at: new Date().toISOString()
+    };
+    const persisted = setSavedWorkOrdersLocal_(records);
+    if (!persisted) {
+      console.warn("Saved work order only in memory fallback.", { workOrderNo });
+    }
+    return records[workOrderNo];
+  }
+
+  function findLocalWorkOrderRecord_(workOrderNoRaw){
+    const workOrderNo = normalizeWorkOrderNo_(workOrderNoRaw);
+    const comparable = workOrderNoComparable_(workOrderNoRaw);
+    if (!workOrderNo) return null;
+    const records = getSavedWorkOrdersLocal_();
+    const direct = records[workOrderNo];
+    if (direct) return direct;
+
+    const directByNormalizedKey = Object.entries(records).find(([key]) => normalizeWorkOrderNo_(key) === workOrderNo);
+    if (directByNormalizedKey?.[1]) return directByNormalizedKey[1];
+
+    return Object.values(records).find((record) => {
+      if (workOrderRecordMatches_(record, workOrderNo)) return true;
+      const recNo = extractWorkOrderNumber_(record);
+      return recNo === workOrderNo || workOrderNoComparable_(recNo) === comparable;
+    }) || null;
+  }
+
+  function buildSupabaseWorkOrderVariants_(draft){
+    const full = {
+      wo_number: draft.wo_number,
+      work_order_no: draft.wo_number,
+      work_order_type: draft.work_order_type,
+      parent_work_order_id: draft.parent_work_order_id,
+      parent_work_order_no: draft.parent_work_order_no,
+      vendor_name: draft.vendor_name,
+      vendor_contact: draft.vendor_contact,
+      vendor_email: draft.vendor_email,
+      vendor_phone: draft.vendor_phone,
+      vendor_type: draft.vendor_type,
+      vendor_method: draft.vendor_method,
+      vendor_status: draft.vendor_status,
+      internal_vendor_notes: draft.internal_vendor_notes,
+      vendor_notes: draft.vendor_notes,
+      vendor_item_ids: draft.vendor_item_ids,
+      related_vendor_workorders: draft.related_vendor_workorders,
+      created_date: draft.created_date,
+      due_date: draft.due_date,
+      customer_name: draft.customer_name,
+      company: draft.company,
+      email: draft.email,
+      phone: draft.phone,
+      billing_address: draft.billing_address,
+      shipping_address: draft.shipping_address,
+      notes_customer: draft.notes_customer,
+      notes_internal: draft.notes_internal,
+      status: draft.status,
+      approval: draft.approval,
+      items_json: draft.items_json,
+      artworks_json: draft.artworks_json,
+      payload: draft.payload
+    };
+
+    return [
+      full,
+      {
+        wo_number: draft.wo_number,
+        work_order_no: draft.wo_number,
+        work_order_type: draft.work_order_type,
+        parent_work_order_no: draft.parent_work_order_no,
+        vendor_name: draft.vendor_name,
+        vendor_contact: draft.vendor_contact,
+        vendor_email: draft.vendor_email,
+        vendor_phone: draft.vendor_phone,
+        vendor_type: draft.vendor_type,
+        vendor_method: draft.vendor_method,
+        vendor_status: draft.vendor_status,
+        customer_name: draft.customer_name,
+        due_date: draft.due_date,
+        status: draft.status,
+        payload: draft.payload
+      }
+    ];
+  }
+
+  async function fetchSupabaseWorkOrderRows_(){
+    if (!sb) throw new Error("Supabase client not initialized.");
+
+    let result = await sb.from("work_orders").select("*").order("created_at", { ascending:false }).limit(500);
+    if (result.error) {
+      result = await sb.from("work_orders").select("*").limit(500);
+    }
+    if (result.error) throw result.error;
+    return Array.isArray(result.data) ? result.data : [];
+  }
+
+  async function findSupabaseWorkOrderByNumber_(workOrderNoRaw){
+    const workOrderNo = normalizeWorkOrderNo_(workOrderNoRaw);
+    const comparable = workOrderNoComparable_(workOrderNoRaw);
+    if (!workOrderNo) return null;
+
+    if (!sb) return null;
+
+    const directAttempts = [
+      () => sb
+        .from("work_orders")
+        .select("*")
+        .eq("work_order_no", workOrderNo)
+        .order("created_at", { ascending:false })
+        .limit(1)
+        .maybeSingle(),
+      () => sb
+        .from("work_orders")
+        .select("*")
+        .eq("wo_number", workOrderNo)
+        .order("created_at", { ascending:false })
+        .limit(1)
+        .maybeSingle(),
+      () => sb
+        .from("work_orders")
+        .select("*")
+        .ilike("work_order_no", workOrderNo)
+        .order("created_at", { ascending:false })
+        .limit(1)
+        .maybeSingle(),
+      () => sb
+        .from("work_orders")
+        .select("*")
+        .ilike("wo_number", workOrderNo)
+        .order("created_at", { ascending:false })
+        .limit(1)
+        .maybeSingle()
+    ];
+
+    for (const attempt of directAttempts) {
+      try {
+        const { data, error } = await attempt();
+        if (!error && data) {
+          const candidate = workOrderDebugFields_(data);
+          const match = workOrderRecordMatches_(data, workOrderNo);
+          console.log("LOAD WO candidate number", candidate.work_order_no || candidate.wo_number || candidate.payload_work_order_no || candidate.payload_woNumber || "");
+          console.log("LOAD WO candidate top-level number", data?.work_order_no || data?.wo_number || "");
+          console.log("LOAD WO candidate payload number", parseObject_(data?.payload)?.work_order_no || parseObject_(data?.payload)?.woNumber || "");
+          console.log("LOAD WO match?", match);
+          console.log("LOAD WO supabase candidate", candidate);
+          console.log("LOAD WO match decision", {
+            source: "supabase:direct",
+            query: workOrderNo,
+            queryComparable: comparable,
+            candidate,
+            match
+          });
+          if (match) return data;
+        }
+      } catch (e) {}
+    }
+
+    const rows = await fetchSupabaseWorkOrderRows_();
+    console.log("LOAD WO Supabase rows", rows);
+    let found = null;
+    for (const row of rows) {
+      const candidate = workOrderDebugFields_(row);
+      const match = workOrderRecordMatches_(row, workOrderNo);
+      console.log("LOAD WO candidate number", candidate.work_order_no || candidate.wo_number || candidate.payload_work_order_no || candidate.payload_woNumber || "");
+      console.log("LOAD WO candidate top-level number", row?.work_order_no || row?.wo_number || "");
+      console.log("LOAD WO candidate payload number", parseObject_(row?.payload)?.work_order_no || parseObject_(row?.payload)?.woNumber || "");
+      console.log("LOAD WO match?", match);
+      console.log("LOAD WO supabase candidate", candidate);
+      console.log("LOAD WO match decision", {
+        source: "supabase:rows",
+        query: workOrderNo,
+        queryComparable: comparable,
+        candidateComparable: candidate.comparable,
+        candidate,
+        match
+      });
+      if (!found && match) found = row;
+    }
+    return found;
+  }
+
+  async function saveWorkOrderToSupabase_(draftOverride = null){
+    const draft = draftOverride || getWorkOrderDraftObject();
+    const canonicalNumber = normalizeWorkOrderNo_(draft.wo_number || draft?.payload?.woNumber || wo?.woNumber || buildWONumber());
+    draft.wo_number = canonicalNumber;
+    draft.payload = {
+      ...parseObject_(draft.payload),
+      woNumber: canonicalNumber,
+      wo_number: canonicalNumber,
+      work_order_no: canonicalNumber
+    };
+    const variants = buildSupabaseWorkOrderVariants_(draft);
+
+    const forceCanonicalOnRow_ = async (rowLike) => {
+      if (!rowLike?.id || !sb) return rowLike;
+      if (hasCanonicalWONumber_(rowLike, canonicalNumber)) return rowLike;
+
+      const patch = {
+        wo_number: canonicalNumber,
+        work_order_no: canonicalNumber,
+        payload: draft.payload
+      };
+      const { data, error } = await sb
+        .from("work_orders")
+        .update(patch)
+        .eq("id", rowLike.id)
+        .select("*")
+        .maybeSingle();
+
+      if (error) return rowLike;
+      return data || rowLike;
+    };
+
+    const ensureCanonicalRow_ = async (rowLike) => {
+      const fixed = await forceCanonicalOnRow_(rowLike);
+      if (!hasCanonicalWONumber_(fixed, canonicalNumber)) {
+        console.error("SAVE WO returned row mismatch", {
+          canonicalNumber,
+          returned: workOrderDebugFields_(fixed)
+        });
+        throw new Error(`Supabase did not persist canonical work order number ${canonicalNumber}.`);
+      }
+      return fixed;
+    };
+
+    if (window.CURRENT_WORKORDER_ID) {
+      let lastError = null;
+      for (const variant of variants) {
+        const rowToSave = {
+          ...variant,
+          wo_number: canonicalNumber,
+          work_order_no: canonicalNumber,
+          payload: draft.payload
+        };
+        console.log("SAVE WO row being written", rowToSave);
+        const { data, error } = await sb
+          .from("work_orders")
+          .update(rowToSave)
+          .eq("id", window.CURRENT_WORKORDER_ID)
+          .select("*")
+          .maybeSingle();
+
+        if (!error) {
+          return await ensureCanonicalRow_(data || { id: window.CURRENT_WORKORDER_ID, payload: draft.payload, work_order_no: canonicalNumber, wo_number: canonicalNumber });
+        }
+        lastError = error;
+      }
+      throw lastError || new Error("Could not update work order.");
+    }
+
+    const existing = await findSupabaseWorkOrderByNumber_(canonicalNumber).catch(() => null);
+    if (existing?.id) {
+      window.CURRENT_WORKORDER_ID = existing.id;
+      return saveWorkOrderToSupabase_(draft);
+    }
+
+    let lastError = null;
+    for (const variant of variants) {
+      const rowToSave = {
+        ...variant,
+        wo_number: canonicalNumber,
+        work_order_no: canonicalNumber,
+        payload: draft.payload
+      };
+      console.log("SAVE WO row being written", rowToSave);
+      const { data, error } = await sb
+        .from("work_orders")
+        .insert(rowToSave)
+        .select("*")
+        .maybeSingle();
+
+      if (!error) {
+        return await ensureCanonicalRow_(data || { payload: draft.payload, work_order_no: canonicalNumber, wo_number: canonicalNumber });
+      }
+      lastError = error;
+    }
+    throw lastError || new Error("Could not create work order.");
+  }
+
+  async function saveWorkOrderRecord_(){
+    if (!wo?.woNumber) wo.woNumber = "";
+
+    if (isCustomerWorkOrder_(wo) && window.CURRENT_WORKORDER_MODE !== "edit") {
+      const parsed = parseWorkOrderSequence_(wo?.woNumber || "");
+      if (!parsed) {
+        await assignCanonicalWorkOrderNumber_({ force:true, reason:"save-customer" });
+      }
+    }
+
+    const currentVisibleNumber = getVisibleWorkOrderNumber_();
+    console.log("UI WO number before save", currentVisibleNumber);
+
+    const draft = getWorkOrderDraftObject();
+    let workOrderNumber = normalizeWorkOrderNo_(currentVisibleNumber || draft.wo_number || wo?.woNumber || "");
+    if (isCustomerWorkOrder_(wo) && window.CURRENT_WORKORDER_MODE !== "edit" && !parseWorkOrderSequence_(workOrderNumber)) {
+      workOrderNumber = await getNextCanonicalWorkOrderNumber_();
+    }
+    wo.woNumber = workOrderNumber;
+    draft.wo_number = workOrderNumber;
+    draft.payload = {
+      ...parseObject_(draft.payload),
+      woNumber: workOrderNumber,
+      wo_number: workOrderNumber,
+      work_order_no: workOrderNumber
+    };
+
+    const canonicalNumber = workOrderNumber;
+    console.log("SAVE WO canonical number", canonicalNumber);
+
+    console.log("SAVE WO payload", draft.payload);
+    console.log("SAVE WO number", workOrderNumber);
+
+    setLoadMsg(`Saving ${workOrderNumber}...`);
+
+    // Mirror locally before remote save completes so immediate Load by number always works.
+    const optimisticLocalRecord = {
+      id: window.CURRENT_WORKORDER_ID || null,
+      work_order_no: workOrderNumber,
+      wo_number: workOrderNumber,
+      work_order_type: draft.work_order_type,
+      parent_work_order_id: draft.parent_work_order_id,
+      parent_work_order_no: draft.parent_work_order_no,
+      vendor_name: draft.vendor_name,
+      vendor_contact: draft.vendor_contact,
+      vendor_email: draft.vendor_email,
+      vendor_phone: draft.vendor_phone,
+      vendor_type: draft.vendor_type,
+      vendor_method: draft.vendor_method,
+      vendor_status: draft.vendor_status,
+      internal_vendor_notes: draft.internal_vendor_notes,
+      vendor_notes: draft.vendor_notes,
+      vendor_item_ids: draft.vendor_item_ids,
+      related_vendor_workorders: draft.related_vendor_workorders,
+      payload: draft.payload,
+      customer_name: draft.customer_name,
+      due_date: draft.due_date,
+      status: draft.status,
+      source: "local"
+    };
+    console.log("SAVE WO row being written", optimisticLocalRecord);
+    const optimisticSaved = saveWorkOrderRecordLocally_(optimisticLocalRecord);
+    console.log("SAVE WO result", optimisticLocalRecord);
+    console.log("POST-SAVE local saved records", getSavedWorkOrdersLocal_());
+
+    try {
+      let saved = null;
+      if (sb) {
+        saved = await saveWorkOrderToSupabase_(draft);
+        console.log("SAVE WO returned row", saved);
+        console.log("POST-SAVE saved row", saved);
+        console.log("POST-SAVE saved row work order fields", workOrderDebugFields_(saved || optimisticSaved || optimisticLocalRecord));
+        window.CURRENT_WORKORDER_ID = saved?.id || window.CURRENT_WORKORDER_ID || null;
+        window.CURRENT_WORKORDER_SOURCE = "supabase";
+      }
+
+      window.CURRENT_WORKORDER_MODE = "edit";
+
+      const record = {
+        ...(saved || {}),
+        id: saved?.id || window.CURRENT_WORKORDER_ID || null,
+        work_order_no: workOrderNumber,
+        wo_number: workOrderNumber,
+        work_order_type: draft.work_order_type,
+        parent_work_order_id: draft.parent_work_order_id,
+        parent_work_order_no: draft.parent_work_order_no,
+        vendor_name: draft.vendor_name,
+        vendor_contact: draft.vendor_contact,
+        vendor_email: draft.vendor_email,
+        vendor_phone: draft.vendor_phone,
+        vendor_type: draft.vendor_type,
+        vendor_method: draft.vendor_method,
+        vendor_status: draft.vendor_status,
+        internal_vendor_notes: draft.internal_vendor_notes,
+        vendor_notes: draft.vendor_notes,
+        vendor_item_ids: draft.vendor_item_ids,
+        related_vendor_workorders: draft.related_vendor_workorders,
+        payload: draft.payload,
+        customer_name: draft.customer_name,
+        due_date: draft.due_date,
+        status: draft.status
+      };
+      console.log("SAVE WO row being written", record);
+      const localSaved = saveWorkOrderRecordLocally_(record);
+      console.log("SAVE WO result", record);
+      console.log("POST-SAVE local saved records", getSavedWorkOrdersLocal_());
+      console.log("POST-SAVE saved row", saved || record);
+      console.log("POST-SAVE saved row work order fields", workOrderDebugFields_(saved || localSaved || record));
+
+      syncWorkOrderUrl_(workOrderNumber, window.CURRENT_WORKORDER_ID || "");
+      if ($("loadWONumber")) $("loadWONumber").value = workOrderNumber;
+      saveDraft();
+
+      const savedWhere = window.CURRENT_WORKORDER_SOURCE === "supabase"
+        ? `Saved ${workOrderNumber}.`
+        : `Saved ${workOrderNumber} on this device.`;
+      setLoadMsg(savedWhere);
+      toast(window.CURRENT_WORKORDER_SOURCE === "supabase" ? "Work order saved." : "Work order saved locally.");
+      return record;
+    } catch (error) {
+      console.error("Work order save failed:", error);
+
+      const fallbackRecord = {
+        id: window.CURRENT_WORKORDER_ID || null,
+        work_order_no: workOrderNumber,
+        wo_number: workOrderNumber,
+        work_order_type: draft.work_order_type,
+        parent_work_order_id: draft.parent_work_order_id,
+        parent_work_order_no: draft.parent_work_order_no,
+        vendor_name: draft.vendor_name,
+        vendor_contact: draft.vendor_contact,
+        vendor_email: draft.vendor_email,
+        vendor_phone: draft.vendor_phone,
+        vendor_type: draft.vendor_type,
+        vendor_method: draft.vendor_method,
+        vendor_status: draft.vendor_status,
+        internal_vendor_notes: draft.internal_vendor_notes,
+        vendor_notes: draft.vendor_notes,
+        vendor_item_ids: draft.vendor_item_ids,
+        related_vendor_workorders: draft.related_vendor_workorders,
+        payload: draft.payload,
+        customer_name: draft.customer_name,
+        due_date: draft.due_date,
+        status: draft.status,
+        source: "local"
+      };
+      console.log("SAVE WO row being written", fallbackRecord);
+      const fallbackSaved = saveWorkOrderRecordLocally_(fallbackRecord);
+      console.log("SAVE WO result", fallbackRecord);
+      console.log("POST-SAVE local saved records", getSavedWorkOrdersLocal_());
+      console.log("POST-SAVE saved row", fallbackRecord);
+      console.log("POST-SAVE saved row work order fields", workOrderDebugFields_(fallbackSaved || fallbackRecord));
+      window.CURRENT_WORKORDER_SOURCE = "local";
+      window.CURRENT_WORKORDER_MODE = "edit";
+      syncWorkOrderUrl_(workOrderNumber, "");
+      saveDraft();
+
+      const msg = error?.message ? `Supabase save unavailable (${error.message}). Saved locally on this device.` : "Saved locally on this device.";
+      setLoadMsg(msg, true);
+      toast("Saved locally on this device.", "error", 4200);
+      return fallbackRecord;
+    }
+  }
+
+  async function loadWorkOrderByNumber(workOrderNoRaw){
+    const workOrderNo = normalizeWorkOrderNo_(workOrderNoRaw);
+    const comparable = workOrderNoComparable_(workOrderNoRaw);
+    if (!workOrderNo) throw new Error("Enter a work order number first.");
+
+    // Immediate in-memory fallback for the currently open work order.
+    if (workOrderNoComparable_(wo?.woNumber) === comparable) {
+      const draft = getWorkOrderDraftObject();
+      const currentRecord = {
+        id: window.CURRENT_WORKORDER_ID || null,
+        work_order_no: workOrderNo,
+        wo_number: workOrderNo,
+        work_order_type: draft.work_order_type,
+        payload: draft.payload,
+        customer_name: draft.customer_name,
+        due_date: draft.due_date,
+        status: draft.status
+      };
+      saveWorkOrderRecordLocally_(currentRecord);
+      console.log("LOAD WO local candidate", workOrderDebugFields_(currentRecord));
+      console.log("LOAD WO match decision", {
+        source: "in-memory",
+        query: workOrderNo,
+        queryComparable: comparable,
+        candidate: workOrderDebugFields_(currentRecord),
+        match: true
+      });
+      applyWorkOrderObject(currentRecord, {
+        currentId: window.CURRENT_WORKORDER_ID || null,
+        source: window.CURRENT_WORKORDER_ID ? "supabase" : "local"
+      });
+      console.log("LOAD WO found", currentRecord);
+      return currentRecord;
+    }
+
+    const localRows = Object.values(getSavedWorkOrdersLocal_() || {});
+    console.log("LOAD WO local rows", localRows);
+    localRows.forEach((row) => {
+      const candidate = workOrderDebugFields_(row);
+      const match = workOrderRecordMatches_(row, workOrderNo);
+      console.log("LOAD WO candidate number", candidate.work_order_no || candidate.wo_number || candidate.payload_work_order_no || candidate.payload_woNumber || "");
+      console.log("LOAD WO candidate top-level number", row?.work_order_no || row?.wo_number || "");
+      console.log("LOAD WO candidate payload number", parseObject_(row?.payload)?.work_order_no || parseObject_(row?.payload)?.woNumber || "");
+      console.log("LOAD WO match?", match);
+      console.log("LOAD WO local candidate", candidate);
+      console.log("LOAD WO match decision", {
+        source: "local",
+        query: workOrderNo,
+        queryComparable: comparable,
+        candidateComparable: candidate.comparable,
+        candidate,
+        match
+      });
+    });
+
+    clearWorkOrderSearchResults_();
+    setLoadMsg(`Loading ${workOrderNo}...`);
+
+    const local = findLocalWorkOrderRecord_(workOrderNo);
+    if (local) {
+      const localCandidate = makeWorkOrderCandidate_(local, "local");
+      applyWorkOrderCandidate_(localCandidate);
+      console.log("LOAD WO found", local);
+      return local;
+    }
+
+    if (sb) {
+      try {
+        const remoteExact = await findSupabaseWorkOrderByNumber_(workOrderNo);
+        if (remoteExact) {
+          const remoteCandidate = makeWorkOrderCandidate_(remoteExact, "supabase");
+          applyWorkOrderCandidate_(remoteCandidate);
+          console.log("LOAD WO found", remoteExact);
+          return remoteExact;
+        }
+      } catch (error) {
+        console.error("Direct Supabase load-by-number failed:", error);
+      }
+    }
+
+    const { candidates, supabaseError } = await gatherSearchableWorkOrders_();
+    const matches = candidates.filter(c => {
+      const no = c.workOrderNo || "";
+      const decision = workOrderRecordMatches_(c.record, workOrderNo)
+        || no === workOrderNo
+        || workOrderNoComparable_(no) === comparable;
+      console.log("LOAD WO match decision", {
+        source: c.source || "candidate",
+        query: workOrderNo,
+        queryComparable: comparable,
+        candidate: {
+          id: c.currentId || null,
+          workOrderNo: no,
+          normalized: normalizeWorkOrderNo_(no),
+          comparable: workOrderNoComparable_(no),
+          variants: getWorkOrderNumberVariants_(c.record),
+          variantComparables: getWorkOrderNumberVariants_(c.record).map(v => workOrderNoComparable_(v))
+        },
+        match: decision
+      });
+      return decision;
+    });
+    if (!matches.length) {
+      console.log("LOAD WO not found after all sources", workOrderNo);
+      if (supabaseError) throw new Error(`Could not load ${workOrderNo} from Supabase, and no local copy was found.`);
+      throw new Error(`Work order not found: ${workOrderNo}`);
+    }
+
+    applyWorkOrderCandidate_(matches[0]);
+    console.log("LOAD WO found", matches[0].record);
+    return matches[0].record;
+  }
+
+  function buildVendorItemsFromMaster_(masterState){
+    const selectedIds = Array.isArray(masterState.vendorItemIds) ? masterState.vendorItemIds.filter(Boolean) : [];
+    const selectedItems = masterState.items.filter(i => selectedIds.includes(i.id));
+    if (!selectedItems.length) return { selectedIds: [], items: [], artworks: [] };
+
+    const items = selectedItems.map((src) => ({
+      ...deepClone_(src),
+      sourceItemId: src.id,
+      id: crypto.randomUUID()
+    }));
+    const artIds = new Set();
+    items.forEach(i => (Array.isArray(i.artworkIds) ? i.artworkIds : []).forEach(id => artIds.add(id)));
+    const artworks = (Array.isArray(masterState.artworks) ? masterState.artworks : []).filter(a => artIds.has(a.id));
+
+    return { selectedIds, items, artworks };
+  }
+
+  function pushRelatedVendorRefToMaster_(masterState, vendorRecordLike){
+    if (!Array.isArray(masterState.relatedVendorWorkorders)) masterState.relatedVendorWorkorders = [];
+    const ref = {
+      id: vendorRecordLike?.id || null,
+      work_order_no: normalizeWorkOrderNo_(vendorRecordLike?.work_order_no || vendorRecordLike?.wo_number || ""),
+      vendor_name: String(vendorRecordLike?.vendor_name || ""),
+      vendor_type: String(vendorRecordLike?.vendor_type || ""),
+      status: String(vendorRecordLike?.vendor_status || "draft")
+    };
+    if (!ref.work_order_no) return;
+    const idx = masterState.relatedVendorWorkorders.findIndex(r => normalizeWorkOrderNo_(r.work_order_no) === ref.work_order_no);
+    if (idx >= 0) masterState.relatedVendorWorkorders[idx] = ref;
+    else masterState.relatedVendorWorkorders.push(ref);
+  }
+
+  async function persistMasterVendorLinks_(masterState, vendorRef){
+    if (!masterState || isVendorWorkOrder_(masterState)) return;
+    pushRelatedVendorRefToMaster_(masterState, vendorRef);
+
+    const localRecord = {
+      id: masterState.parentWorkOrderId || window.CURRENT_WORKORDER_ID || null,
+      work_order_no: normalizeWorkOrderNo_(masterState.woNumber),
+      work_order_type: "customer",
+      related_vendor_workorders: deepClone_(masterState.relatedVendorWorkorders || []),
+      payload: deepClone_(masterState),
+      customer_name: masterState.customerName || null,
+      due_date: masterState.dueDate || null,
+      status: masterState.approval?.approved ? "approved" : "draft"
+    };
+    saveWorkOrderRecordLocally_(localRecord);
+
+    const masterId = masterState.parentWorkOrderId || window.CURRENT_WORKORDER_ID || null;
+    if (!masterId || !sb) return;
+    try {
+      await sb.from("work_orders").update({
+        related_vendor_workorders: deepClone_(masterState.relatedVendorWorkorders || []),
+        payload: deepClone_(masterState)
+      }).eq("id", masterId);
+    } catch (e) {
+      console.warn("Could not persist master vendor links to Supabase:", e);
+    }
+  }
+
+  async function createVendorWorkOrderFromCurrent_(){
+    if (isVendorWorkOrder_(wo)) {
+      toast("Already in a vendor work order.", "error", 2500);
+      return;
+    }
+
+    const parentNo = normalizeWorkOrderNo_(wo?.woNumber || "");
+    if (!parentNo) {
+      toast("Save or create a master work order first.", "error", 3200);
+      return;
+    }
+
+    const { selectedIds, items, artworks } = buildVendorItemsFromMaster_(wo);
+    if (!selectedIds.length || !items.length) {
+      toast("Select at least one line item using 'Include in next vendor work order'.", "error", 4200);
+      setTab("items");
+      return;
+    }
+
+    const vendorNo = await getNextVendorWorkOrderNumber_(parentNo);
+    const vendorState = hydrateWorkOrderState_({
+      ...newWO(),
+      woNumber: vendorNo,
+      workOrderType: "vendor",
+      parentWorkOrderId: window.CURRENT_WORKORDER_ID || null,
+      parentWorkOrderNo: parentNo,
+      createdDate: todayISO(),
+      dueDate: wo.dueDate || "",
+      customerName: wo.customerName || "",
+      company: wo.company || "",
+      email: wo.email || "",
+      phone: wo.phone || "",
+      billingAddress: wo.billingAddress || "",
+      shippingAddress: wo.shippingAddress || "",
+      notesCustomer: "",
+      notesInternal: wo.notesInternal || "",
+      vendorName: wo.vendorName || "",
+      vendorContact: wo.vendorContact || "",
+      vendorEmail: wo.vendorEmail || "",
+      vendorPhone: wo.vendorPhone || "",
+      vendorType: wo.vendorType || "",
+      vendorMethod: wo.vendorMethod || wo.vendorType || "",
+      vendorStatus: "draft",
+      internalVendorNotes: wo.internalVendorNotes || "",
+      vendorNotes: wo.vendorNotes || wo.internalVendorNotes || "",
+      vendorItemIds: selectedIds,
+      items,
+      artworks,
+      relatedVendorWorkorders: []
+    });
+
+    const vendorDraft = (() => {
+      const backup = wo;
+      wo = vendorState;
+      const d = getWorkOrderDraftObject();
+      wo = backup;
+      return d;
+    })();
+
+    let vendorRecord = null;
+    try {
+      let saved = null;
+      if (sb) {
+        const variants = buildSupabaseWorkOrderVariants_(vendorDraft);
+        let lastError = null;
+        for (const variant of variants) {
+          const { data, error } = await sb.from("work_orders").insert(variant).select("*").maybeSingle();
+          if (!error) { saved = data || null; break; }
+          lastError = error;
+        }
+        if (!saved && lastError) throw lastError;
+      }
+
+      vendorRecord = {
+        ...(saved || {}),
+        id: saved?.id || null,
+        work_order_no: vendorDraft.wo_number,
+        work_order_type: "vendor",
+        parent_work_order_id: vendorDraft.parent_work_order_id,
+        parent_work_order_no: vendorDraft.parent_work_order_no,
+        vendor_name: vendorDraft.vendor_name,
+        vendor_contact: vendorDraft.vendor_contact,
+        vendor_email: vendorDraft.vendor_email,
+        vendor_phone: vendorDraft.vendor_phone,
+        vendor_type: vendorDraft.vendor_type,
+        vendor_method: vendorDraft.vendor_method,
+        vendor_status: vendorDraft.vendor_status,
+        internal_vendor_notes: vendorDraft.internal_vendor_notes,
+        vendor_notes: vendorDraft.vendor_notes,
+        vendor_item_ids: vendorDraft.vendor_item_ids,
+        payload: vendorDraft.payload,
+        customer_name: vendorDraft.customer_name,
+        due_date: vendorDraft.due_date,
+        status: vendorDraft.status
+      };
+      saveWorkOrderRecordLocally_(vendorRecord);
+    } catch (error) {
+      console.error("Vendor work order create failed:", error);
+      vendorRecord = {
+        id: null,
+        work_order_no: vendorDraft.wo_number,
+        work_order_type: "vendor",
+        parent_work_order_id: vendorDraft.parent_work_order_id,
+        parent_work_order_no: vendorDraft.parent_work_order_no,
+        vendor_name: vendorDraft.vendor_name,
+        vendor_contact: vendorDraft.vendor_contact,
+        vendor_email: vendorDraft.vendor_email,
+        vendor_phone: vendorDraft.vendor_phone,
+        vendor_type: vendorDraft.vendor_type,
+        vendor_method: vendorDraft.vendor_method,
+        vendor_status: vendorDraft.vendor_status,
+        internal_vendor_notes: vendorDraft.internal_vendor_notes,
+        vendor_notes: vendorDraft.vendor_notes,
+        vendor_item_ids: vendorDraft.vendor_item_ids,
+        payload: vendorDraft.payload,
+        customer_name: vendorDraft.customer_name,
+        due_date: vendorDraft.due_date,
+        status: vendorDraft.status,
+        source: "local"
+      };
+      saveWorkOrderRecordLocally_(vendorRecord);
+      setLoadMsg("Vendor work order saved locally (Supabase unavailable).", true);
+    }
+
+    const masterSnapshot = hydrateWorkOrderState_(wo);
+    await persistMasterVendorLinks_(masterSnapshot, vendorRecord);
+
+    wo.vendorItemIds = [];
+    saveDraft();
+
+    applyWorkOrderObject(vendorRecord, {
+      currentId: vendorRecord.id || null,
+      source: vendorRecord.id ? "supabase" : "local"
+    });
+    toast("Vendor work order created and opened.");
+  }
+
+  async function searchWorkOrdersByCustomerName(nameRaw){
+    const query = String(nameRaw || "").trim().toLowerCase();
+    if (!query) return [];
+
+    const { candidates } = await gatherSearchableWorkOrders_();
+    return candidates.filter((c) => {
+      const customer = String(c.customerName || "").toLowerCase();
+      return customer.includes(query);
+    });
+  }
+
+  async function loadLatestWorkOrder(){
+    clearWorkOrderSearchResults_();
+    setLoadMsg("Loading latest work order...");
+
+    const { candidates, supabaseError } = await gatherSearchableWorkOrders_();
+    if (!candidates.length) {
+      if (supabaseError) throw new Error("No work orders found locally, and Supabase is unavailable.");
+      throw new Error("No saved work orders found.");
+    }
+
+    applyWorkOrderCandidate_(candidates[0]);
+    return candidates[0].record;
+  }
+
+  async function loadWorkOrder(queryRaw){
+    const query = String(queryRaw || "").trim();
+    const normalizedQuery = normalizeWorkOrderNo_(query);
+    console.log("LOAD WO query", query);
+    if (!query) {
+      return loadLatestWorkOrder();
+    }
+
+    if (/^WO(?:-|\d)/i.test(normalizedQuery)) {
+      return loadWorkOrderByNumber(normalizedQuery);
+    }
+
+    clearWorkOrderSearchResults_();
+    setLoadMsg(`Searching for customer "${query}"...`);
+    const matches = await searchWorkOrdersByCustomerName(query);
+    if (!matches.length) {
+      throw new Error(`No work orders found for "${query}".`);
+    }
+
+    if (matches.length === 1) {
+      applyWorkOrderCandidate_(matches[0]);
+      return matches[0].record;
+    }
+
+    showWorkOrderMatchList_(matches, query);
+    setLoadMsg(`Found ${matches.length} matching work orders. Select one below.`);
+    return null;
+  }
+
+  async function maybeLoadWorkOrderFromUrl_(){
+    clearWorkOrderSearchResults_();
+    const pendingLoad = getExplicitUrlLoadTarget_();
+    const workOrderId = pendingLoad.workOrderId;
+    const workOrderNo = pendingLoad.workOrderNo;
+
+    if (!pendingLoad.intentional) return false;
+
+    if (workOrderId && sb) {
+      try {
+        const { data, error } = await sb.from("work_orders").select("*").eq("id", workOrderId).maybeSingle();
+        if (error) throw error;
+        if (data) {
+          applyWorkOrderObject(data, { currentId: data.id || null, source: "supabase" });
+          saveWorkOrderRecordLocally_(data);
+          return true;
+        }
+      } catch (error) {
+        console.error("Work order auto-load by id failed:", error);
+      }
+    }
+
+    if (workOrderNo) {
+      await loadWorkOrderByNumber(workOrderNo);
+      return true;
+    }
+
+    return false;
+  }
+
   // ====== LOAD/SAVE ======
   function loadDraft(){
     const raw = localStorage.getItem(DRAFT_KEY);
-    if(!raw) return;
+    if(!raw) return false;
     try{
       const parsed = JSON.parse(raw);
 
-      // Ensure shared library exists
-      if(!Array.isArray(parsed.artworks)) parsed.artworks = [];
-
-      if(Array.isArray(parsed.items)){
-        parsed.items = parsed.items.map(it => {
-          const next = {
-            ...defaultItem(),
-            ...it,
-            sizeBreakdown: Array.isArray(it.sizeBreakdown) ? it.sizeBreakdown : newSizeBreakdown(),
-            quantity: typeof it.quantity === "number" ? it.quantity : Number(it.quantity||0)
-          };
-          
-          // Back-compat: migrate old images into shared artworks + item.artworkIds
-          const legacyImgs = [];
-          if(next.image?.dataUrl) legacyImgs.push(next.image);
-          if(Array.isArray(next.images)) legacyImgs.push(...next.images);
-
-          if(!Array.isArray(next.artworkIds)) next.artworkIds = [];
-
-          for(const im of legacyImgs){
-            if(!im?.dataUrl) continue;
-
-            let existing = parsed.artworks.find(a => a.dataUrl === im.dataUrl);
-            if(!existing){
-              existing = { id: crypto.randomUUID(), name: im.name || "artwork", dataUrl: im.dataUrl };
-              parsed.artworks.push(existing);
-            }
-            if(!next.artworkIds.includes(existing.id)){
-              next.artworkIds.push(existing.id);
-            }
-          }
-
-          delete next.image;
-          delete next.images;
-          
-          delete next.dueDate; // ignore old item due dates
-          return next;
-        });
-      }
-
-      wo = { ...newWO(), ...parsed };
-      if(!wo.createdDate) wo.createdDate = todayISO();
+      const state = parsed && parsed.state ? parsed.state : parsed;
+      const meta = parsed && parsed.meta ? parsed.meta : {};
+      wo = hydrateWorkOrderState_(state);
+      window.CURRENT_WORKORDER_ID = meta.currentId || null;
+      window.CURRENT_WORKORDER_SOURCE = meta.source || null;
+      window.CURRENT_WORKORDER_MODE = meta.mode === "edit" ? "edit" : "new";
+      return true;
     }catch(e){}
+    return false;
   }
+
   function saveDraft(){
     try{
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(wo));
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        state: wo,
+        meta: {
+          mode: window.CURRENT_WORKORDER_MODE === "edit" ? "edit" : "new",
+          currentId: window.CURRENT_WORKORDER_ID || null,
+          source: window.CURRENT_WORKORDER_SOURCE || null
+        }
+      }));
     }catch(e){
       console.warn("Draft save failed:", e);
       toast(
@@ -546,17 +2379,26 @@
   // ====== VALIDATION ======
   function validateAllRequired({ includeApproval = false } = {}){
     clearInvalids();
+    const vendorMode = isVendorWorkOrder_(wo);
 
     // Top-level required fields (company is optional)
-    const requiredTop = [
-      { id:"createdDate", label:"Created Date" },
-      { id:"dueDate", label:"Due Date" },
-      { id:"customerName", label:"Customer Name" },
-      { id:"email", label:"Email" },
-      { id:"shippingAddress", label:"Shipping / Pickup Notes" },
-      { id:"notesCustomer", label:"Customer Notes" },
-      { id:"notesInternal", label:"Internal Notes" },
-    ];
+    const requiredTop = vendorMode
+      ? [
+          { id:"createdDate", label:"Created Date" },
+          { id:"dueDate", label:"Due Date" },
+          { id:"vendorName", label:"Vendor Name" },
+          { id:"vendorMethod", label:"Vendor Method" },
+          { id:"notesInternal", label:"Internal Notes" }
+        ]
+      : [
+          { id:"createdDate", label:"Created Date" },
+          { id:"dueDate", label:"Due Date" },
+          { id:"customerName", label:"Customer Name" },
+          { id:"email", label:"Email" },
+          { id:"shippingAddress", label:"Shipping / Pickup Notes" },
+          { id:"notesCustomer", label:"Customer Notes" },
+          { id:"notesInternal", label:"Internal Notes" },
+        ];
 
     const missing = [];
 
@@ -644,6 +2486,7 @@
 
   // ====== RENDER ======
   function updateSummary(){
+    if ($("loadWONumber")) $("loadWONumber").value = wo.woNumber || "";
     $("woNumber").textContent = wo.woNumber;
     $("createdDate").value = wo.createdDate || todayISO();
     $("dueDate").value = wo.dueDate || "";
@@ -655,12 +2498,23 @@
     $("shippingAddress").value = wo.shippingAddress || "";
     $("notesCustomer").value = wo.notesCustomer || "";
     $("notesInternal").value = wo.notesInternal || "";
+    if ($("vendorName")) $("vendorName").value = wo.vendorName || "";
+    if ($("vendorContact")) $("vendorContact").value = wo.vendorContact || "";
+    if ($("vendorEmail")) $("vendorEmail").value = wo.vendorEmail || "";
+    if ($("vendorPhone")) $("vendorPhone").value = wo.vendorPhone || "";
+    if ($("vendorMethod")) $("vendorMethod").value = wo.vendorMethod || wo.vendorType || "";
+    if ($("vendorType")) $("vendorType").value = wo.vendorType || wo.vendorMethod || "";
+    if ($("vendorNotes")) $("vendorNotes").value = wo.vendorNotes || "";
+    if ($("vendorStatus")) $("vendorStatus").value = wo.vendorStatus || "draft";
+    if ($("internalVendorNotes")) $("internalVendorNotes").value = wo.internalVendorNotes || "";
 
     // approval UI
     $("termsAccepted").checked = !!wo.approval.termsAccepted;
     $("approvedName").value = wo.approval.approvedName || "";
     $("approvedDate").value = wo.approval.approvedDate || "";
-    const status = wo.approval.approved ? "Approved" : "Draft";
+    const baseStatus = wo.approval.approved ? "Approved" : "Draft";
+    const typeLabel = isVendorWorkOrder_(wo) ? "Vendor" : "Customer";
+    const status = `${baseStatus} · ${typeLabel}`;
     $("statusPill").textContent = status;
     $("summaryStatus").textContent = status;
     $("approvalBadge").textContent = wo.approval.approved ? `Approved ${wo.approval.approvedDate||""}` : "Awaiting approval";
@@ -668,6 +2522,41 @@
 
     $("summaryItems").textContent = String(wo.items.length);
     $("summaryDueDate").textContent = wo.dueDate || "-";
+
+    const vendorMode = isVendorWorkOrder_(wo);
+    if ($("vendorPanel")) $("vendorPanel").classList.toggle("hidden", !vendorMode);
+    if ($("vendorTypeBadge")) $("vendorTypeBadge").textContent = vendorMode ? "Vendor Work Order" : "Customer Work Order";
+    if ($("vendorPanelHint")) {
+      $("vendorPanelHint").textContent = vendorMode
+        ? "Vendor-only details for outsourced production. Not customer-facing."
+        : "Optional vendor routing defaults when creating linked vendor work orders.";
+    }
+    if ($("vendorParentRef")) {
+      $("vendorParentRef").textContent = vendorMode
+        ? (wo.parentWorkOrderNo || "(No parent linked)")
+        : "(Master / Customer Work Order)";
+    }
+    if ($("relatedVendorWrap")) $("relatedVendorWrap").classList.toggle("hidden", vendorMode);
+    if ($("createVendorWO")) $("createVendorWO").disabled = vendorMode;
+    if ($("previewCustomer")) $("previewCustomer").textContent = vendorMode ? "Preview Vendor View" : "Preview Customer View";
+
+    const relatedList = $("relatedVendorList");
+    if (relatedList) {
+      if (vendorMode) {
+        relatedList.innerHTML = "";
+      } else if (!Array.isArray(wo.relatedVendorWorkorders) || !wo.relatedVendorWorkorders.length) {
+        relatedList.textContent = "None yet.";
+      } else {
+        relatedList.innerHTML = wo.relatedVendorWorkorders
+          .map(r => `
+            <button type="button" class="btn secondary" data-related-wo="${esc(r.work_order_no || "")}" style="width:100%;text-align:left;margin-bottom:6px">
+              <div style="font-weight:900">${esc(r.work_order_no || "")}</div>
+              <div class="help">${esc(r.vendor_name || "")} ${r.vendor_type ? `• ${esc(r.vendor_type)}` : ""} ${r.status ? `• ${esc(r.status)}` : ""}</div>
+            </button>
+          `)
+          .join("");
+      }
+    }
   }
 
   function sizeFieldLabel(type){
@@ -695,8 +2584,10 @@
     const wrap = $("itemsWrap");
     wrap.innerHTML = "";
 
+    const vendorMode = isVendorWorkOrder_(wo);
     wo.items.forEach((it, idx) => {
       const garment = isGarment(it.serviceType);
+      const isSelectedForVendor = Array.isArray(wo.vendorItemIds) ? wo.vendorItemIds.includes(it.id) : false;
 
       const card = document.createElement("div");
       card.className = "itemCard";
@@ -705,6 +2596,12 @@
         <div class="itemTop">
           <span class="badge">Item ${idx+1}</span>
           <div class="btnRow">
+            ${vendorMode ? `` : `
+              <label class="pill" style="gap:8px">
+                <input type="checkbox" data-vendorselect="${it.id}" style="width:auto" ${isSelectedForVendor ? "checked" : ""}>
+                Include in next vendor work order
+              </label>
+            `}
             <button class="btn secondary" data-action="dupColor" data-id="${it.id}">
               Same item, different color
             </button>
@@ -867,10 +2764,29 @@
     }
     const groups = Array.from(groupsMap.values());
 
+    const vendorMode = isVendorWorkOrder_(wo);
+    const vendorMethodDisplay = wo.vendorMethod || wo.vendorType || "-";
+    const vendorNotesDisplay = wo.vendorNotes || wo.internalVendorNotes || "";
     const html = `
-      <div class="muted"><b>Work Order:</b> ${esc(wo.woNumber)}</div>
-      <div style="margin-top:6px"><b>Customer:</b> ${esc(wo.customerName || "(missing)")}</div>
-      <div><b>Due Date:</b> ${esc(wo.dueDate || "-")}</div>
+      <div class="muted"><b>${vendorMode ? "Vendor Work Order" : "Work Order"}:</b> ${esc(wo.woNumber)}</div>
+      ${vendorMode
+        ? `
+          <div style="margin-top:6px"><b>Vendor:</b> ${esc(wo.vendorName || "(missing)")}</div>
+          <div><b>Contact:</b> ${esc(wo.vendorContact || "-")}</div>
+          <div><b>Email:</b> ${esc(wo.vendorEmail || "-")}</div>
+          <div><b>Phone:</b> ${esc(wo.vendorPhone || "-")}</div>
+          <div><b>Method:</b> ${esc(vendorMethodDisplay)}</div>
+          <div><b>Parent:</b> ${esc(wo.parentWorkOrderNo || "-")}</div>
+          <div><b>Sender:</b> ${esc(SHOP_SENDER.name)}</div>
+          ${SHOP_SENDER.email ? `<div><b>Sender Email:</b> ${esc(SHOP_SENDER.email)}</div>` : ``}
+          ${SHOP_SENDER.phone ? `<div><b>Sender Phone:</b> ${esc(SHOP_SENDER.phone)}</div>` : ``}
+          <div><b>Due Date:</b> ${esc(wo.dueDate || "-")}</div>
+        `
+        : `
+          <div style="margin-top:6px"><b>Customer:</b> ${esc(wo.customerName || "(missing)")}</div>
+          <div><b>Due Date:</b> ${esc(wo.dueDate || "-")}</div>
+        `
+      }
       <hr>
       <div style="display:grid;gap:10px">
         ${groups.map((itemsInGroup, gIdx) => {
@@ -936,6 +2852,10 @@
           `;
         }).join("")}
       </div>
+      ${vendorMode && vendorNotesDisplay.trim()
+        ? `<hr><div><b>Vendor Notes:</b><div style="white-space:pre-wrap;margin-top:6px">${esc(vendorNotesDisplay)}</div></div>`
+        : ``
+      }
     `;
     $("modalBody").innerHTML = html;
     
@@ -951,6 +2871,19 @@
   // ====== PRINT VIEW ======
   function buildPrintView(){
     const status = wo.approval.approved ? "Approved" : "Draft";
+    const vendorMode = isVendorWorkOrder_(wo);
+    const vendorMethodDisplay = wo.vendorMethod || wo.vendorType || "-";
+    const vendorNotesDisplay = wo.vendorNotes || wo.internalVendorNotes || "-";
+    const getVendorItemNotesDisplay_ = (item) => {
+      const itemNotes = String(item?.artNotes || "").trim();
+      const woNotes = String(vendorNotesDisplay || "").trim();
+      const methodNorm = String(vendorMethodDisplay || "").trim().toLowerCase();
+
+      // If item notes is just the same as method text (e.g., "DTG"), prefer real vendor notes.
+      if (itemNotes && itemNotes.toLowerCase() !== methodNorm) return itemNotes;
+      if (woNotes && woNotes !== "-") return woNotes;
+      return itemNotes || "-";
+    };
     
     // Group items by artwork
     const groupsMap = new Map();
@@ -973,7 +2906,7 @@
               ${itemsInGroup.map((i, idx) => `
                 <div ${idx > 0 ? 'style="margin-top:8px;padding-top:8px;border-top:1px solid #ddd"' : ''}>
                   <div style="font-weight:900">${esc(i.serviceType)} <span style="font-weight:600">· Qty ${Number(i.quantity||0)}</span></div>
-                  <div style="margin-top:2px">${esc(i.product||"-")}</div>
+                  <div style="margin-top:2px"><b>Product Description:</b> ${esc(i.product||"-")}</div>
 
                   ${isGarment(i.serviceType) && i.variantColor?.trim()
                     ? `<div style="margin-top:2px"><b>Shirt:</b> ${esc(i.variantColor)}</div>`
@@ -994,7 +2927,13 @@
                     <b>Colors:</b> ${esc(i.inkColors||"-")}
                   </div>
 
-                  ${i.artNotes ? `<div style="margin-top:4px"><b>Notes:</b> <span style="white-space:pre-wrap">${esc(i.artNotes)}</span></div>` : ``}
+                  ${vendorMode
+                    ? `
+                      <div style="margin-top:4px"><b>Method:</b> ${esc(vendorMethodDisplay || "-")}</div>
+                      <div style="margin-top:2px"><b>Notes:</b> <span style="white-space:pre-wrap">${esc(getVendorItemNotesDisplay_(i))}</span></div>
+                    `
+                    : (i.artNotes ? `<div style="margin-top:4px"><b>Notes:</b> <span style="white-space:pre-wrap">${esc(i.artNotes)}</span></div>` : ``)
+                  }
                 </div>
               `).join("")}
             </div>
@@ -1015,26 +2954,43 @@
       <div style="padding:18px">
         <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap">
           <div>
-            <div style="font-size:24px;font-weight:900">Work Order</div>
+            <div style="font-size:24px;font-weight:900">${vendorMode ? "Vendor Work Order" : "Work Order"}</div>
             <div style="color:#555">${esc(wo.woNumber)}</div>
           </div>
           <div style="font-size:13px;color:#333">
             <div><b>Created:</b> ${esc(wo.createdDate)}</div>
             <div><b>Due:</b> ${esc(wo.dueDate || "-")}</div>
             <div><b>Status:</b> ${esc(status)}</div>
+            ${vendorMode ? `<div><b>Parent:</b> ${esc(wo.parentWorkOrderNo || "-")}</div>` : ``}
           </div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
           <div class="printCard">
-            <div style="font-weight:900">Customer</div>
-            <div>${esc(wo.customerName)}</div>
-            <div>${esc(wo.company)}</div>
-            <div>${esc(wo.email)}</div>
-            <div>${esc(wo.phone)}</div>
+            ${vendorMode
+              ? `
+                <div style="font-weight:900">Vendor</div>
+                <div>${esc(wo.vendorName || "-")}</div>
+                <div>${esc(wo.vendorContact || "-")}</div>
+                <div>${esc(wo.vendorEmail || "-")}</div>
+                <div>${esc(wo.vendorPhone || "-")}</div>
+                <div>${esc(vendorMethodDisplay)}</div>
+                <div style="margin-top:8px;font-weight:900">Sender</div>
+                <div>${esc(SHOP_SENDER.name)}</div>
+                ${SHOP_SENDER.email ? `<div>${esc(SHOP_SENDER.email)}</div>` : ``}
+                ${SHOP_SENDER.phone ? `<div>${esc(SHOP_SENDER.phone)}</div>` : ``}
+              `
+              : `
+                <div style="font-weight:900">Customer</div>
+                <div>${esc(wo.customerName)}</div>
+                <div>${esc(wo.company)}</div>
+                <div>${esc(wo.email)}</div>
+                <div>${esc(wo.phone)}</div>
+              `
+            }
           </div>
           <div class="printCard">
-            <div style="font-weight:900">Addresses / Delivery</div>
+            <div style="font-weight:900">${vendorMode ? "Delivery / Routing" : "Addresses / Delivery"}</div>
             <div style="white-space:pre-wrap">${esc(wo.billingAddress||"")}</div>
             <div style="margin-top:8px;white-space:pre-wrap">${esc(wo.shippingAddress||"")}</div>
           </div>
@@ -1045,23 +3001,6 @@
           ${items}
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-          <div class="printCard">
-            <div style="font-weight:900">Customer Notes</div>
-            <div style="white-space:pre-wrap">${esc(wo.notesCustomer||"-")}</div>
-          </div>
-          <div class="printCard">
-            <div style="font-weight:900">Internal Notes</div>
-            <div style="white-space:pre-wrap">${esc(wo.notesInternal||"-")}</div>
-          </div>
-        </div>
-
-        <div class="printCard" style="margin-top:12px">
-          <div style="font-weight:900">Approval</div>
-          <div><b>Approved:</b> ${wo.approval.approved ? "Yes" : "No"}</div>
-          <div><b>Name:</b> ${esc(wo.approval.approvedName||"-")}</div>
-          <div><b>Date:</b> ${esc(wo.approval.approvedDate||"-")}</div>
-        </div>
       </div>
     `;
   }
@@ -1069,8 +3008,10 @@
   // ====== EVENTS ======
   function bindTopInputs(){
     const bind = (id, path) => {
-      $(id).addEventListener("input", (e)=>{ wo[path] = e.target.value; renderAll(); });
-      $(id).addEventListener("change", (e)=>{ wo[path] = e.target.value; renderAll(); });
+      const el = $(id);
+      if (!el) return;
+      el.addEventListener("input", (e)=>{ wo[path] = e.target.value; renderAll(); });
+      el.addEventListener("change", (e)=>{ wo[path] = e.target.value; renderAll(); });
     };
     bind("createdDate","createdDate");
     bind("dueDate","dueDate");
@@ -1082,6 +3023,29 @@
     bind("shippingAddress","shippingAddress");
     bind("notesCustomer","notesCustomer");
     bind("notesInternal","notesInternal");
+    bind("vendorName","vendorName");
+    bind("vendorContact","vendorContact");
+    bind("vendorEmail","vendorEmail");
+    bind("vendorPhone","vendorPhone");
+    bind("vendorMethod","vendorMethod");
+    bind("vendorType","vendorType");
+    bind("vendorNotes","vendorNotes");
+    bind("internalVendorNotes","internalVendorNotes");
+
+    const syncVendorMethodAndType = () => {
+      const method = String(wo.vendorMethod || wo.vendorType || "").trim();
+      wo.vendorMethod = method;
+      wo.vendorType = method;
+      if (!wo.vendorNotes && wo.internalVendorNotes) wo.vendorNotes = wo.internalVendorNotes;
+    };
+    ["vendorMethod", "vendorType", "internalVendorNotes", "vendorNotes"].forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      el.addEventListener("input", () => { syncVendorMethodAndType(); saveDraft(); });
+      el.addEventListener("change", () => { syncVendorMethodAndType(); saveDraft(); });
+    });
+
+    $("vendorStatus").addEventListener("change", (e)=>{ wo.vendorStatus = e.target.value; renderAll(); });
 
     $("termsAccepted").addEventListener("change",(e)=>{ wo.approval.termsAccepted = !!e.target.checked; renderAll(); });
     $("approvedName").addEventListener("input",(e)=>{ wo.approval.approvedName = e.target.value; renderAll(); });
@@ -1091,6 +3055,23 @@
       el.addEventListener("input", ()=> el.classList.remove("invalid"));
       el.addEventListener("change", ()=> el.classList.remove("invalid"));
     });
+
+    const relatedList = $("relatedVendorList");
+    if (relatedList) {
+      relatedList.addEventListener("click", async (e) => {
+        const btn = e.target.closest("[data-related-wo]");
+        if (!btn) return;
+        const woNo = String(btn.getAttribute("data-related-wo") || "").trim();
+        if (!woNo) return;
+        try {
+          await loadWorkOrderByNumber(woNo);
+        } catch (error) {
+          console.error(error);
+          setLoadMsg(error?.message || "Could not load related vendor work order.", true);
+          toast(error?.message || "Could not load related vendor work order.", "error", 4200);
+        }
+      });
+    }
   }
 
   function setTab(name){
@@ -1243,6 +3224,19 @@
       }
 
       // checkbox size
+      if(el.matches('input[type="checkbox"][data-vendorselect]')){
+        const id = String(el.dataset.vendorselect || "");
+        if (!Array.isArray(wo.vendorItemIds)) wo.vendorItemIds = [];
+        if (el.checked) {
+          if (!wo.vendorItemIds.includes(id)) wo.vendorItemIds.push(id);
+        } else {
+          wo.vendorItemIds = wo.vendorItemIds.filter(v => v !== id);
+        }
+        saveDraft();
+        return;
+      }
+
+      // checkbox size
       if(el.matches('input[type="checkbox"][data-sizecheck]')){
         const [id, idxStr] = el.dataset.sizecheck.split(":");
         const idx = Number(idxStr);
@@ -1304,10 +3298,28 @@
   }
 
   // ====== INIT ======
-  function init(){
-    wo = newWO();
-    loadDraft();
-    if(!wo) wo = newWO();
+  async function init(){
+    const pendingLoad = getExplicitUrlLoadTarget_();
+    const explicitUrlLoad = !!pendingLoad.intentional;
+
+    disableBrowserFormRestore_();
+    clearLegacyLoadKeys_();
+
+    // Restore in-progress work unless there is an explicit URL auto-load request.
+    const restoredDraft = explicitUrlLoad ? false : loadDraft();
+    if(!restoredDraft){
+      window.CURRENT_WORKORDER_MODE = "new";
+      window.CURRENT_WORKORDER_ID = null;
+      window.CURRENT_WORKORDER_SOURCE = null;
+      wo = newWO();
+    }
+
+    if (!explicitUrlLoad && isCustomerWorkOrder_(wo) && window.CURRENT_WORKORDER_MODE !== "edit") {
+      const parsed = parseWorkOrderSequence_(wo?.woNumber || "");
+      if (!parsed) {
+        await assignCanonicalWorkOrderNumber_({ force:true, reason: restoredDraft ? "init-repair" : "init-new" });
+      }
+    }
 
     document.querySelectorAll(".tab").forEach(t => {
       t.addEventListener("click", ()=> setTab(t.dataset.tab));
@@ -1330,11 +3342,40 @@
       renderAll();
     });
 
-    $("newWO").addEventListener("click", ()=>{
-      wo = newWO();
-      saveDraft();
+    $("newWO").addEventListener("click", async ()=>{
+      await resetToNewWorkOrder_();
       toast("Started a new work order.");
-      renderAll();
+    });
+
+    $("createVendorWO").addEventListener("click", async ()=>{
+      try {
+        await createVendorWorkOrderFromCurrent_();
+      } catch (error) {
+        console.error(error);
+        setLoadMsg(error?.message || "Could not create vendor work order.", true);
+        toast(error?.message || "Could not create vendor work order.", "error", 4200);
+      }
+    });
+
+    $("saveWO").addEventListener("click", async ()=>{
+      await saveWorkOrderRecord_();
+    });
+
+    $("loadWO").addEventListener("click", async ()=>{
+      const value = $("loadWONumber")?.value || "";
+      try {
+        await loadWorkOrder(value);
+      } catch (error) {
+        console.error(error);
+        setLoadMsg(error?.message || "Could not load work order.", true);
+        toast(error?.message || "Could not load work order.", "error", 4200);
+      }
+    });
+
+    $("loadWONumber").addEventListener("keydown", async (e)=>{
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      $("loadWO").click();
     });
 
     $("markApproved").addEventListener("click", markApproved);
@@ -1367,8 +3408,18 @@
 
     bindTopInputs();
     bindItemsEvents();
+    bindCustomerLookup_();
 
     renderAll();
+
+    try {
+      if (explicitUrlLoad) {
+        await maybeLoadWorkOrderFromUrl_();
+      }
+    } catch (error) {
+      console.error(error);
+      setLoadMsg(error?.message || "Could not auto-load work order.", true);
+    }
   }
 
   init();

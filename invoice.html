@@ -48,14 +48,15 @@
       display:flex; align-items:center; justify-content:space-between;
       gap:16px; padding:14px 0;
     }
-    .brand{display:flex; align-items:center; gap:12px; min-width:220px;}
+    .brand{display:flex; align-items:center; gap:12px; min-width:0; flex:1 1 auto;}
     .brand img{height:42px; width:auto; object-fit:contain;}
     .brand .name{
       font-family:"DM Sans", Inter, sans-serif;
       font-weight:700; font-size:16px; letter-spacing:.2px; color:var(--primary-2);
-      white-space:nowrap;
+      white-space:normal;
+      line-height:1.2;
     }
-    nav{display:flex; gap:18px; align-items:center; flex-wrap:wrap;}
+    nav{display:flex; gap:18px; align-items:center; flex-wrap:wrap; flex:0 0 auto;}
     nav a{
       font-size:14px; color:var(--primary-2);
       padding:8px 10px; border-radius:10px; font-weight:600;
@@ -258,6 +259,20 @@
       gap:12px;
       align-items:flex-end;
     }
+    .quote-action-row .field{
+      flex:1;
+      min-width:0;
+    }
+
+    .invoice-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:8px;
+      flex-wrap:wrap;
+    }
+    .invoice-head h3{margin:0;}
 
     .tableWrap{
       margin-top: 14px;
@@ -306,7 +321,7 @@
     .totals{
       border:1px solid var(--border);
       border-radius: var(--radius);
-      overflow:hidden;
+      overflow:visible;
       background:#fff;
     }
     .trow{
@@ -325,6 +340,43 @@
     .trow.balance{background: var(--primary); color:#fff;}
     .trow.balance .value{color:#fff;}
     .trow input{ width: 120px; text-align:right; }
+
+    .payments-row{
+      display:block;
+      overflow:visible;
+      padding-bottom:14px;
+    }
+    .payments-head{
+      font-weight:800;
+      color:var(--primary-2);
+    }
+    .payments-wrap{
+      margin-top:8px;
+      display:grid;
+      gap:8px;
+      overflow:visible;
+    }
+    .payments-fields{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      align-items:end;
+      min-width:0;
+    }
+    .payments-actions{
+      display:flex;
+      justify-content:flex-end;
+    }
+    #btnAddPayment{
+      display:inline-flex;
+      min-width:130px;
+    }
+    #paymentsList{
+      display:grid;
+      gap:6px;
+      overflow:visible;
+      min-width:0;
+    }
 
     .loadMsg{
       margin-top:10px;
@@ -366,6 +418,9 @@
       .topgrid{grid-template-columns: 1fr;}
       .bottomgrid{grid-template-columns: 1fr;}
       .actionbar{position: sticky; top: 70px; z-index: 40;}
+      .payments-fields{grid-template-columns:1fr;}
+      .payments-actions{justify-content:stretch;}
+      #btnAddPayment{width:100%;}
     }
 
     /* Mobile (phones & small tablets) tweaks */
@@ -396,6 +451,7 @@
       /* Quote / load controls stack */
       .quote-action-row{display:flex; flex-direction:column; gap:8px;}
       .quote-action-row .field, .quote-action-row .btn{width:100%}
+      .invoice-head #btnCreateInvoice{width:100%;}
 
       /* Table: allow horizontal scroll for saved items but keep entry-row stacked separately */
       .tableWrap{overflow:auto; -webkit-overflow-scrolling:touch}
@@ -536,31 +592,17 @@
       </div>
 
       <div class="sheet" role="document" aria-label="Invoice editor">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-          <button class="btn danger" id="btnClearAll" type="button" style="background:#c62828;color:#fff;">Clear All</button>
-        </div>
         <div class="actionbar">
           <div class="action-left">
-            <button class="btn ghost" type="button" id="btnEdit">Edit</button>
             <button class="btn ghost" type="button" id="btnPrint">Print</button>
             <button class="btn ghost" type="button" id="btnPdf">PDF</button>
 
             <button class="btn primary" type="button" id="btnSend">Send</button>
-            <button class="btn ghost" type="button" id="btnPaid">Mark as Paid</button>
             <button class="btn primary" type="button" id="btnSaveDraft">Save Draft</button>
-            <button class="btn ghost" type="button" id="btnRestoreDraft">Restore Draft</button>
+            <button class="btn danger" id="btnClearAll" type="button" style="background:#c62828;color:#fff;">Clear All</button>
           </div>
 
-          <div class="action-right">
-            <details class="menu" id="moreMenu">
-              <summary>More Actions… <span aria-hidden="true">▾</span></summary>
-              <div class="menuPanel" role="menu" aria-label="More actions">
-                <button type="button" id="btnDuplicate">Duplicate</button>
-                <button type="button" id="btnVoid">Void</button>
-                <button type="button" id="btnDownloadJson">Download JSON</button>
-              </div>
-            </details>
-          </div>
+
         </div>
 
         <div class="content">
@@ -599,7 +641,10 @@
 
             <!-- RIGHT: INVOICE DETAILS -->
             <div class="box">
-              <h3>Invoice Details</h3>
+              <div class="invoice-head">
+                <h3>Invoice Details</h3>
+                <button class="btn primary noPrint" type="button" id="btnCreateInvoice" disabled>Create Invoice</button>
+              </div>
 
               <div class="row3">
                 <div>
@@ -613,15 +658,13 @@
                 <div></div>
               </div>
 
-              <div style="margin-top:10px" class="row3 noPrint">
+              <div style="margin-top:10px" class="row2 noPrint">
                 <div>
                   <label class="label">Quote #</label>
-                  <input class="field mono wide-input" id="quoteNoInput" placeholder="e.g. 45" />
-                </div>
-
-                <div style="display:flex; align-items:flex-end; gap:10px; justify-content:flex-start;">
-                  <button class="btn ghost" type="button" id="btnLoadQuote">Load Quote</button>
-                  <button class="btn primary" type="button" id="btnCreateInvoice" disabled>Create Invoice</button>
+                  <div class="quote-action-row">
+                    <input class="field mono wide-input" id="quoteNoInput" placeholder="e.g. 45" />
+                    <button class="btn ghost" type="button" id="btnLoadQuote">Load Quote</button>
+                  </div>
                 </div>
 
                 <div>
@@ -806,7 +849,21 @@
               <div class="trow">
                 <div>Amount Paid</div>
                 <div style="display:flex; justify-content:flex-end;">
-                  <input class="field mono" id="amountPaid" type="number" step="0.01" value="0.00" />
+                  <input class="field mono" id="amountPaid" type="number" step="0.01" value="0.00" readonly />
+                </div>
+              </div>
+
+              <div class="trow payments-row">
+                <div class="payments-head">Payments</div>
+                <div class="payments-wrap">
+                  <div class="payments-fields">
+                    <input class="field mono" id="paymentAmount" type="number" step="0.01" min="0" placeholder="Amount" />
+                    <input class="field" id="paymentDate" type="date" />
+                  </div>
+                  <div class="payments-actions">
+                    <button class="btn ghost small" type="button" id="btnAddPayment">Add Payment</button>
+                  </div>
+                  <div id="paymentsList"></div>
                 </div>
               </div>
 
@@ -823,7 +880,6 @@
   </section>
 
 
-  <script src="quotes.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
@@ -865,6 +921,7 @@
       window.CURRENT_QUOTE_ID = null;
       window.CURRENT_INVOICE_ID = null;
       window.CURRENT_PAYMENT_LINK = null;
+      window.INVOICE_PAYMENTS = [];
 
       // ===========================
       // UI HELPERS
@@ -1166,6 +1223,139 @@
       // ===========================
       // LINE ITEMS + TOTALS
       // ===========================
+      function todayIso_() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function normalizePayment_(p) {
+        const amount = toNum(p?.amount);
+        if (!Number.isFinite(amount) || amount <= 0) return null;
+        const dateRaw = String(p?.date || todayIso_()).trim();
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : todayIso_();
+        const note = String(p?.note || "").trim();
+        return { amount, date, note };
+      }
+
+      function normalizePayments_(list) {
+        if (!Array.isArray(list)) return [];
+        return list.map(normalizePayment_).filter(Boolean);
+      }
+
+      function sumPayments_(list = window.INVOICE_PAYMENTS) {
+        return normalizePayments_(list).reduce((sum, p) => sum + toNum(p.amount), 0);
+      }
+
+      function unpackStoredItemsAndPayments_(storedItems) {
+        if (Array.isArray(storedItems)) {
+          return { items: storedItems, payments: [] };
+        }
+
+        if (storedItems && typeof storedItems === "object") {
+          const items = Array.isArray(storedItems.items)
+            ? storedItems.items
+            : (Array.isArray(storedItems.line_items) ? storedItems.line_items : []);
+
+          const payments = normalizePayments_(
+            storedItems.payments || storedItems.payments_json || storedItems?.meta?.payments || []
+          );
+
+          return { items, payments };
+        }
+
+        return { items: [], payments: [] };
+      }
+
+      function buildStoredItemsPayload_(items, payments) {
+        const safeItems = Array.isArray(items) ? items : [];
+        const safePayments = normalizePayments_(payments);
+        if (!safePayments.length) return safeItems;
+        return { items: safeItems, meta: { payments: safePayments } };
+      }
+
+      function renderPayments_() {
+        const listEl = $("paymentsList");
+        const paidInput = $("amountPaid");
+        const payments = normalizePayments_(window.INVOICE_PAYMENTS);
+        window.INVOICE_PAYMENTS = payments;
+
+        const totalPaid = sumPayments_(payments);
+        if (paidInput) paidInput.value = totalPaid.toFixed(2);
+        if (!listEl) return;
+
+        if (!payments.length) {
+          listEl.innerHTML = `<div style="font-size:12px; font-weight:700; color:var(--muted);">No payments added.</div>`;
+          return;
+        }
+
+        listEl.innerHTML = "";
+        payments.forEach((p, idx) => {
+          const row = document.createElement("div");
+          row.style.display = "flex";
+          row.style.alignItems = "center";
+          row.style.justifyContent = "space-between";
+          row.style.gap = "8px";
+          row.style.border = "1px solid var(--border)";
+          row.style.borderRadius = "10px";
+          row.style.padding = "6px 8px";
+
+          const left = document.createElement("div");
+          left.style.fontSize = "13px";
+          left.style.fontWeight = "800";
+          left.style.color = "var(--primary-2)";
+          const dateText = p.date || "";
+          const noteText = p.note ? ` — ${esc(p.note)}` : "";
+          left.innerHTML = `${esc(dateText)} — ${esc(moneyUSD(p.amount))}${noteText}`;
+
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.className = "iconbtn";
+          removeBtn.textContent = "✕";
+          removeBtn.setAttribute("aria-label", "Remove payment");
+          removeBtn.addEventListener("click", () => {
+            window.INVOICE_PAYMENTS.splice(idx, 1);
+            renderPayments_();
+            recalcTotals();
+          });
+
+          row.appendChild(left);
+          row.appendChild(removeBtn);
+          listEl.appendChild(row);
+        });
+      }
+
+      function addPaymentFromInputs_() {
+        const amtEl = $("paymentAmount");
+        const dateEl = $("paymentDate");
+        const noteEl = $("paymentNote");
+        if (!amtEl || !dateEl) return;
+
+        const amount = toNum(amtEl.value);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          alert("Enter a payment amount greater than 0.");
+          return;
+        }
+
+        const payment = normalizePayment_({
+          amount,
+          date: dateEl.value || todayIso_(),
+          note: noteEl ? (noteEl.value || "") : ""
+        });
+
+        if (!payment) return;
+        window.INVOICE_PAYMENTS.push(payment);
+
+        amtEl.value = "";
+        if (noteEl) noteEl.value = "";
+        if (!dateEl.value) dateEl.value = todayIso_();
+
+        renderPayments_();
+        recalcTotals();
+      }
+
       function toNum(v) {
         const s = String(v ?? "").trim().replace(/[^0-9.-]/g, "");
         const n = parseFloat(s);
@@ -1190,8 +1380,10 @@
         const tax = taxableSubtotal * (Number.isFinite(taxRate) ? taxRate : 0);
 
         const total = subtotal + tax;
-        const paid = toNum($("amountPaid")?.value);
+        const paid = sumPayments_(window.INVOICE_PAYMENTS);
         const balance = total - paid;
+
+        if ($("amountPaid")) $("amountPaid").value = paid.toFixed(2);
 
         $("subtotal").textContent = moneyUSD(subtotal);
         $("taxAmount").textContent = moneyUSD(tax);
@@ -1207,6 +1399,11 @@
         if ($("clientPhone")) $("clientPhone").value = "";
         if ($("clientAddr")) $("clientAddr").value = "";
         setClientContactUI_("");
+        window.INVOICE_PAYMENTS = [];
+        if ($("paymentAmount")) $("paymentAmount").value = "";
+        if ($("paymentNote")) $("paymentNote").value = "";
+        if ($("paymentDate")) $("paymentDate").value = todayIso_();
+        renderPayments_();
         if ($("notes")) $("notes").value = "";
         if ($("terms")) $("terms").value = "";
         // Remove draft from localStorage and set a cleared flag so reload won't auto-restore
@@ -1632,6 +1829,7 @@
           client_addr: $("clientAddr")?.value,
           client_contact: $("clientContact")?.value
         });
+        const payments = normalizePayments_(window.INVOICE_PAYMENTS);
 
         return {
           invoice_no: ($("invNo")?.value || "").trim(),
@@ -1644,7 +1842,8 @@
           notes: ($("notes")?.value || "").trim(),
           terms: ($("terms")?.value || "").trim(),
           tax_rate: toNum($("taxRate")?.value),
-          amount_paid: toNum($("amountPaid")?.value),
+          amount_paid: sumPayments_(payments),
+          payments,
           items_json: getItemsFromTable()
         };
       }
@@ -1661,9 +1860,17 @@
  
 
         if ($("taxRate")) $("taxRate").value = (d.tax_rate ?? 9.375);
-        if ($("amountPaid")) $("amountPaid").value = (d.amount_paid ?? 0);
+        const unpacked = unpackStoredItemsAndPayments_(d.items_json);
+        renderItems(unpacked.items);
 
-        renderItems(Array.isArray(d.items_json) ? d.items_json : []);
+        let payments = normalizePayments_(d.payments);
+        if (!payments.length) payments = unpacked.payments;
+        if (!payments.length && toNum(d.amount_paid) > 0) {
+          payments = [{ amount: toNum(d.amount_paid), date: (d.invoice_date || todayIso_()), note: "Imported payment" }];
+        }
+        window.INVOICE_PAYMENTS = payments;
+        if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
+        renderPayments_();
         recalcTotals();
       }
 
@@ -1705,7 +1912,7 @@
           client_phone: draft.client_phone || null,
           payment_link: window.CURRENT_PAYMENT_LINK || null,
           notes: draft.notes || null,
-          items_json: draft.items_json
+          items_json: buildStoredItemsPayload_(draft.items_json, draft.payments)
         };
 
         // If we already loaded/created an invoice row earlier, update it.
@@ -1768,64 +1975,321 @@
       // ===========================
       // QUOTE -> ITEMS
       // ===========================
+      function stripHtml_(value) {
+        return String(value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+      }
+
+      function getAmountFromKnownField_(value, fieldName = "") {
+        if (value == null || value === "") return 0;
+
+        const key = String(fieldName || "").toLowerCase();
+        if (typeof value === "number") {
+          if (key.includes("_cents") || key.endsWith("cents")) return value / 100;
+          return value;
+        }
+
+        if (typeof value === "string") {
+          if (/<[^>]+>/.test(value)) {
+            const moneyMatch = value.match(/-?\$\s*([0-9,]+(?:\.[0-9]{1,2})?)/);
+            if (moneyMatch) {
+              const base = asNum(moneyMatch[0]);
+              return /^\s*-/.test(value) ? -Math.abs(base) : base;
+            }
+          }
+          return asNum(value);
+        }
+
+        if (typeof value === "object") {
+          if (typeof value.amount === "number" || typeof value.amount === "string") return getAmountFromKnownField_(value.amount, `${key}_amount`);
+          if (typeof value.total === "number" || typeof value.total === "string") return getAmountFromKnownField_(value.total, `${key}_total`);
+          if (typeof value.subtotal === "number" || typeof value.subtotal === "string") return getAmountFromKnownField_(value.subtotal, `${key}_subtotal`);
+          if (typeof value.subtotal_cents === "number" || typeof value.subtotal_cents === "string") return getAmountFromKnownField_(value.subtotal_cents, `${key}_subtotal_cents`);
+          if ((typeof value.price === "number" || typeof value.price === "string") && (typeof value.qty === "number" || typeof value.qty === "string")) {
+            return asNum(value.price) * Math.max(1, asNum(value.qty));
+          }
+          if ((typeof value.price_cents === "number" || typeof value.price_cents === "string") && (typeof value.qty === "number" || typeof value.qty === "string")) {
+            return centsToDollars(value.price_cents) * Math.max(1, asNum(value.qty));
+          }
+        }
+
+        return 0;
+      }
+
+      function mapQuoteArrayItemsToInvoice_(list) {
+        if (!Array.isArray(list) || !list.length) return [];
+
+        return list.map((it) => {
+          const rawType = String(it?.type || it?.kind || it?.category || "").trim();
+          const label = String(
+            it?.product || it?.style_number || it?.desc || it?.description || it?.label || it?.title || it?.name || rawType || ""
+          ).trim();
+          const qty = Math.max(1, asNum(it?.qty ?? it?.quantity ?? 1));
+          let unitPrice = 0;
+
+          if (it?.unit_price != null) unitPrice = asNum(it.unit_price);
+          else if (it?.price != null) unitPrice = asNum(it.price);
+          else if (it?.price_cents != null) unitPrice = centsToDollars(it.price_cents);
+          else {
+            const total = getAmountFromKnownField_(it?.amount ?? it?.total ?? it?.subtotal, rawType || label);
+            unitPrice = qty > 0 ? total / qty : total;
+          }
+
+          let type = rawType || "Services";
+          if (!rawType && /garment|shirt|hoodie|tee|product/i.test(label)) type = "Product";
+          if (/discount/i.test(type) || /discount/i.test(label) || unitPrice < 0) type = "Discount";
+
+          return {
+            type,
+            product: label,
+            color: String(it?.color || "").trim(),
+            unit_price: unitPrice,
+            qty,
+            taxable: it?.taxable !== false && type !== "Discount",
+            sizes: it?.sizes || {},
+            sizeText: String(it?.sizeText || it?.sizes_text || it?.size || "")
+          };
+        }).filter((it) => it.product || it.unit_price || it.qty);
+      }
+
       function buildInvoiceItemsFromQuote(quote) {
         const p = quote?.payload || {};
 
-        if (Array.isArray(p.items) && p.items.length) {
-          return p.items.map(it => ({
-            type: it.type || "Services",
-            product: it.product || "",
-            color: it.color || "",
-            unit_price: Number(it.price ?? 0),
-            qty: Number(it.qty ?? 1),
-            taxable: it.taxable !== false,
-            sizes: it.sizes || {},
-            sizeText: ""
-          }));
+        console.log("★★★ BUILD INVOICE ITEMS FROM QUOTE [2026-03-17 NEW VERSION] ★★★");
+        console.log("Looking for invoice_items at: p.invoice_items");
+        console.log("p.invoice_items value:", p.invoice_items);
+        console.log("Is array?", Array.isArray(p.invoice_items));
+        console.log("Array length:", Array.isArray(p.invoice_items) ? p.invoice_items.length : "N/A");
+        
+        // EXPLICIT CHECK FOR INVOICE_ITEMS - PRIORITIZE OVER OTHER SOURCES
+        if (Array.isArray(p.invoice_items) && p.invoice_items.length > 0) {
+          console.log("✓ FOUND invoice_items with", p.invoice_items.length, "items");
+          console.log("First item:", p.invoice_items[0]);
+          const mapped = mapQuoteArrayItemsToInvoice_(p.invoice_items);
+          console.log("After mapping to invoice format:", mapped.length, "items");
+          if (mapped && mapped.length > 0) {
+            console.log("✓✓✓ RETURNING INVOICE_ITEMS (NOT FALLBACK) ✓✓✓");
+            return mapped;
+          }
+        }
+
+        // Only use other directItems if invoice_items wasn't found/used
+        const directItems = [
+          p.items,
+          p.line_items,
+          p.lineItems,
+          p.pricing_items,
+          p.pricingItems,
+          p.components
+        ].find((arr) => Array.isArray(arr) && arr.length);
+        
+        if (directItems) {
+          console.log("Using other directItems (not invoice_items)");
+          const mapped = mapQuoteArrayItemsToInvoice_(directItems);
+          if (mapped.length) {
+            return mapped;
+          }
+        }
+        const breakdownCollections = [p.breakdown, p.pricing_breakdown, p.pricingBreakdown]
+          .filter((value) => Array.isArray(value) && value.length);
+        for (const collection of breakdownCollections) {
+          const mapped = mapQuoteArrayItemsToInvoice_(collection);
+          if (mapped.length) {
+            console.log("=== USING BREAKDOWN COLLECTION PATH ===");
+            return mapped;
+          }
         }
 
         const qty = Math.max(1, asNum(p.qty ?? quote?.qty ?? 1));
-        const totalEstimate = asNum(p.total_estimate ?? quote?.total_estimate ?? 0);
-        const garmentsSubtotal = centsToDollars(p.garments_subtotal_cents ?? 0);
+        const garmentLineItems = mapQuoteArrayItemsToInvoice_(p?.garments?.lines || []);
+        const totalEstimate = getAmountFromKnownField_(
+          p.total_estimate ?? p.totalEstimate ?? p.total ?? p.grand_total ?? p.grandTotal ?? quote?.total_estimate,
+          "total_estimate"
+        );
 
-        const printingSubtotal = Math.max(0, totalEstimate - garmentsSubtotal);
-        const items = [];
+        const garmentsSubtotal = getAmountFromKnownField_(
+          p.garments_subtotal_cents ?? p.garmentsSubtotal ?? p.garments_subtotal ?? p.garments?.subtotal_cents ?? p.garments?.subtotal,
+          "garments_subtotal_cents"
+        );
+        const printingOnlyTotal = getAmountFromKnownField_(
+          p.printingOnlyTotal ?? p.printing_total ?? p.printingTotal ?? p.printing_subtotal ?? p.printingSubtotal,
+          "printing_total"
+        );
+        const embroideryTotal = getAmountFromKnownField_(
+          p.embroidery_total ?? p.embroideryTotal ?? p.embroidery_subtotal ?? p.embroiderySubtotal,
+          "embroidery_total"
+        );
+        const digitizingFee = getAmountFromKnownField_(
+          p.digitizing_fee ?? p.digitizingFee ?? p.digitizing_total ?? p.digitizingTotal,
+          "digitizing_fee"
+        );
+        const setupFee = getAmountFromKnownField_(
+          p.setupFee ?? p.setup_fee ?? p.screen_setup_fee ?? p.screenSetupFee,
+          "setup_fee"
+        );
+        const filmFee = getAmountFromKnownField_(
+          p.filmFee ?? p.film_fee,
+          "film_fee"
+        );
+        const rushFee = getAmountFromKnownField_(
+          p.rushFee ?? p.rush_fee,
+          "rush_fee"
+        );
+        let discountAmount = getAmountFromKnownField_(
+          p.discountAmount ?? p.discount_amount,
+          "discount_amount"
+        );
+        if (!discountAmount && p.discountLine) {
+          discountAmount = Math.abs(getAmountFromKnownField_(stripHtml_(p.discountLine), "discount_line"));
+        }
 
-        if (garmentsSubtotal > 0) {
-          items.push({
+        const detailItems = [];
+        const pushDetail = (config) => {
+          const amount = Number(config?.amount || 0);
+          if (!Number.isFinite(amount) || amount === 0) return;
+          const qtyValue = Math.max(1, asNum(config?.qty ?? 1));
+          detailItems.push({
+            type: config.type || "Services",
+            desc: config.desc || "",
+            product: config.product || "",
+            unit_price: qtyValue > 0 ? amount / qtyValue : amount,
+            qty: qtyValue,
+            taxable: config.taxable !== false,
+            sizes: config.sizes || {},
+            sizeText: config.sizeText || ""
+          });
+        };
+
+        if (garmentLineItems.length) {
+          detailItems.push(...garmentLineItems);
+        } else if (garmentsSubtotal > 0) {
+          const garmentLines = Array.isArray(p?.garments?.lines) ? p.garments.lines : [];
+          const firstGarmentLabel = garmentLines[0]?.label || garmentLines[0]?.name || garmentLines[0]?.product || "";
+          pushDetail({
             type: "Product",
-            desc: `Garments (${qty} pcs)`,
-            unit_price: garmentsSubtotal / qty,
+            desc: firstGarmentLabel ? `${firstGarmentLabel} (${qty} pcs)` : `Garments (${qty} pcs)`,
+            amount: garmentsSubtotal,
             qty,
             taxable: true
           });
         }
 
-        if (printingSubtotal > 0) {
-          items.push({
+        if (printingOnlyTotal > 0) {
+          const pricingLabel = stripHtml_(p.pricingLabel || "");
+          pushDetail({
             type: "Services",
-            desc: "Printing",
-            unit_price: printingSubtotal,
+            desc: pricingLabel ? `Printing (${pricingLabel})` : "Printing",
+            amount: printingOnlyTotal,
             qty: 1,
             taxable: true
           });
         }
 
-        if (!items.length && totalEstimate > 0) {
-          items.push({
+        pushDetail({ type: "Services", desc: "Embroidery", amount: embroideryTotal, qty: 1, taxable: true });
+        pushDetail({ type: "Services", desc: "Digitizing", amount: digitizingFee, qty: 1, taxable: true });
+        pushDetail({ type: "Services", desc: "Screen/Setup Fees", amount: setupFee, qty: 1, taxable: true });
+        pushDetail({ type: "Services", desc: "Film Fees", amount: filmFee, qty: 1, taxable: true });
+        pushDetail({ type: "Services", desc: "Rush Fee", amount: rushFee, qty: 1, taxable: true });
+
+        if (discountAmount > 0) {
+          const discountCode = String(p.discount_code || "").trim();
+          const discountLabel = stripHtml_(p.discountLine || "");
+          pushDetail({
+            type: "Discount",
+            desc: discountCode ? `Discount (${discountCode})` : (discountLabel || "Discount"),
+            amount: -Math.abs(discountAmount),
+            qty: 1,
+            taxable: false
+          });
+        }
+
+        const recognizedTotal = detailItems.reduce((sum, item) => sum + (asNum(item.unit_price) * Math.max(1, asNum(item.qty))), 0);
+
+        if (detailItems.length >= 2) {
+          const remainder = totalEstimate - recognizedTotal;
+          console.log("=== USING FALLBACK: detailItems.length >= 2, returning detailItems ===");
+          console.log("detailItems:", detailItems);
+          if (Math.abs(remainder) >= 0.01) {
+            if (!printingOnlyTotal && remainder > 0) {
+              pushDetail({ type: "Services", desc: "Printing", amount: remainder, qty: 1, taxable: true });
+            } else if (detailItems.length === 1 && totalEstimate > 0) {
+              return [{
+                type: "Services",
+                desc: "Printing Order (Total Estimate)",
+                unit_price: totalEstimate,
+                qty: 1,
+                taxable: true
+              }];
+            }
+          }
+          return detailItems;
+        }
+
+        if (detailItems.length === 1) {
+          console.log("=== FALLBACK: detailItems.length === 1 ===");
+          if (garmentsSubtotal > 0 && totalEstimate > recognizedTotal) {
+            console.log("=== RETURNING SPLIT: garment item + printing remainder ===");
+            return [
+              detailItems[0],
+              {
+                type: "Services",
+                desc: "Printing",
+                unit_price: Math.max(0, totalEstimate - recognizedTotal),
+                qty: 1,
+                taxable: true
+              }
+            ];
+          }
+
+          if (totalEstimate > 0 && Math.abs(totalEstimate - recognizedTotal) >= 0.01) {
+            console.log("=== RETURNING SINGLE LUMP SUM: 'Printing Order (Total Estimate)' ===");
+            return [{
+              type: "Services",
+              desc: "Printing Order (Total Estimate)",
+              unit_price: totalEstimate,
+              qty: 1,
+              taxable: true
+            }];
+          }
+          return detailItems;
+        }
+
+        if (garmentsSubtotal > 0 && totalEstimate > garmentsSubtotal) {
+          console.log("=== FALLBACK: garment subtotal + printing remainder ===");
+          const baseGarmentItems = garmentLineItems.length
+            ? garmentLineItems
+            : [{
+                type: "Product",
+                desc: `Garments (${qty} pcs)`,
+                unit_price: garmentsSubtotal / qty,
+                qty,
+                taxable: true
+              }];
+
+          return [
+            ...baseGarmentItems,
+            {
+              type: "Services",
+              desc: "Printing",
+              unit_price: Math.max(0, totalEstimate - garmentsSubtotal),
+              qty: 1,
+              taxable: true
+            }
+          ];
+        }
+
+        if (totalEstimate > 0) {
+          console.log("=== FALLBACK: Only totalEstimate available, returning single lump sum ===");
+          return [{
             type: "Services",
             desc: "Printing Order (Total Estimate)",
             unit_price: totalEstimate,
             qty: 1,
             taxable: true
-          });
+          }];
         }
 
-        if (!items.length) {
-          items.push({ type: "Services", desc: "Quote (pricing not found)", unit_price: 0, qty: 1, taxable: true });
-        }
-
-        return items;
+        console.log("=== FALLBACK: No pricing found at all ===");
+        return [{ type: "Services", desc: "Quote (pricing not found)", unit_price: 0, qty: 1, taxable: true }];
       }
 
       // ===========================
@@ -1906,6 +2370,16 @@
         }
         if (!data.payload || typeof data.payload !== "object") data.payload = {};
 
+        console.log("★★★ LOADED QUOTE FROM SUPABASE [2026-03-17 NEW VERSION] ★★★");
+        console.log("Quote #:", quoteNo);
+        console.log("data.payload.invoice_items exists?", !!data.payload.invoice_items);
+        console.log("Is array?", Array.isArray(data.payload.invoice_items));
+        console.log("Length:", data.payload.invoice_items?.length || 0);
+        if (Array.isArray(data.payload.invoice_items) && data.payload.invoice_items.length > 0) {
+          console.log("First item:", data.payload.invoice_items[0]);
+        }
+        console.log("data.payload.quote_summary exists?", !!data.payload.quote_summary);
+
         window.CURRENT_QUOTE = data;
         window.CURRENT_QUOTE_ID = data.id;
         return data;
@@ -1968,7 +2442,14 @@
         syncBizInfoDisplay();
 
         const items = Array.isArray(data.items_json) ? data.items_json : [];
-        renderItems(items);
+        const unpacked = unpackStoredItemsAndPayments_(data.items_json);
+        renderItems(unpacked.items);
+
+        let loadedPayments = normalizePayments_(data.payments || data.payments_json);
+        if (!loadedPayments.length) loadedPayments = unpacked.payments;
+        window.INVOICE_PAYMENTS = loadedPayments;
+        if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
+        renderPayments_();
 
         // Save to local too, so a Live Server reload won't wipe it.
         saveDraftToLocalStorage();
@@ -2003,6 +2484,9 @@ window.CURRENT_QUOTE_ID = quote.id;
 
           const previewItems = buildInvoiceItemsFromQuote(quote);
           renderItems(previewItems);
+          window.INVOICE_PAYMENTS = [];
+          if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
+          renderPayments_();
 
           setLoadMsg(`Quote #${quote.quote_no} loaded (preview). Click "Create Invoice" to generate an invoice.`);
           setCreateEnabled(true);
@@ -2114,6 +2598,9 @@ window.CURRENT_QUOTE_ID = quote.id;
           window.CURRENT_PAYMENT_LINK = data.payment_link || null;
           $("invNo").value = data.invoice_no || "";
           applyCustomerFieldsToForm_(data, q?.payload);
+          window.INVOICE_PAYMENTS = [];
+          if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
+          renderPayments_();
 
           // Save to local so refresh doesn't wipe it
           saveDraftToLocalStorage();
@@ -2132,19 +2619,18 @@ window.CURRENT_QUOTE_ID = quote.id;
       // EMAIL
       // ===========================
       async function sendInvoiceEmailNow() {
+        console.log("[Send] sendInvoiceEmailNow() called");
         const to = $("clientEmail")?.value?.trim() || "";
+        console.log("[Send] client email:", to || "(empty)");
         if (!to) throw new Error("Client email is empty.");
 
-        const invNo = $("invNo")?.value?.trim() || "";
-        const subject = invNo ? `Invoice ${invNo} — My Shirt Printing` : "Invoice — My Shirt Printing";
+        const itemCount = document.querySelectorAll("#itemsTbody tr").length;
+        console.log("[Send] invoice line item count:", itemCount);
+        if (itemCount <= 0) throw new Error("No invoice content to send (no line items).");
 
-        const loadEl = $("loadMsg");
-        const _prevLoadDisplay = loadEl ? loadEl.style.display : null;
-        const _prevLoadText = loadEl ? loadEl.textContent : null;
-        if (loadEl) loadEl.style.display = "none";
-        const clearBtn = $("btnClearAll");
-        const _prevClearBtnDisplay = clearBtn ? clearBtn.style.display : null;
-        if (clearBtn) clearBtn.style.display = "none";
+        const invNo = $("invNo")?.value?.trim() || "";
+        console.log("[Send] invoice number:", invNo || "(empty)");
+        const subject = invNo ? `Invoice ${invNo} — My Shirt Printing` : "Invoice — My Shirt Printing";
 
         const html = `
           <div style="font-family:Arial,sans-serif;line-height:1.4">
@@ -2154,6 +2640,15 @@ window.CURRENT_QUOTE_ID = quote.id;
           </div>
         `;
 
+        console.log("[Send] preparing payload", {
+          to,
+          invoiceNo: invNo || null,
+          subject,
+          hasHtml: !!html,
+          endpoint: EMAIL_WEBAPP_URL,
+          method: "POST"
+        });
+
         const body = new URLSearchParams({
           secret: EMAIL_WEBAPP_SECRET,
           to,
@@ -2161,23 +2656,40 @@ window.CURRENT_QUOTE_ID = quote.id;
           html
         });
 
-        try {
-          const res = await fetch(EMAIL_WEBAPP_URL, { method: "POST", body });
-          const text = await res.text();
-          let data = null;
-          try { data = JSON.parse(text); } catch {}
+        console.log("[Send] payload detail", {
+          payload: Object.fromEntries(body.entries()),
+          recipient: to,
+          subject,
+          htmlLength: html.length
+        });
 
-          if (!data?.ok) throw new Error(data?.error || "Email send failed");
-          return true;
-        } finally {
-          if (loadEl) {
-            loadEl.style.display = _prevLoadDisplay || "";
-            loadEl.textContent = _prevLoadText || "";
-          }
-          if (clearBtn) {
-            clearBtn.style.display = _prevClearBtnDisplay || "";
-          }
+        console.log("[Send] fetch started");
+        const res = await fetch(EMAIL_WEBAPP_URL, { method: "POST", body });
+        const text = await res.text();
+        console.log("[Send] response received", {
+          ok: res.ok,
+          status: res.status,
+          statusText: res.statusText
+        });
+
+        let data = null;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = null;
         }
+        console.log("[Send] parsed response", data ?? { rawText: text });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${text || res.statusText || "Email send failed"}`);
+        }
+        if (!data || data.success !== true) {
+          throw new Error(data?.error || "Email failed (backend did not confirm success).\nEnsure Apps Script returns { success: true, recipient: '<email>' } only after MailApp.sendEmail() runs.");
+        }
+
+        const confirmedRecipient = String(data.recipient || data.recipientEmail || data.to || to || "").trim();
+        console.log("[Send] backend confirmed MailApp send", { success: data.success, recipient: confirmedRecipient });
+        return { success: true, recipient: confirmedRecipient || to };
       }
 
       // ===========================
@@ -2195,6 +2707,18 @@ window.CURRENT_QUOTE_ID = quote.id;
         $("clientContact")?.addEventListener("input", () => {
           setClientContactUI_($("clientContact")?.value || "");
         });
+        if ($("paymentDate")) $("paymentDate").value = todayIso_();
+        $("btnAddPayment")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          addPaymentFromInputs_();
+        });
+        $("paymentAmount")?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addPaymentFromInputs_();
+          }
+        });
+        renderPayments_();
         syncBizInfoDisplay();
 
         // Save Draft button: local backup first, then Supabase (creates or updates)
@@ -2257,11 +2781,25 @@ window.CURRENT_QUOTE_ID = quote.id;
 
         $("btnSend")?.addEventListener("click", async (e) => {
           e.preventDefault();
+          console.log("[Send] Send button clicked");
+          const to = $("clientEmail")?.value?.trim() || "";
+          const invNo = $("invNo")?.value?.trim() || "";
+          console.log("[Send] preflight values", { clientEmail: to || "(empty)", invoiceNo: invNo || "(empty)" });
+
+          if (!to) {
+            setLoadMsg("Email failed: Client email is empty.", true);
+            console.error("[Send] blocked: client email is empty");
+            return;
+          }
+
+          setLoadMsg("Sending email...");
           try {
-            await sendInvoiceEmailNow();
-            setLoadMsg("Email sent.");
+            const result = await sendInvoiceEmailNow();
+            const toMsg = result?.recipient ? `Email sent to ${result.recipient}.` : "Email sent.";
+            setLoadMsg(toMsg);
           } catch (err) {
             console.error("Send error:", err);
+            console.error("[Send] caught error:", err?.message || err);
             setLoadMsg("Email failed: " + (err?.message || err), true);
           }
         });

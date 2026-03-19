@@ -183,6 +183,47 @@
       .brand .name{display:none;}
     }
 
+    /* Mobile header/nav fixes (match working quote pages) */
+    @media (max-width: 768px){
+      .container, .wrap { padding-left:12px; padding-right:12px; }
+      .navwrap { padding-left:0; padding-right:0; }
+      .brand { min-width:0; max-width:60%; }
+      .brand .name { white-space: normal; overflow-wrap: anywhere; }
+      .brand img { max-width:100%; height:auto; }
+      nav { min-width:0; }
+      .grid, .row, .choices, .choice { min-width:0; }
+      .card { overflow:hidden; }
+      .pill, .pill select, .pill input { max-width:100%; }
+      img { max-width:100%; height:auto; }
+
+      .navwrap{padding:8px 0; gap:10px}
+      .brand img{height:36px}
+      .mobile-menu-btn{font-size:20px;padding:4px 6px}
+      nav{padding:6px 8px}
+      nav.show{display:flex; flex-direction:column; align-items:stretch; max-height:60vh; overflow-y:auto}
+      nav a{padding:8px 10px;font-size:15px; justify-content:flex-start}
+      details.quoteDrop > summary{padding:6px 8px;font-size:14px}
+      .qMenu{max-width:calc(100vw - 32px)}
+    }
+
+    @media (max-width: 520px){
+      .brand { min-width:0; max-width:48%; }
+      .navwrap { gap:8px; }
+      .mobile-menu-btn { display:block; }
+      nav { position:relative; display:none; }
+      nav.show{display:flex; flex-direction:column; align-items:stretch; position:fixed; left:0; right:0; top:56px; width:100vw; box-sizing:border-box; max-height:calc(100vh - 56px); overflow-y:auto; background:#fff; z-index:9999}
+      .grid { grid-template-columns:1fr; }
+      .row { grid-template-columns:1fr; }
+      .wrap { padding:0 12px; }
+      .card { padding:12px; }
+      input, select, textarea, .pill input, .pill select { width:100%; max-width:100%; }
+      .choice { flex-direction:column; align-items:stretch; }
+      .qMenu { min-width: unset; width:100%; max-width: calc(100vw - 32px); position:static; box-shadow:none; border-radius:10px; padding:6px; margin-top:6px }
+      .qMenu a{ display:block; padding:9px 10px; font-size:14px; line-height:1.2; white-space:normal; word-break:normal; overflow-wrap:normal }
+      .container { padding:0 12px; }
+      .brand, .navwrap, .grid, .row, .card, .wrap, .container { min-width:0; }
+    }
+
     .wrap{max-width:980px;margin:22px auto 28px;padding:0 16px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
     .card{
@@ -348,65 +389,6 @@
       h1{font-size:20px}
       .btn{font-size:14px;padding:10px 12px}
       input,select,textarea{font-size:16px;padding:12px}
-    }
-
-    /* Targeted mobile overflow fixes (keep desktop unchanged) */
-    @media (max-width: 768px){
-      .container, .wrap { padding-left:12px; padding-right:12px; }
-      .navwrap { padding-left:0; padding-right:0; }
-      .brand { min-width:0; max-width:60%; }
-      /* allow brand name to wrap on small screens (prevent it forcing width) */
-      .brand .name { white-space: normal; overflow-wrap: anywhere; }
-      .brand img { max-width:100%; height:auto; }
-      nav { min-width:0; }
-      .grid, .row, .choices, .choice { min-width:0; }
-      .card { overflow:hidden; }
-      /* Compact mobile header rules (match other pages) */
-      .navwrap{padding:8px 0; gap:10px}
-      .brand img{height:36px}
-      .mobile-menu-btn{font-size:20px;padding:4px 6px}
-      nav{padding:6px 8px}
-      nav.show{display:flex; flex-direction:column; align-items:stretch; position:fixed; left:0; right:0; top:64px; width:100vw; box-sizing:border-box; max-height:calc(100vh - 64px); overflow-y:auto; background:#fff; z-index:9999}
-      nav a{padding:8px 10px;font-size:15px; justify-content:flex-start}
-      details.quoteDrop > summary{padding:6px 8px;font-size:14px}
-      .qMenu{max-width:calc(100vw - 32px)}
-    @media (max-width:520px){
-      .inlineCheck{flex-direction:column;align-items:flex-start;gap:8px;padding:8px}
-      .inlineCheck label{margin:0;display:block;white-space:normal;overflow-wrap:break-word;word-break:break-word}
-      .inlineCheck .muted{white-space:normal;overflow-wrap:break-word;word-break:break-word;font-size:13px}
-      .inlineCheck input{flex:0 0 auto}
-      .inlineCheck *{min-width:0}
-    }
-      .pill, .pill select, .pill input { max-width:100%; }
-      img { max-width:100%; height:auto; }
-    }
-
-    @media (max-width: 520px){
-      .brand { min-width:0; max-width:48%; }
-      .navwrap { gap:8px; }
-      .mobile-menu-btn { display:block; }
-      nav { position:relative; display:none; }
-      nav.show { display:flex; }
-      /* Make mobile nav span viewport and sit under header like other pages */
-      nav.show{display:flex; flex-direction:column; align-items:stretch; position:fixed; left:0; right:0; top:56px; width:100vw; box-sizing:border-box; max-height:calc(100vh - 56px); overflow-y:auto; background:#fff; z-index:9999}
-      /* ensure nav uses box-sizing and has consistent padding so submenu aligns */
-      nav, nav.show { box-sizing: border-box; padding-left:12px; padding-right:12px; overflow: visible; }
-      details.quoteDrop { position: static; width:100%; display:block; }
-      details.quoteDrop > summary{ display:flex; align-items:center; justify-content:flex-start; padding:6px 8px; width:100%; }
-      .grid { grid-template-columns:1fr; }
-      .row { grid-template-columns:1fr; }
-      .wrap { padding:0 12px; }
-      .card { padding:12px; }
-      input, select, textarea, .pill input, .pill select { width:100%; max-width:100%; }
-      .choice { flex-direction:column; align-items:stretch; }
-      /* Make the Quote submenu a sensible mobile block: allow it to size to its
-         content (within viewport limits) and wrap by words only — no letter-splitting. */
-      /* Anchor submenu to the nav column and keep it compact and readable */
-      .qMenu { position:static; box-shadow:none; border-radius:10px; padding:6px; margin-top:6px; width:100%; max-width:calc(100vw - 32px); }
-      .qMenu a{ display:block; padding:9px 10px; font-size:14px; line-height:1.2; white-space:normal; word-break:normal; overflow-wrap:normal }
-      .container { padding:0 12px; }
-      /* Ensure core containers can't force horizontal overflow */
-      .brand, .navwrap, .grid, .row, .card, .wrap, .container { min-width:0; }
     }
 
     /* Mobile: ensure sharing-images/info box wraps and doesn't overflow */
@@ -821,14 +803,24 @@
     /* ================================
        HEADER UX + FILE UX
     ================================ */
-    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-    const mainNav = document.getElementById("mainNav");
-    if (mobileMenuBtn && mainNav) {
-      mobileMenuBtn.addEventListener("click", () => mainNav.classList.toggle("show"));
-      document.addEventListener("click", (e) => {
-        if (!mainNav.contains(e.target) && !mobileMenuBtn.contains(e.target)) mainNav.classList.remove("show");
+    (function(){
+      document.addEventListener("DOMContentLoaded", function(){
+        const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+        const mainNav = document.getElementById("mainNav");
+        if (!mobileMenuBtn || !mainNav) return;
+
+        mobileMenuBtn.addEventListener("click", function(e){
+          e.stopPropagation();
+          mainNav.classList.toggle("show");
+        });
+
+        document.addEventListener("click", function(e){
+          if (!mainNav.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+            mainNav.classList.remove("show");
+          }
+        });
       });
-    }
+    })();
 
     document.addEventListener("click", (e) => {
       const dd = document.getElementById("quoteDrop");
@@ -1076,6 +1068,77 @@
       document.getElementById("totalEstimate").textContent = "$0.00";
     }
 
+    function stripHtmlForPayload_(value){
+      return String(value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    }
+
+    function buildQuoteInvoiceItems_({
+      garmentsObj, setupFee, setupRate, filmFee, filmCount,
+      printingOnlyTotal, discountAmount, discountCode, discountLine,
+      rushRate, rushFee, garmentsSubtotal
+    }){
+      console.log("=== BUILD QUOTE INVOICE ITEMS CALLED ===");
+      console.log("Input params:", { garmentsObj, setupFee, setupRate, filmFee, filmCount, printingOnlyTotal, discountAmount, discountCode, discountLine, rushRate, rushFee, garmentsSubtotal });
+      
+      const items = [];
+      const garments = garmentsObj && Array.isArray(garmentsObj.lines) ? garmentsObj.lines : [];
+
+      garments.forEach((ln) => {
+        const unit = Number(ln.price_cents || 0) / 100;
+        const qty = Math.max(1, Number(ln.qty || 1));
+        items.push({
+          type: "Product",
+          product: String(ln.style_number || "Garment").trim(),
+          color: String(ln.color || "").trim(),
+          unit_price: unit,
+          qty,
+          taxable: true,
+          sizeText: String(ln.size || "").trim()
+        });
+      });
+
+      if (!garments.length && garmentsSubtotal > 0) {
+        items.push({ type: "Product", product: "Garments subtotal", unit_price: garmentsSubtotal, qty: 1, taxable: true });
+      }
+
+      if (printingOnlyTotal > 0) {
+        items.push({ type: "Services", product: "Garments print cost", unit_price: printingOnlyTotal, qty: 1, taxable: true });
+      }
+      if (setupFee > 0) {
+        items.push({ type: "Services", product: `Setup fee (${money(setupRate)} per screen)`, unit_price: setupFee, qty: 1, taxable: true });
+      }
+      if (filmFee > 0) {
+        items.push({ type: "Services", product: `Film fee (${filmCount} film${filmCount !== 1 ? "s" : ""} @ ${money(FILM_FEE)})`, unit_price: filmFee, qty: 1, taxable: true });
+      }
+      if (rushRate > 0 && rushFee > 0) {
+        items.push({ type: "Services", product: `Rush (+${Math.round(rushRate * 100)}%)`, unit_price: rushFee, qty: 1, taxable: true });
+      }
+      if (discountAmount > 0) {
+        const label = stripHtmlForPayload_(discountLine || "");
+        const desc = discountCode
+          ? `Discount (${discountCode}${label ? ` — ${label}` : ""})`
+          : (label || "Discount");
+        items.push({ type: "Discount", product: desc, unit_price: -Math.abs(discountAmount), qty: 1, taxable: false });
+      }
+
+      // Fallback: if no items were created, compute a total and add it as a single line
+      if (!items.length) {
+        const total = (printingOnlyTotal || 0) + (setupFee || 0) + (filmFee || 0) + (rushFee || 0) - (discountAmount || 0) + (garmentsSubtotal || 0);
+        if (total > 0) {
+          items.push({ 
+            type: "Services", 
+            product: "Quote Total", 
+            unit_price: total, 
+            qty: 1, 
+            taxable: true 
+          });
+        }
+      }
+
+      console.log("=== BUILT INVOICE ITEMS, RETURNING: ===", items);
+      return items;
+    }
+
     function renderSummary({
       qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,filmCount,
       perGarmentTotalAllLocations,printingOnlyTotal,discountLine,
@@ -1098,6 +1161,8 @@
     }
 
     function calc(){
+      console.log("★★★ CALC FUNCTION CALLED [2026-03-17 NEW VERSION] ★★★");
+      
       const errorEl = document.getElementById("error");
       const discMsgEl = document.getElementById("discMsg");
       errorEl.textContent = "";
@@ -1275,6 +1340,48 @@
         total: grandTotal,
         garmentsSubtotal
       });
+
+      window.LAST_QUOTE_SUMMARY = {
+        qty,
+        isDark,
+        tierQty,
+        totalScreens,
+        setupFee,
+        setupRate: setupRateDisplay,
+        filmFee,
+        filmCount,
+        perGarmentTotalAllLocations,
+        printingOnlyTotal,
+        discountLine,
+        discountAmount,
+        rushRate,
+        rushFee,
+        pricingLabel,
+        total: grandTotal,
+        garmentsSubtotal,
+        garments: garmentsObj
+      };
+      window.LAST_QUOTE_INVOICE_ITEMS = buildQuoteInvoiceItems_({
+        garmentsObj,
+        setupFee,
+        setupRate: setupRateDisplay,
+        filmFee,
+        filmCount,
+        printingOnlyTotal,
+        discountAmount,
+        discountCode,
+        discountLine,
+        rushRate,
+        rushFee,
+        garmentsSubtotal
+      });
+
+      console.log("✓ CALC COMPLETE - GLOBALS SET");
+      console.log("window.LAST_QUOTE_SUMMARY items:", window.LAST_QUOTE_SUMMARY?.total ? "✓ has total: " + window.LAST_QUOTE_SUMMARY.total : "✗ missing");
+      console.log("window.LAST_QUOTE_INVOICE_ITEMS:", window.LAST_QUOTE_INVOICE_ITEMS?.length ? `✓ has ${window.LAST_QUOTE_INVOICE_ITEMS.length} items` : "✗ missing or empty");
+      if (window.LAST_QUOTE_INVOICE_ITEMS && window.LAST_QUOTE_INVOICE_ITEMS.length > 0) {
+        console.log("First invoice item:", window.LAST_QUOTE_INVOICE_ITEMS[0]);
+      }
 
       document.getElementById("totalEstimate").textContent = money(grandTotal);
       showResults();
@@ -1925,6 +2032,8 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
   const sb = getSB();
   const msgEl = document.getElementById("saveMsg");
 
+  console.log("★★★ SAVE CUSTOMER QUOTE FUNCTION CALLED [2026-03-17 NEW VERSION] ★★★");
+
   function setMsg(text, good) {
     if (!msgEl) return;
     msgEl.textContent = text;
@@ -1976,6 +2085,11 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
     const garments =
       window.getGarmentLinesForQuote?.() || { lines: [], subtotal_cents: 0, subtotal_display: "$0.00" };
 
+  // EXPLICIT CHECK: Do the globals exist?
+  console.log("BEFORE PAYLOAD BUILD:");
+  console.log("  window.LAST_QUOTE_SUMMARY:", window.LAST_QUOTE_SUMMARY ? "✓ EXISTS" : "✗ MISSING");
+  console.log("  window.LAST_QUOTE_INVOICE_ITEMS:", window.LAST_QUOTE_INVOICE_ITEMS ? `✓ EXISTS (${window.LAST_QUOTE_INVOICE_ITEMS.length} items)` : "✗ MISSING");
+
     const payload = {
       qty: document.getElementById("qty")?.value?.trim() || "",
       garment_tone: document.getElementById("garmentTone")?.value || "",
@@ -1995,11 +2109,16 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
       total_estimate: document.getElementById("totalEstimate")?.textContent || "",
       garments,
       garments_subtotal_cents: Number(garments.subtotal_cents || 0),
+      quote_summary: window.LAST_QUOTE_SUMMARY || null,
+      invoice_items: Array.isArray(window.LAST_QUOTE_INVOICE_ITEMS) ? window.LAST_QUOTE_INVOICE_ITEMS : [],
       customer_notes: custNotes,
       files: []
     };
 
-    console.log("Insert row -> customer_quotes");
+    console.log("★★★ PAYLOAD BUILT - FINAL CHECK BEFORE SAVE ★★★");
+    console.log("FINAL SAVE PAYLOAD payload.invoice_items:", payload.invoice_items);
+    console.log("FINAL SAVE PAYLOAD payload.quote_summary:", payload.quote_summary);
+    console.log("FINAL SAVE PAYLOAD", payload);
 
     // 1) INSERT FIRST (quote_no comes from DB)
     const ins = await sb
@@ -2009,6 +2128,12 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
       .single();
 
     console.log("INSERT RESULT:", ins);
+    if (ins.data) {
+      console.log("✓ SUPABASE INSERT SUCCESS");
+      console.log("  Quote ID:", ins.data.id);
+      console.log("  Quote Number:", ins.data.quote_no);
+      console.log("  Payload that was saved should include invoice_items and quote_summary");
+    }
 
     if (ins.error) {
       setMsg("Save failed:\n" + ins.error.message, false);
