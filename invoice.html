@@ -226,28 +226,24 @@
     .wide-input{
       min-width: 160px;
       width: 100%;
-      font-size: 20px; /* larger so numbers are easier to read */
+      font-size: 20px;
       padding: 14px 16px;
     }
 
-    /* ✅ FIX: prevent grid columns from squeezing / overflow */
     .topgrid > .box,
     .box,
     .field {
       min-width: 0;
     }
 
-    /* ✅ FIX: make the two columns more stable on medium screens */
     .topgrid{
       grid-template-columns: 1fr 1fr;
     }
 
-    /* ✅ FIX: stack to ONE column earlier (tablet / small laptop) */
     @media (max-width: 1120px){
       .topgrid{ grid-template-columns: 1fr; }
     }
 
-    /* ✅ FIX: email should not look “cut off” on mobile */
     #bizEmail{
       font-size: 14px;
       padding: 12px 12px;
@@ -380,13 +376,13 @@
 
     .loadMsg{
       margin-top:10px;
-      padding:14px 16px; /* larger bubble padding */
+      padding:14px 16px;
       border:1px solid var(--border);
       border-radius:14px;
       background:#fff;
       color:var(--primary-2);
       font-weight:800;
-      font-size:18px; /* make the message and numbers more readable */
+      font-size:18px;
       display:none;
     }
     .loadMsg.error{
@@ -400,7 +396,6 @@
       #btnClearAll { display: none !important; }
     }
 
-    /* From section tweaks */
     #bizName, #bizEmail, #bizAddr, #bizCity, #bizPhone{
       font-size: 16px;
       padding: 12px 14px;
@@ -423,7 +418,6 @@
       #btnAddPayment{width:100%;}
     }
 
-    /* Mobile (phones & small tablets) tweaks */
     @media (max-width: 720px){
       .navwrap{flex-direction:column; align-items:flex-start; gap:8px;}
       .brand{min-width:0;}
@@ -434,26 +428,21 @@
       .page-title h1{font-size:22px;}
       .hero::after{display:none}
 
-      /* Stack action bar controls and make buttons touch-friendly */
       .actionbar{padding:10px; flex-direction:column; align-items:stretch; gap:10px;}
       .action-left, .action-right{display:flex; flex-direction:column; gap:8px; width:100%;}
       .action-left > .btn, .action-right > details, .action-right > .btn, .action-left > details{width:100%;}
       .action-left .btn, .action-right .btn{justify-content:center}
 
-      /* Ensure grid children can shrink to avoid overflow */
       .topgrid > .box, .box, .row2 > div, .row3 > div, .bottomgrid > .box{min-width:0}
 
-      /* Stack invoice details and From box to single column */
       .topgrid{grid-template-columns:1fr}
       .row2{grid-template-columns:1fr}
       .row3{grid-template-columns:1fr}
 
-      /* Quote / load controls stack */
       .quote-action-row{display:flex; flex-direction:column; gap:8px;}
       .quote-action-row .field, .quote-action-row .btn{width:100%}
       .invoice-head #btnCreateInvoice{width:100%;}
 
-      /* Table: allow horizontal scroll for saved items but keep entry-row stacked separately */
       .tableWrap{overflow:auto; -webkit-overflow-scrolling:touch}
       table{min-width:0}
       thead th, tbody td{padding:8px; font-size:13px}
@@ -464,22 +453,16 @@
       .sheet{margin:0 -16px; border-radius:12px}
     }
 
-    /* Small phones: convert only the entry row into a stacked card so saved rows keep table layout */
     @media (max-width: 520px){
-      /* Prevent overflow from long text */
       .field{min-width:0; overflow-wrap:anywhere; word-break:break-word}
 
-      /* Hide table header to avoid column sizing constraints for the entry card */
       .items-table thead{display:none}
 
-      /* Convert only the first tbody (entry row) to block layout so it can stack */
       .items-table tbody:first-of-type{display:block; width:100%}
       .items-table tbody:first-of-type tr.entry-row{display:block; width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:12px; margin:10px 0; padding:10px; background:#fff}
 
-      /* Make each cell stack and be full width */
       .items-table tbody:first-of-type tr.entry-row td{display:block; width:100%; padding:8px 0; border-bottom:none; box-sizing:border-box}
 
-      /* Force controls inside the entry row to fill the card width */
       .items-table tbody:first-of-type tr.entry-row .field,
       .items-table tbody:first-of-type tr.entry-row select,
       .items-table tbody:first-of-type tr.entry-row input,
@@ -488,20 +471,15 @@
         width:100% !important; max-width:100% !important; box-sizing:border-box;
       }
 
-      /* Make internal wrappers behave (color, discount, sizes) */
       #itemColorWrap, #discountWrap, #sizesWrap{display:block; width:100%}
       #discountWrap select, #discountWrap .field{width:100%}
 
-      /* Ensure labels and spacing read well in stacked layout */
       .items-table tbody:first-of-type tr.entry-row td label.label{display:block; margin-bottom:6px}
 
-      /* Make Add button full width */
       .items-table tbody:first-of-type tr.entry-row td .btn{display:block; width:100%}
 
-      /* Prevent horizontal scrolling caused by the entry row */
       .items-table, .tableWrap{overflow-x:visible}
 
-      /* Keep saved items tbody as table rows so saved rows and JS behavior remain unchanged */
       .items-table tbody#itemsTbody, .items-table tbody#itemsTbody tr{display:table-row}
     }
 
@@ -510,7 +488,7 @@
       .noPrint{ display:none !important; }
       #contactSearch, #contactResults, #btnAddNewCustomer { display:none !important; }
       .noPrint, .noPrint *{ display:none !important; visibility:hidden !important; }
-      .entry-row{ display:none !important; } /* ✅ hide add-item row in PDF/Print */
+      .entry-row{ display:none !important; }
       body{ background:#fff; }
       .hero{ padding: 0; }
       .sheet{ border:none; box-shadow:none; }
@@ -531,7 +509,6 @@
       align-self: flex-start;
     }
 
-    /* Size modal */
     .sizeModalBackdrop{
       position: fixed; inset: 0;
       background: rgba(0,0,0,.35);
@@ -591,24 +568,64 @@
         <div><h1>Invoice</h1></div>
       </div>
 
+      <div id="staffAuthWrap" class="box noPrint" style="margin-bottom:14px; display:none;">
+        <div id="staffSignedInBar" style="display:none; flex-direction:column; gap:10px;">
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <span id="staffSignedInMsg" style="font-weight:800; font-size:14px; color:var(--primary-2);"></span>
+            <button class="btn ghost small" type="button" id="btnStaffLogout">Log out</button>
+          </div>
+        </div>
+
+        <div id="staffLoginForm" style="display:none;">
+          <div style="font-weight:800; font-size:14px; color:var(--primary-2); margin-bottom:10px;">Staff login required to use invoices.</div>
+          <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            <div style="flex:1; min-width:160px;">
+              <label class="label" for="staffEmail">Email</label>
+              <input class="field" id="staffEmail" type="email" autocomplete="username" placeholder="staff@myshirt..." />
+            </div>
+            <div style="flex:1; min-width:140px;">
+              <label class="label" for="staffPassword">Password</label>
+              <input class="field" id="staffPassword" type="password" autocomplete="current-password" placeholder="••••••••" />
+            </div>
+            <div style="flex:0 0 auto; padding-bottom:1px;">
+              <button class="btn primary" type="button" id="btnStaffLogin">Log in</button>
+            </div>
+          </div>
+          <div id="staffAuthMsg" class="loadMsg" style="margin-top:8px; font-size:14px;"></div>
+        </div>
+
+        <div id="staffRecoveryForm" style="display:none;">
+          <div style="font-weight:800; font-size:14px; color:var(--primary-2); margin-bottom:10px;">Password recovery detected. Enter a new password below.</div>
+          <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            <div style="flex:1; min-width:140px;">
+              <label class="label" for="staffRecoveryPassword">New password</label>
+              <input class="field" id="staffRecoveryPassword" type="password" autocomplete="new-password" placeholder="New password" />
+            </div>
+            <div style="flex:1; min-width:140px;">
+              <label class="label" for="staffRecoveryConfirm">Confirm password</label>
+              <input class="field" id="staffRecoveryConfirm" type="password" autocomplete="new-password" placeholder="Confirm password" />
+            </div>
+            <div style="flex:0 0 auto; padding-bottom:1px;">
+              <button class="btn primary" type="button" id="btnStaffRecovery">Update password</button>
+            </div>
+          </div>
+          <div id="staffRecoveryMsg" class="loadMsg" style="margin-top:8px; font-size:14px;"></div>
+        </div>
+      </div>
+
       <div class="sheet" role="document" aria-label="Invoice editor">
         <div class="actionbar">
           <div class="action-left">
             <button class="btn ghost" type="button" id="btnPrint">Print</button>
             <button class="btn ghost" type="button" id="btnPdf">PDF</button>
-
             <button class="btn primary" type="button" id="btnSend">Send</button>
             <button class="btn primary" type="button" id="btnSaveDraft">Save Draft</button>
             <button class="btn danger" id="btnClearAll" type="button" style="background:#c62828;color:#fff;">Clear All</button>
           </div>
-
-
         </div>
 
         <div class="content">
           <div class="topgrid">
-
-            <!-- LEFT: FROM -->
             <div class="box">
               <h3>From</h3>
               <div class="row1">
@@ -639,7 +656,6 @@
               </div>
             </div>
 
-            <!-- RIGHT: INVOICE DETAILS -->
             <div class="box">
               <div class="invoice-head">
                 <h3>Invoice Details</h3>
@@ -662,7 +678,7 @@
                 <div>
                   <label class="label">Quote #</label>
                   <div class="quote-action-row">
-                    <input class="field mono wide-input" id="quoteNoInput" placeholder="e.g. 45" />
+                    <input class="field mono wide-input" id="quoteNoInput" placeholder="e.g. 45 or Q-2026-001008" />
                     <button class="btn ghost" type="button" id="btnLoadQuote">Load Quote</button>
                   </div>
                 </div>
@@ -738,74 +754,73 @@
               </thead>
 
               <tbody>
-<tr class="entry-row">
-  <td>
-    <select id="itemType" class="field">
-      <option value="Product">Product</option>
-      <option value="Services">Services</option>
-      <option value="Discount">Discount</option>
-      <option value="Other">Other</option>
-    </select>
+                <tr class="entry-row">
+                  <td>
+                    <select id="itemType" class="field">
+                      <option value="Product">Product</option>
+                      <option value="Services">Services</option>
+                      <option value="Discount">Discount</option>
+                      <option value="Other">Other</option>
+                    </select>
 
-    <!-- ✅ shown for Product OR Services -->
-    <div id="productKindWrap" style="margin-top:8px; display:none;">
-      <label class="label">Product kind</label>
-      <select id="productKind" class="field">
-        <option value="non_garment">Non-garment (banner, etc.)</option>
-        <option value="garment" selected>Garment (sizes)</option>
-      </select>
-    </div>
+                    <div id="productKindWrap" style="margin-top:8px; display:none;">
+                      <label class="label">Product kind</label>
+                      <select id="productKind" class="field">
+                        <option value="non_garment">Non-garment (banner, etc.)</option>
+                        <option value="garment" selected>Garment (sizes)</option>
+                      </select>
+                    </div>
 
-    <div id="sizesWrap" style="margin-top:10px; display:none;">
-      <button type="button" class="btn ghost small" id="btnEntryEditSizes">Edit Sizes</button>
-      <span id="sizesSummary" style="margin-left:10px; font-weight:800; color:var(--muted);"></span>
-    </div>
-  </td>
+                    <div id="sizesWrap" style="margin-top:10px; display:none;">
+                      <button type="button" class="btn ghost small" id="btnEntryEditSizes">Edit Sizes</button>
+                      <span id="sizesSummary" style="margin-left:10px; font-weight:800; color:var(--muted);"></span>
+                    </div>
+                  </td>
 
-  <td>
-    <div style="display:flex; flex-direction:column; gap:10px;">
-      <input id="itemProduct" class="field" placeholder="PC850H Fan Favorite Fleece Hoodie" />
-      <div id="itemColorWrap">
-        <input id="itemColor" class="field" placeholder="Color (e.g. Black)" />
-      </div>
-    </div>
-  </td>
+                  <td>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                      <input id="itemProduct" class="field" placeholder="PC850H Fan Favorite Fleece Hoodie" />
+                      <div id="itemColorWrap">
+                        <input id="itemColor" class="field" placeholder="Color (e.g. Black)" />
+                      </div>
+                    </div>
+                  </td>
 
-  <td class="t-right">
-    <input id="itemPrice" class="field mono" inputmode="decimal" placeholder="0.00" />
+                  <td class="t-right">
+                    <input id="itemPrice" class="field mono" inputmode="decimal" placeholder="0.00" />
 
-    <div id="discountWrap" style="display:none; margin-top:8px;">
-      <label class="label">Discount</label>
-      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <select id="discountMode" class="field" style="max-width:160px;">
-          <option value="amount">$ Amount off</option>
-          <option value="percent">% Percent off</option>
-        </select>
+                    <div id="discountWrap" style="display:none; margin-top:8px;">
+                      <label class="label">Discount</label>
+                      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <select id="discountMode" class="field" style="max-width:160px;">
+                          <option value="amount">$ Amount off</option>
+                          <option value="percent">% Percent off</option>
+                        </select>
 
-        <input id="discountValue" class="field mono" inputmode="decimal"
-               placeholder="e.g. 25 or 10" style="max-width:180px;" />
+                        <input id="discountValue" class="field mono" inputmode="decimal"
+                               placeholder="e.g. 25 or 10" style="max-width:180px;" />
 
-        <span style="font-weight:800; color:var(--muted);" id="discountHint"></span>
-      </div>
-    </div>
-  </td>
+                        <span style="font-weight:800; color:var(--muted);" id="discountHint"></span>
+                      </div>
+                    </div>
+                  </td>
 
-  <td class="t-right">
-    <input id="itemQty" class="field mono" inputmode="numeric" value="1" />
-  </td>
+                  <td class="t-right">
+                    <input id="itemQty" class="field mono" inputmode="numeric" value="1" />
+                  </td>
 
-  <td class="t-right">
-    <input id="itemAmount" class="field mono" placeholder="0.00" disabled />
-  </td>
+                  <td class="t-right">
+                    <input id="itemAmount" class="field mono" placeholder="0.00" disabled />
+                  </td>
 
-  <td class="t-right">
-    <input type="checkbox" id="itemTaxable" checked />
-  </td>
+                  <td class="t-right">
+                    <input type="checkbox" id="itemTaxable" checked />
+                  </td>
 
-  <td class="t-right">
-    <button type="button" class="btn ghost" id="addItemBtn">Add</button>
-  </td>
-</tr>
+                  <td class="t-right">
+                    <button type="button" class="btn ghost" id="addItemBtn">Add</button>
+                  </td>
+                </tr>
               </tbody>
 
               <tbody id="itemsTbody"></tbody>
@@ -874,16 +889,14 @@
             </div>
           </div>
 
-        </div><!-- /content -->
-      </div><!-- /sheet -->
+        </div>
+      </div>
     </div>
   </section>
-
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // Clear All button handler
     document.addEventListener("DOMContentLoaded", function() {
       const btn = document.getElementById("btnClearAll");
       if (btn) btn.addEventListener("click", function() {
@@ -892,10 +905,8 @@
         }
       });
     });
+
     (function () {
-      // ===========================
-      // CONFIG
-      // ===========================
       const INVOICE_SYNC_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwCH648WscPI-obyqhOPSq0jiqwXzzWI2v9ZBv1UCejr5X6L5Y3FLHROOA_0x43aMN8/exec";
       const INVOICE_SYNC_SECRET = "inv_sync_2026_03_01__L0ndonbrides!2vR9pX7aL1nY4zW";
 
@@ -905,7 +916,12 @@
       const SUPABASE_URL = "https://tvtyjmeedapbsaopeebh.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHlqbWVlZGFwYnNhb3BlZWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzQ3MzUsImV4cCI6MjA4NzIxMDczNX0.VKNQc9G18OgJndoN3eiv5wcLWaAmqOcQ9qA4ve2tNsQ";
 
+      const SHEETS_API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
+      const SHEETS_SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
+      const QUOTES_TAB_NAME = "customer_quotes";
+
       const $ = (id) => document.getElementById(id);
+      window.MIRROR_SECRET = "inv_sync_2026_03_01__L0ndonbrides!2vR9pX7aL1nY4zW";
 
       if (!window.supabase) {
         console.error("Supabase library did not load.");
@@ -913,19 +929,14 @@
       }
       window.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // ===========================
-      // STATE
-      // ===========================
       window.__LOADING_QUOTE = false;
       window.CURRENT_QUOTE = null;
       window.CURRENT_QUOTE_ID = null;
       window.CURRENT_INVOICE_ID = null;
       window.CURRENT_PAYMENT_LINK = null;
       window.INVOICE_PAYMENTS = [];
+      window.__STAFF_RECOVERY_MODE = false;
 
-      // ===========================
-      // UI HELPERS
-      // ===========================
       function setLoadMsg(msg, isError = false) {
         const el = $("loadMsg");
         if (!el) return;
@@ -940,6 +951,182 @@
         }
         el.style.display = "block";
         el.classList.toggle("error", !!isError);
+      }
+
+      function setStaffAuthMsg_(msg, isErr = false) {
+        const el = $("staffAuthMsg");
+        if (!el) return;
+        const text = (msg || "").trim();
+        el.textContent = text;
+        if (!text) {
+          el.style.display = "none";
+          el.classList.remove("error");
+          return;
+        }
+        el.style.display = "block";
+        el.classList.toggle("error", !!isErr);
+      }
+
+      function setStaffChangePwMsg_(msg, isErr = false) {
+        const el = $("staffChangePwMsg");
+        if (!el) return;
+        const text = (msg || "").trim();
+        el.textContent = text;
+        if (!text) {
+          el.style.display = "none";
+          el.classList.remove("error");
+          return;
+        }
+        el.style.display = "block";
+        el.classList.toggle("error", !!isErr);
+      }
+
+      function setStaffRecoveryMsg_(msg, isErr = false) {
+        const el = $("staffRecoveryMsg");
+        if (!el) return;
+        const text = (msg || "").trim();
+        el.textContent = text;
+        if (!text) {
+          el.style.display = "none";
+          el.classList.remove("error");
+          return;
+        }
+        el.style.display = "block";
+        el.classList.toggle("error", !!isErr);
+      }
+
+      function clearStaffPasswordFields_() {
+        [
+          "staffPassword",
+          "staffNewPassword",
+          "staffConfirmPassword",
+          "staffRecoveryPassword",
+          "staffRecoveryConfirm"
+        ].forEach((id) => {
+          const el = $(id);
+          if (el) el.value = "";
+        });
+        console.log("PASSWORD FIELDS cleared");
+      }
+
+      let authMode = "login";
+
+      function clearRecoveryTokensFromUrl_() {
+        if (!window.history?.replaceState) return;
+        const url = new URL(window.location.href);
+        ["access_token", "refresh_token", "type", "token", "token_hash", "expires_at", "expires_in"].forEach((key) => {
+          url.searchParams.delete(key);
+        });
+        url.hash = "";
+        window.history.replaceState(null, "", url.pathname + url.search);
+      }
+
+      function setAuthMode_(mode) {
+        authMode = mode;
+        console.log("AUTH MODE " + mode);
+        console.log("AUTH MODE switched", authMode);
+
+        clearStaffPasswordFields_();
+
+        const wrap = $("staffAuthWrap");
+        const signedInBar = $("staffSignedInBar");
+        const loginForm = $("staffLoginForm");
+        const recoveryForm = $("staffRecoveryForm");
+
+        if (!wrap) return;
+        wrap.style.display = "block";
+
+        if (signedInBar) signedInBar.style.display = "none";
+        if (loginForm) loginForm.style.display = "none";
+        if (recoveryForm) recoveryForm.style.display = "none";
+
+        if (mode === "signed-in") {
+          if (signedInBar) signedInBar.style.display = "flex";
+          setStaffAuthMsg_("");
+          setStaffRecoveryMsg_("");
+        } else if (mode === "recovery") {
+          if (recoveryForm) recoveryForm.style.display = "block";
+          setStaffAuthMsg_("");
+          setStaffRecoveryMsg_("");
+        } else {
+          if (loginForm) loginForm.style.display = "block";
+          setStaffRecoveryMsg_("");
+        }
+      }
+
+      async function detectRecoveryMode_() {
+        const hashParams = new URLSearchParams(String(window.location.hash || "").replace(/^#/, ""));
+        const searchParams = new URLSearchParams(window.location.search || "");
+
+        const accessToken = hashParams.get("access_token") || searchParams.get("access_token") || "";
+        const refreshToken = hashParams.get("refresh_token") || searchParams.get("refresh_token") || "";
+        const type = hashParams.get("type") || searchParams.get("type") || "";
+
+        if (!accessToken || !refreshToken || type !== "recovery") {
+          return false;
+        }
+
+        console.log("RECOVERY TOKENS found", {
+          accessToken: !!accessToken,
+          refreshToken: !!refreshToken,
+          type
+        });
+
+        try {
+          await window.sb.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          console.log("RECOVERY setSession success");
+          clearRecoveryTokensFromUrl_();
+          setAuthMode_("recovery");
+          setStaffRecoveryMsg_("");
+          return true;
+        } catch (error) {
+          console.log("RECOVERY setSession failed", error?.message || error);
+          setAuthMode_("login");
+          setStaffAuthMsg_("Recovery link is invalid or expired.", true);
+          return false;
+        }
+      }
+
+      async function refreshStaffAuthUI_() {
+        if (authMode === "recovery") {
+          return;
+        }
+
+        const wrap = $("staffAuthWrap");
+        if (wrap) wrap.style.display = "block";
+
+        const { data: sessionData } = await window.sb.auth.getSession();
+        const session = sessionData?.session || null;
+
+        if (session?.user?.email) {
+          const signedInMsg = $("staffSignedInMsg");
+          if (signedInMsg) signedInMsg.textContent = "Signed in as " + session.user.email;
+          setAuthMode_("signed-in");
+        } else {
+          setAuthMode_("login");
+          setStaffAuthMsg_("You must be signed in to use invoices.", true);
+        }
+      }
+
+      async function requireInvoiceAuth_() {
+        const { data: sessionData, error: sessionErr } = await window.sb.auth.getSession();
+        if (sessionErr) {
+          console.error("INVOICE auth error:", sessionErr);
+          setLoadMsg("You must be signed in to use invoices.", true);
+          setStaffAuthMsg_("You must be signed in to use invoices.", true);
+          throw sessionErr;
+        }
+        if (!sessionData?.session) {
+          console.log("INVOICE auth blocked: no session");
+          setLoadMsg("You must be signed in to use invoices.", true);
+          setStaffAuthMsg_("You must be signed in to use invoices.", true);
+          throw new Error("You must be signed in to use invoices.");
+        }
+        console.log("INVOICE auth session", sessionData?.session || null);
+        return sessionData.session;
       }
 
       function setCreateEnabled(on) {
@@ -957,6 +1144,42 @@
         if (/^\d+$/.test(raw)) return "Inv-" + raw;
         if (/^inv-\d+$/i.test(raw)) return "Inv-" + raw.split("-")[1];
         return raw;
+      }
+
+      function quoteTailDigits_(v) {
+        const digits = String(v ?? "").replace(/\D/g, "");
+        return digits;
+      }
+
+      function isDigitsOnlyQuote_(v) {
+        return /^\d+$/.test(String(v ?? "").trim());
+      }
+
+      function invoiceNoComparable_(v) {
+        return String(v ?? "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+      }
+
+      function getInvoiceNumberCandidates_(invoiceNoRaw) {
+        const raw = String(invoiceNoRaw ?? "").trim();
+        const candidates = new Set();
+
+        if (!raw) return [];
+
+        const normalized = normalizeInvoiceNo(raw);
+        [raw, normalized, raw.toUpperCase(), raw.toLowerCase(), normalized.toUpperCase(), normalized.toLowerCase()]
+          .map(v => String(v || "").trim())
+          .filter(Boolean)
+          .forEach(v => candidates.add(v));
+
+        const digitsOnly = raw.replace(/\D/g, "");
+        if (digitsOnly) {
+          candidates.add(`Inv-${Number(digitsOnly)}`);
+          candidates.add(`INV-${Number(digitsOnly)}`);
+          candidates.add(`Inv-${digitsOnly}`);
+          candidates.add(`INV-${digitsOnly}`);
+        }
+
+        return Array.from(candidates);
       }
 
       function asNum(v) {
@@ -1047,9 +1270,6 @@
         setClientContactUI_(n.client_contact);
       }
 
-      // ===========================
-      // CONTACT SEARCH (GOOGLE SHEETS)
-      // ===========================
       (function(){
         const API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
         const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
@@ -1067,7 +1287,7 @@
 
         const $ = (id) => document.getElementById(id);
 
-        function esc(s){
+        function escLocal(s){
           return String(s ?? "")
             .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
             .replaceAll('"',"&quot;").replaceAll("'","&#039;");
@@ -1129,7 +1349,7 @@
           catch (e){ CONTACTS = []; CONTACTS_ERROR = e?.message || "Could not load contacts."; console.error(CONTACTS_ERROR); }
 
           function showMessage(msg){
-            resultsEl.innerHTML = `<div style="padding:10px 12px; font-weight:800; color:var(--muted);">${esc(msg)}</div>`;
+            resultsEl.innerHTML = `<div style="padding:10px 12px; font-weight:800; color:var(--muted);">${escLocal(msg)}</div>`;
             resultsEl.style.display = "block";
           }
 
@@ -1149,8 +1369,8 @@
               btn.style.borderRadius = "12px";
               btn.style.cursor = "pointer";
               btn.innerHTML = `
-                <div style="font-weight:900; color:var(--primary-2);">${esc(top)}</div>
-                <div style="font-size:12px; font-weight:800; color:var(--muted); margin-top:2px;">${esc(sub)}</div>
+                <div style="font-weight:900; color:var(--primary-2);">${escLocal(top)}</div>
+                <div style="font-size:12px; font-weight:800; color:var(--muted); margin-top:2px;">${escLocal(sub)}</div>
               `;
               btn.addEventListener("mouseenter", () => btn.style.background = "var(--sky)");
               btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
@@ -1192,37 +1412,35 @@
         });
       })();
 
-      // ===========================
-      // BUSINESS DISPLAY SYNC (kept; safe even if display elements don't exist)
-      // ===========================
       function syncBizInfoDisplay() {
         const name = $("bizName")?.value || "";
         const addr = $("bizAddr")?.value || "";
         const city = $("bizCity")?.value || "";
         const phone = $("bizPhone")?.value || "";
         const email = $("bizEmail")?.value || "";
-    
 
-        if ($("bizNameDisplay")) $("bizNameDisplay").textContent = name;
-        if ($("bizAddrDisplay")) $("bizAddrDisplay").textContent = addr;
-        if ($("bizCityDisplay")) $("bizCityDisplay").textContent = city;
-        if ($("bizPhoneDisplay")) $("bizPhoneDisplay").textContent = phone;
+        const emailInput = $("bizEmail");
+        if (emailInput) emailInput.title = emailInput.value || "";
 
-        const emailEl = $("bizEmailDisplay");
-        if (emailEl) {
-          emailEl.textContent = email;
-          emailEl.href = email ? ("mailto:" + email) : "#";
+        const emailDisplay = $("bizEmailDisplay");
+        if (emailDisplay) {
+          emailDisplay.textContent = email;
+          emailDisplay.href = email ? ("mailto:" + email) : "#";
         }
 
-    
+        const nameDisplay = $("bizNameDisplay");
+        if (nameDisplay) nameDisplay.textContent = name;
 
-        const bizEmailInput = $("bizEmail");
-        if (bizEmailInput) bizEmailInput.title = bizEmailInput.value || "";
+        const addrDisplay = $("bizAddrDisplay");
+        if (addrDisplay) addrDisplay.textContent = addr;
+
+        const cityDisplay = $("bizCityDisplay");
+        if (cityDisplay) cityDisplay.textContent = city;
+
+        const phoneDisplay = $("bizPhoneDisplay");
+        if (phoneDisplay) phoneDisplay.textContent = phone;
       }
 
-      // ===========================
-      // LINE ITEMS + TOTALS
-      // ===========================
       function todayIso_() {
         const d = new Date();
         const y = d.getFullYear();
@@ -1253,19 +1471,15 @@
         if (Array.isArray(storedItems)) {
           return { items: storedItems, payments: [] };
         }
-
         if (storedItems && typeof storedItems === "object") {
           const items = Array.isArray(storedItems.items)
             ? storedItems.items
             : (Array.isArray(storedItems.line_items) ? storedItems.line_items : []);
-
           const payments = normalizePayments_(
             storedItems.payments || storedItems.payments_json || storedItems?.meta?.payments || []
           );
-
           return { items, payments };
         }
-
         return { items: [], payments: [] };
       }
 
@@ -1274,6 +1488,12 @@
         const safePayments = normalizePayments_(payments);
         if (!safePayments.length) return safeItems;
         return { items: safeItems, meta: { payments: safePayments } };
+      }
+
+      function toNum(v) {
+        const s = String(v ?? "").trim().replace(/[^0-9.-]/g, "");
+        const n = parseFloat(s);
+        return Number.isFinite(n) ? n : 0;
       }
 
       function renderPayments_() {
@@ -1356,12 +1576,6 @@
         recalcTotals();
       }
 
-      function toNum(v) {
-        const s = String(v ?? "").trim().replace(/[^0-9.-]/g, "");
-        const n = parseFloat(s);
-        return Number.isFinite(n) ? n : 0;
-      }
-
       function recalcTotals() {
         const body = $("itemsTbody");
         if (!body) return;
@@ -1370,7 +1584,7 @@
         let subtotal = 0;
         let taxableSubtotal = 0;
 
-        rows.forEach(tr => {
+        rows.forEach((tr) => {
           const amt = toNum(tr.dataset.amount);
           subtotal += amt;
           if (tr.dataset.taxable === "1") taxableSubtotal += amt;
@@ -1378,45 +1592,42 @@
 
         const taxRate = toNum($("taxRate")?.value) / 100;
         const tax = taxableSubtotal * (Number.isFinite(taxRate) ? taxRate : 0);
-
         const total = subtotal + tax;
         const paid = sumPayments_(window.INVOICE_PAYMENTS);
         const balance = total - paid;
 
         if ($("amountPaid")) $("amountPaid").value = paid.toFixed(2);
-
-        $("subtotal").textContent = moneyUSD(subtotal);
-        $("taxAmount").textContent = moneyUSD(tax);
-        $("total").textContent = moneyUSD(total);
-        $("balance").textContent = moneyUSD(balance);
+        if ($("subtotal")) $("subtotal").textContent = moneyUSD(subtotal);
+        if ($("taxAmount")) $("taxAmount").textContent = moneyUSD(tax);
+        if ($("total")) $("total").textContent = moneyUSD(total);
+        if ($("balance")) $("balance").textContent = moneyUSD(balance);
       }
 
       function clearItems() {
         if ($("itemsTbody")) $("itemsTbody").innerHTML = "";
-        // Clear client/info fields
         if ($("clientName")) $("clientName").value = "";
         if ($("clientEmail")) $("clientEmail").value = "";
         if ($("clientPhone")) $("clientPhone").value = "";
         if ($("clientAddr")) $("clientAddr").value = "";
         setClientContactUI_("");
-        window.INVOICE_PAYMENTS = [];
-        if ($("paymentAmount")) $("paymentAmount").value = "";
-        if ($("paymentNote")) $("paymentNote").value = "";
-        if ($("paymentDate")) $("paymentDate").value = todayIso_();
-        renderPayments_();
         if ($("notes")) $("notes").value = "";
         if ($("terms")) $("terms").value = "";
-        // Remove draft from localStorage and set a cleared flag so reload won't auto-restore
-        try { localStorage.removeItem(DRAFT_KEY); localStorage.setItem('invoiceDraftCleared', '1'); } catch {}
-        // Reset in-memory quote variables if present
-        if (window.CURRENT_QUOTE) window.CURRENT_QUOTE = null;
-        if (window.CURRENT_QUOTE_ID) window.CURRENT_QUOTE_ID = null;
+        if ($("invNo")) $("invNo").value = "";
+        window.CURRENT_QUOTE = null;
+        window.CURRENT_QUOTE_ID = null;
+        window.CURRENT_INVOICE_ID = null;
+        window.CURRENT_PAYMENT_LINK = null;
+        window.INVOICE_PAYMENTS = [];
+        if ($("paymentAmount")) $("paymentAmount").value = "";
+        if ($("paymentDate")) $("paymentDate").value = todayIso_();
+        renderPayments_();
         recalcTotals();
+        try {
+          localStorage.removeItem(DRAFT_KEY);
+          localStorage.setItem("invoiceDraftCleared", "1");
+        } catch {}
       }
 
-      // ===========================
-      // GARMENT SIZES
-      // ===========================
       const GARMENT_SIZES = ["XS", "S", "M", "L", "XL", "2X", "3X", "4X"];
       let sizeModalSaveHandler_ = null;
 
@@ -1479,8 +1690,8 @@
         const sizes = normalizeSizesMap_(initialSizes);
         grid.innerHTML = GARMENT_SIZES.map((sz) => `
           <div class="sizeCell">
-            <label for="modalSize_${sz}">${esc(sz)}</label>
-            <input id="modalSize_${sz}" data-size-key="${esc(sz)}" class="mono" inputmode="numeric" value="${sizes[sz] || ""}" />
+            <label for="modalSize_${esc(sz)}">${esc(sz)}</label>
+            <input id="modalSize_${esc(sz)}" data-size-key="${esc(sz)}" class="mono" inputmode="numeric" value="${sizes[sz] || ""}" />
           </div>
         `).join("");
 
@@ -1500,8 +1711,6 @@
         const backdrop = $("sizeModalBackdrop");
         const grid = $("sizeGrid");
         if (!backdrop || !grid) return;
-
-        // prevent double-binding
         if (backdrop.dataset.wired === "1") return;
         backdrop.dataset.wired = "1";
 
@@ -1524,9 +1733,6 @@
         });
       }
 
-      // ===========================
-      // RENDERED LINE ITEMS (supports garment sizes for ANY type if sizes exist)
-      // ===========================
       function addRenderedLine({ type, product, desc, color, sizes, sizeText, unit_price, qty, taxable }) {
         const body = $("itemsTbody");
         if (!body) return;
@@ -1543,7 +1749,6 @@
         const hasSizes = sumSizeQty_(effectiveSizes) > 0;
         const derivedSizeText = buildSizeText_(effectiveSizes);
         const st = String(sizeText || derivedSizeText || "");
-
         const q = hasSizes ? sumSizeQty_(effectiveSizes) : Math.max(1, asNum(qty || 1));
 
         let amount = u * q;
@@ -1623,18 +1828,13 @@
 
       function renderItems(items) {
         if ($("itemsTbody")) $("itemsTbody").innerHTML = "";
-        (items || []).forEach(it => addRenderedLine(it));
+        (items || []).forEach((it) => addRenderedLine(it));
         recalcTotals();
       }
 
-      // ===========================
-      // ENTRY ROW (Add Item) — RESTORED GARMENT SIZE LOGIC (Product + Services)
-      // ===========================
       function wireEntryRow() {
         const entryTr = document.querySelector("tr.entry-row");
         if (!entryTr) return;
-
-        // prevent double-binding (causes “weird resets”)
         if (entryTr.dataset.wired === "1") return;
         entryTr.dataset.wired = "1";
 
@@ -1706,11 +1906,10 @@
           draftSizes_ = {};
           updateSizesSummary_();
 
-          $in("itemProduct") && ($in("itemProduct").value = "");
-          $in("itemColor") && ($in("itemColor").value = "");
-          $in("itemPrice") && ($in("itemPrice").value = "");
-          $in("itemTaxable") && ($in("itemTaxable").checked = true);
-
+          if ($in("itemProduct")) $in("itemProduct").value = "";
+          if ($in("itemColor")) $in("itemColor").value = "";
+          if ($in("itemPrice")) $in("itemPrice").value = "";
+          if ($in("itemTaxable")) $in("itemTaxable").checked = true;
           if ($in("itemType")) $in("itemType").value = "Product";
           if ($in("productKind")) $in("productKind").value = "garment";
           if ($in("itemQty")) $in("itemQty").value = "1";
@@ -1734,14 +1933,12 @@
         });
 
         $in("itemType")?.addEventListener("change", () => {
-          // if they changed away from garment-capable type, clear sizes
           if (!isTypeWithGarments_()) draftSizes_ = {};
           updateEntryVisibility_();
           recalcEntryAmount_();
         });
 
         $in("productKind")?.addEventListener("change", () => {
-          // switching from garment -> non_garment clears sizes
           if (!isGarment_()) draftSizes_ = {};
           updateEntryVisibility_();
           recalcEntryAmount_();
@@ -1752,18 +1949,15 @@
 
           const type = $in("itemType")?.value || "Product";
           const garment = isGarment_();
-
           const product = ($in("itemProduct")?.value || "").trim();
           const color = garment ? ($in("itemColor")?.value || "").trim() : "";
           const unit_price = toNum($in("itemPrice")?.value);
           const taxable = $in("itemTaxable")?.checked ?? true;
-
           const sizes = garment ? normalizeSizesMap_(draftSizes_) : {};
           const garmentQty = sumSizeQty_(sizes);
           const qty = garment ? Math.max(1, garmentQty) : Math.max(1, toNum($in("itemQty")?.value || 1));
           const sizeText = garment ? buildSizeText_(sizes) : "";
 
-          // Validation
           if ((type === "Product" || type === "Services") && !product) return;
           if (garment && garmentQty <= 0) {
             alert("Set at least one garment size quantity.");
@@ -1797,17 +1991,13 @@
         recalcTotals();
       }
 
-      // ===========================
-      // DRAFT (LOCAL) — ONE CLEAN VERSION (no duplicates)
-      // ===========================
       const DRAFT_KEY = "invoiceDraftBackup_v2";
 
       function getItemsFromTable() {
         const rows = Array.from(document.querySelectorAll("#itemsTbody tr"));
-        return rows.map(tr => {
+        return rows.map((tr) => {
           let sizesObj = {};
           try { sizesObj = tr.dataset.sizes ? JSON.parse(tr.dataset.sizes) : {}; } catch { sizesObj = {}; }
-
           return {
             type: tr.dataset.type || "Services",
             product: tr.dataset.product || "",
@@ -1851,15 +2041,13 @@
       function applyDraftObject(d) {
         if (!d) return;
 
-        $("invNo").value = d.invoice_no || "";
-        $("invDate").value = d.invoice_date || "";
-
+        if ($("invNo")) $("invNo").value = d.invoice_no || "";
+        if ($("invDate")) $("invDate").value = d.invoice_date || "";
         applyCustomerFieldsToForm_(d, d?.payload);
-        $("notes").value = d.notes || "";
-        $("terms").value = d.terms || "";
- 
-
+        if ($("notes")) $("notes").value = d.notes || "";
+        if ($("terms")) $("terms").value = d.terms || "";
         if ($("taxRate")) $("taxRate").value = (d.tax_rate ?? 9.375);
+
         const unpacked = unpackStoredItemsAndPayments_(d.items_json);
         renderItems(unpacked.items);
 
@@ -1889,15 +2077,12 @@
         try { return JSON.parse(raw); } catch { return null; }
       }
 
-      // console helper
       window.loadDraftFromObject = applyDraftObject;
 
-      // ===========================
-      // SAVE DRAFT TO SUPABASE (CREATE OR UPDATE)
-      // ===========================
       async function saveDraftToSupabase() {
-        const draft = getInvoiceDraftObject();
+        try { await requireInvoiceAuth_(); } catch { return; }
 
+        const draft = getInvoiceDraftObject();
         if (!draft.items_json.length) {
           alert("No line items yet. Add at least one item before saving.");
           return;
@@ -1915,7 +2100,6 @@
           items_json: buildStoredItemsPayload_(draft.items_json, draft.payments)
         };
 
-        // If we already loaded/created an invoice row earlier, update it.
         if (window.CURRENT_INVOICE_ID) {
           const { error } = await window.sb
             .from("invoices")
@@ -1932,7 +2116,6 @@
           return;
         }
 
-        // Otherwise: if invNo is filled, try updating by invoice_no first
         if (draft.invoice_no) {
           const { data: found, error: findErr } = await window.sb
             .from("invoices")
@@ -1949,14 +2132,9 @@
           }
         }
 
-        // Else create a new invoice row
-        const insertRow = {
-          ...safePayload
-        };
-
         const { data, error } = await window.sb
           .from("invoices")
-          .insert(insertRow)
+          .insert(safePayload)
           .select("*")
           .single();
 
@@ -1968,13 +2146,10 @@
 
         window.CURRENT_INVOICE_ID = data.id;
         window.CURRENT_PAYMENT_LINK = data.payment_link || null;
-        $("invNo").value = data.invoice_no || "";
+        if ($("invNo")) $("invNo").value = data.invoice_no || "";
         setLoadMsg(`Draft saved as ${data.invoice_no}`);
       }
 
-      // ===========================
-      // QUOTE -> ITEMS
-      // ===========================
       function stripHtml_(value) {
         return String(value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
       }
@@ -2054,25 +2229,11 @@
       function buildInvoiceItemsFromQuote(quote) {
         const p = quote?.payload || {};
 
-        console.log("★★★ BUILD INVOICE ITEMS FROM QUOTE [2026-03-17 NEW VERSION] ★★★");
-        console.log("Looking for invoice_items at: p.invoice_items");
-        console.log("p.invoice_items value:", p.invoice_items);
-        console.log("Is array?", Array.isArray(p.invoice_items));
-        console.log("Array length:", Array.isArray(p.invoice_items) ? p.invoice_items.length : "N/A");
-        
-        // EXPLICIT CHECK FOR INVOICE_ITEMS - PRIORITIZE OVER OTHER SOURCES
         if (Array.isArray(p.invoice_items) && p.invoice_items.length > 0) {
-          console.log("✓ FOUND invoice_items with", p.invoice_items.length, "items");
-          console.log("First item:", p.invoice_items[0]);
           const mapped = mapQuoteArrayItemsToInvoice_(p.invoice_items);
-          console.log("After mapping to invoice format:", mapped.length, "items");
-          if (mapped && mapped.length > 0) {
-            console.log("✓✓✓ RETURNING INVOICE_ITEMS (NOT FALLBACK) ✓✓✓");
-            return mapped;
-          }
+          if (mapped && mapped.length > 0) return mapped;
         }
 
-        // Only use other directItems if invoice_items wasn't found/used
         const directItems = [
           p.items,
           p.line_items,
@@ -2081,22 +2242,17 @@
           p.pricingItems,
           p.components
         ].find((arr) => Array.isArray(arr) && arr.length);
-        
+
         if (directItems) {
-          console.log("Using other directItems (not invoice_items)");
           const mapped = mapQuoteArrayItemsToInvoice_(directItems);
-          if (mapped.length) {
-            return mapped;
-          }
+          if (mapped.length) return mapped;
         }
+
         const breakdownCollections = [p.breakdown, p.pricing_breakdown, p.pricingBreakdown]
           .filter((value) => Array.isArray(value) && value.length);
         for (const collection of breakdownCollections) {
           const mapped = mapQuoteArrayItemsToInvoice_(collection);
-          if (mapped.length) {
-            console.log("=== USING BREAKDOWN COLLECTION PATH ===");
-            return mapped;
-          }
+          if (mapped.length) return mapped;
         }
 
         const qty = Math.max(1, asNum(p.qty ?? quote?.qty ?? 1));
@@ -2206,8 +2362,6 @@
 
         if (detailItems.length >= 2) {
           const remainder = totalEstimate - recognizedTotal;
-          console.log("=== USING FALLBACK: detailItems.length >= 2, returning detailItems ===");
-          console.log("detailItems:", detailItems);
           if (Math.abs(remainder) >= 0.01) {
             if (!printingOnlyTotal && remainder > 0) {
               pushDetail({ type: "Services", desc: "Printing", amount: remainder, qty: 1, taxable: true });
@@ -2225,9 +2379,7 @@
         }
 
         if (detailItems.length === 1) {
-          console.log("=== FALLBACK: detailItems.length === 1 ===");
           if (garmentsSubtotal > 0 && totalEstimate > recognizedTotal) {
-            console.log("=== RETURNING SPLIT: garment item + printing remainder ===");
             return [
               detailItems[0],
               {
@@ -2241,7 +2393,6 @@
           }
 
           if (totalEstimate > 0 && Math.abs(totalEstimate - recognizedTotal) >= 0.01) {
-            console.log("=== RETURNING SINGLE LUMP SUM: 'Printing Order (Total Estimate)' ===");
             return [{
               type: "Services",
               desc: "Printing Order (Total Estimate)",
@@ -2254,7 +2405,6 @@
         }
 
         if (garmentsSubtotal > 0 && totalEstimate > garmentsSubtotal) {
-          console.log("=== FALLBACK: garment subtotal + printing remainder ===");
           const baseGarmentItems = garmentLineItems.length
             ? garmentLineItems
             : [{
@@ -2278,7 +2428,6 @@
         }
 
         if (totalEstimate > 0) {
-          console.log("=== FALLBACK: Only totalEstimate available, returning single lump sum ===");
           return [{
             type: "Services",
             desc: "Printing Order (Total Estimate)",
@@ -2288,16 +2437,8 @@
           }];
         }
 
-        console.log("=== FALLBACK: No pricing found at all ===");
         return [{ type: "Services", desc: "Quote (pricing not found)", unit_price: 0, qty: 1, taxable: true }];
       }
-
-      // ===========================
-      // SHEETS: LOAD QUOTE (fallback loader)
-      // ===========================
-      const SHEETS_API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
-      const SHEETS_SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
-      const QUOTES_TAB_NAME = "customer_quotes";
 
       async function loadQuoteByNumberFromSheet(quoteNoRaw) {
         const quoteNo = String(quoteNoRaw || "").trim().replace(/^#/, "");
@@ -2316,12 +2457,18 @@
         }
 
         const rows = data.values || [];
+        const row = rows.slice(1).find((r) => {
+          const sheetQuote = String(r[1] || "").trim();
+          const sheetDigits = quoteTailDigits_(sheetQuote);
+          const inputDigits = quoteTailDigits_(quoteNo);
+          if (!sheetQuote) return false;
+          if (sheetQuote === quoteNo) return true;
+          if (inputDigits && sheetDigits && sheetDigits.endsWith(inputDigits)) return true;
+          return false;
+        });
 
-        // skip header row, search column B
-        const row = rows.slice(1).find(r => String(r[1] || "").trim() === quoteNo);
         if (!row) throw new Error("Quote not found in Google Sheet: " + quoteNo);
 
-        // column T = index 19
         const payloadCell = String(row[19] || "").trim();
         if (!payloadCell) {
           throw new Error(`Quote ${quoteNo} found, but payload_json is empty.`);
@@ -2336,7 +2483,7 @@
 
         return {
           id: null,
-          quote_no: quoteNo,
+          quote_no: String(row[1] || "").trim(),
           name: String(row[2] || "").trim(),
           email: String(row[3] || "").trim(),
           phone: String(row[4] || "").trim(),
@@ -2345,76 +2492,113 @@
         };
       }
 
-      // ===========================
-      // SUPABASE: LOAD QUOTE
-      // ===========================
+      window.loadQuoteByNumberFromSheet = loadQuoteByNumberFromSheet;
+
       async function loadQuoteByNumber(quoteNoRaw) {
-        const quoteNo = normalizeQuoteNo(quoteNoRaw);
-        if (!quoteNo) throw new Error("Enter a quote number first.");
+        const input = normalizeQuoteNo(quoteNoRaw);
+        console.log("ACTIVE NUMERIC QUOTE LOADER", { input });
+
+        if (!input) throw new Error("Enter a quote number first.");
+
+        const tail = quoteTailDigits_(input);
+        if (!tail) throw new Error("Enter a valid quote number.");
+
+        const numericQuoteNo = parseInt(tail, 10);
+        if (!Number.isFinite(numericQuoteNo)) {
+          throw new Error("Enter a valid quote number.");
+        }
 
         const { data, error } = await window.sb
           .from("customer_quotes")
           .select("*")
-          .eq("quote_no", quoteNo)
+          .eq("quote_no", numericQuoteNo)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
 
         if (error) throw error;
-        if (!data) throw new Error("Quote not found: " + quoteNo);
+        if (!data) throw new Error("Quote not found: " + input);
 
-        try {
-          if (typeof data.payload === "string") data.payload = JSON.parse(data.payload);
-        } catch {
-          data.payload = {};
+        if (typeof data.payload === "string") {
+          try {
+            data.payload = JSON.parse(data.payload);
+          } catch {
+            data.payload = {};
+          }
         }
         if (!data.payload || typeof data.payload !== "object") data.payload = {};
-
-        console.log("★★★ LOADED QUOTE FROM SUPABASE [2026-03-17 NEW VERSION] ★★★");
-        console.log("Quote #:", quoteNo);
-        console.log("data.payload.invoice_items exists?", !!data.payload.invoice_items);
-        console.log("Is array?", Array.isArray(data.payload.invoice_items));
-        console.log("Length:", data.payload.invoice_items?.length || 0);
-        if (Array.isArray(data.payload.invoice_items) && data.payload.invoice_items.length > 0) {
-          console.log("First item:", data.payload.invoice_items[0]);
-        }
-        console.log("data.payload.quote_summary exists?", !!data.payload.quote_summary);
 
         window.CURRENT_QUOTE = data;
         window.CURRENT_QUOTE_ID = data.id;
         return data;
       }
+      window.loadQuoteByNumber = loadQuoteByNumber;
 
-      // ===========================
-      // SUPABASE: LOAD INVOICE (load + enable editing via Save Draft)
-      // ===========================
       async function loadInvoiceByNumber(invoiceNoRaw){
+        await requireInvoiceAuth_();
+
         const invoiceNo = normalizeInvoiceNo(invoiceNoRaw);
+        const invoiceCandidates = getInvoiceNumberCandidates_(invoiceNoRaw);
         if (!invoiceNo) throw new Error("Enter an invoice number first.");
 
         setLoadMsg(`Loading invoice ${invoiceNo}...`);
 
-        let { data, error } = await window.sb
-          .from("invoices")
-          .select("*")
-          .eq("invoice_no", invoiceNo)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        let data = null;
 
-        if (error) throw error;
-
-        if (!data) {
-          const { data: data2, error: error2 } = await window.sb
+        for (const candidate of invoiceCandidates) {
+          const { data: hit, error } = await window.sb
             .from("invoices")
             .select("*")
-            .ilike("invoice_no", invoiceNo)
+            .eq("invoice_no", candidate)
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
 
-          if (error2) throw error2;
-          data = data2;
+          if (error) throw error;
+          if (hit) {
+            data = hit;
+            break;
+          }
+        }
+
+        if (!data) {
+          for (const candidate of invoiceCandidates) {
+            const { data: hit, error } = await window.sb
+              .from("invoices")
+              .select("*")
+              .ilike("invoice_no", candidate)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (error) throw error;
+            if (hit) {
+              data = hit;
+              break;
+            }
+          }
+        }
+
+        if (!data) {
+          const raw = String(invoiceNoRaw ?? "").trim();
+          const numericPart = (raw.match(/\d+/g) || []).join("");
+          if (numericPart) {
+            const { data: rows, error } = await window.sb
+              .from("invoices")
+              .select("*")
+              .ilike("invoice_no", `%${numericPart}%`)
+              .order("created_at", { ascending: false })
+              .limit(50);
+
+            if (error) throw error;
+
+            const targetComparable = invoiceNoComparable_(invoiceNo);
+            const found = (rows || []).find((r) => invoiceNoComparable_(r?.invoice_no) === targetComparable)
+              || (rows || []).find((r) => String(r?.invoice_no || "").replace(/\D/g, "").endsWith(numericPart))
+              || (rows || [])[0]
+              || null;
+            data = found;
+          }
         }
 
         if (!data) throw new Error("Invoice not found: " + invoiceNo);
@@ -2422,26 +2606,19 @@
         window.CURRENT_INVOICE_ID = data.id || null;
         window.CURRENT_PAYMENT_LINK = data.payment_link || null;
 
-        // Apply
-        $("invNo").value = data.invoice_no || "";
-        $("invDate").value = (data.invoice_date || "").slice(0,10) || "";
-
-        $("clientName").value = data.client_name || "";
-        $("clientEmail").value = data.client_email || "";
-        $("clientPhone").value = data.client_phone || "";
-        $("clientAddr").value = "";
-        if (data.client_addr) {
-          $("clientAddr").value = data.client_addr;
-        }
+        if ($("invNo")) $("invNo").value = data.invoice_no || "";
+        if ($("invDate")) $("invDate").value = (data.invoice_date || "").slice(0, 10) || "";
+        if ($("clientName")) $("clientName").value = data.client_name || "";
+        if ($("clientEmail")) $("clientEmail").value = data.client_email || "";
+        if ($("clientPhone")) $("clientPhone").value = data.client_phone || "";
+        if ($("clientAddr")) $("clientAddr").value = data.client_addr || "";
         setClientContactUI_("");
 
-        
-        $("notes").value = data.notes || "";
-        $("terms").value = data.terms || "";
+        if ($("notes")) $("notes").value = data.notes || "";
+        if ($("terms")) $("terms").value = data.terms || "";
 
         syncBizInfoDisplay();
 
-        const items = Array.isArray(data.items_json) ? data.items_json : [];
         const unpacked = unpackStoredItemsAndPayments_(data.items_json);
         renderItems(unpacked.items);
 
@@ -2451,36 +2628,37 @@
         if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
         renderPayments_();
 
-        // Save to local too, so a Live Server reload won't wipe it.
         saveDraftToLocalStorage();
-
         setLoadMsg(`Invoice ${data.invoice_no} loaded. Edit it and click "Save Draft".`);
         return data;
       }
 
-      // ===========================
-      // FLOW 1: LOAD QUOTE (PREVIEW)
-      // ===========================
       async function loadQuotePreviewFlow() {
+        const input = $("quoteNoInput")?.value?.trim() || "";
+        console.log("ACTIVE PREVIEW FLOW", { input });
+
         if (window.__LOADING_QUOTE) return;
         window.__LOADING_QUOTE = true;
 
         try {
           setCreateEnabled(false);
-
-          const quoteNo = $("quoteNoInput")?.value?.trim() || "";
           setLoadMsg("Loading quote...");
 
-          const quote = await loadQuoteByNumber(quoteNo);
-          window.CURRENT_QUOTE = quote;
-window.CURRENT_QUOTE_ID = quote.id;
+          let quote = null;
+          try {
+            quote = await loadQuoteByNumberFromSheet(input);
+          } catch (sheetErr) {
+            console.log("[sheet] Quote lookup failed, falling back to Supabase:", sheetErr?.message || sheetErr);
+            quote = await loadQuoteByNumber(input);
+          }
 
-          // New invoice context
+          window.CURRENT_QUOTE = quote;
+          window.CURRENT_QUOTE_ID = quote.id || null;
           window.CURRENT_INVOICE_ID = null;
-          $("invNo").value = "";
+          if ($("invNo")) $("invNo").value = "";
 
           applyCustomerFieldsToForm_(quote, quote?.payload);
-          $("notes").value = quote.notes || "";
+          if ($("notes")) $("notes").value = quote.notes || "";
 
           const previewItems = buildInvoiceItemsFromQuote(quote);
           renderItems(previewItems);
@@ -2488,7 +2666,7 @@ window.CURRENT_QUOTE_ID = quote.id;
           if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
           renderPayments_();
 
-          setLoadMsg(`Quote #${quote.quote_no} loaded (preview). Click "Create Invoice" to generate an invoice.`);
+          setLoadMsg(`Quote #${quote.quote_no || input} loaded (preview). Click "Create Invoice" to generate an invoice.`);
           setCreateEnabled(true);
         } catch (err) {
           console.error(err);
@@ -2501,24 +2679,19 @@ window.CURRENT_QUOTE_ID = quote.id;
         }
       }
 
-      // ===========================
-      // SHEET SYNC
-      // ===========================
       async function syncSheetNow() {
         if (!INVOICE_SYNC_WEBAPP_URL) return;
 
         try {
           const body = new URLSearchParams({
             secret: INVOICE_SYNC_SECRET,
-            action: "sync",
-            // If your GAS expects additional info, add it here later
+            action: "sync"
           });
 
           const res = await fetch(INVOICE_SYNC_WEBAPP_URL, {
             method: "POST",
             body,
-            cache: "no-store",
-            // IMPORTANT: do NOT set Content-Type manually
+            cache: "no-store"
           });
 
           const text = await res.text();
@@ -2539,19 +2712,20 @@ window.CURRENT_QUOTE_ID = quote.id;
       }
       window.syncSheetNow = syncSheetNow;
 
-      // ===========================
-      // FLOW 2: CREATE INVOICE
-      // ===========================
       async function createInvoiceFromLoadedQuote() {
-        const quote = window.CURRENT_QUOTE;
-        let q = quote;
+        try { await requireInvoiceAuth_(); } catch { return; }
+
+        let q = window.CURRENT_QUOTE;
         if (!q) {
-          // Try to recover by loading from the quote number input if available
           const quoteNo = $("quoteNoInput")?.value?.trim() || "";
           if (quoteNo) {
             try {
               setLoadMsg("Reloading quote...");
-              q = await loadQuoteByNumber(quoteNo);
+              try {
+                q = await loadQuoteByNumberFromSheet(quoteNo);
+              } catch {
+                q = await loadQuoteByNumber(quoteNo);
+              }
               window.CURRENT_QUOTE = q;
               window.CURRENT_QUOTE_ID = q?.id || null;
             } catch (err) {
@@ -2570,20 +2744,18 @@ window.CURRENT_QUOTE_ID = quote.id;
           setLoadMsg("Creating invoice...");
 
           const items = buildInvoiceItemsFromQuote(q);
-
           const customer = normalizeCustomerFields_(q, q?.payload);
 
           const insertRow = {
-            quote_id: q.id,
+            quote_id: q.id || null,
             quote_no: String(q.quote_no || ""),
             status: "draft",
             client_name: customer.client_name || null,
             client_email: customer.client_email || null,
             client_phone: customer.client_phone || null,
             payment_link: null,
-            
             items_json: items,
-            notes: q.notes || null,
+            notes: q.notes || null
           };
 
           const { data, error } = await window.sb
@@ -2596,18 +2768,15 @@ window.CURRENT_QUOTE_ID = quote.id;
 
           window.CURRENT_INVOICE_ID = data.id;
           window.CURRENT_PAYMENT_LINK = data.payment_link || null;
-          $("invNo").value = data.invoice_no || "";
+          if ($("invNo")) $("invNo").value = data.invoice_no || "";
           applyCustomerFieldsToForm_(data, q?.payload);
           window.INVOICE_PAYMENTS = [];
           if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
           renderPayments_();
 
-          // Save to local so refresh doesn't wipe it
           saveDraftToLocalStorage();
-
           setLoadMsg(`Invoice created: ${data.invoice_no} (edit it, then click "Save Draft").`);
-
-          syncSheetNow(); // don’t await
+          syncSheetNow();
         } catch (err) {
           console.error(err);
           setLoadMsg(err?.message || "Could not create invoice.", true);
@@ -2615,21 +2784,14 @@ window.CURRENT_QUOTE_ID = quote.id;
         }
       }
 
-      // ===========================
-      // EMAIL
-      // ===========================
       async function sendInvoiceEmailNow() {
-        console.log("[Send] sendInvoiceEmailNow() called");
         const to = $("clientEmail")?.value?.trim() || "";
-        console.log("[Send] client email:", to || "(empty)");
         if (!to) throw new Error("Client email is empty.");
 
         const itemCount = document.querySelectorAll("#itemsTbody tr").length;
-        console.log("[Send] invoice line item count:", itemCount);
         if (itemCount <= 0) throw new Error("No invoice content to send (no line items).");
 
         const invNo = $("invNo")?.value?.trim() || "";
-        console.log("[Send] invoice number:", invNo || "(empty)");
         const subject = invNo ? `Invoice ${invNo} — My Shirt Printing` : "Invoice — My Shirt Printing";
 
         const html = `
@@ -2640,15 +2802,6 @@ window.CURRENT_QUOTE_ID = quote.id;
           </div>
         `;
 
-        console.log("[Send] preparing payload", {
-          to,
-          invoiceNo: invNo || null,
-          subject,
-          hasHtml: !!html,
-          endpoint: EMAIL_WEBAPP_URL,
-          method: "POST"
-        });
-
         const body = new URLSearchParams({
           secret: EMAIL_WEBAPP_SECRET,
           to,
@@ -2656,21 +2809,8 @@ window.CURRENT_QUOTE_ID = quote.id;
           html
         });
 
-        console.log("[Send] payload detail", {
-          payload: Object.fromEntries(body.entries()),
-          recipient: to,
-          subject,
-          htmlLength: html.length
-        });
-
-        console.log("[Send] fetch started");
         const res = await fetch(EMAIL_WEBAPP_URL, { method: "POST", body });
         const text = await res.text();
-        console.log("[Send] response received", {
-          ok: res.ok,
-          status: res.status,
-          statusText: res.statusText
-        });
 
         let data = null;
         try {
@@ -2678,50 +2818,120 @@ window.CURRENT_QUOTE_ID = quote.id;
         } catch {
           data = null;
         }
-        console.log("[Send] parsed response", data ?? { rawText: text });
 
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${text || res.statusText || "Email send failed"}`);
         }
         if (!data || data.success !== true) {
-          throw new Error(data?.error || "Email failed (backend did not confirm success).\nEnsure Apps Script returns { success: true, recipient: '<email>' } only after MailApp.sendEmail() runs.");
+          throw new Error(data?.error || "Email failed.");
         }
 
         const confirmedRecipient = String(data.recipient || data.recipientEmail || data.to || to || "").trim();
-        console.log("[Send] backend confirmed MailApp send", { success: data.success, recipient: confirmedRecipient });
         return { success: true, recipient: confirmedRecipient || to };
       }
 
-      // ===========================
-      // WIRE BUTTONS
-      // ===========================
       document.addEventListener("DOMContentLoaded", () => {
         setCreateEnabled(false);
         wireSizeModal_();
         wireEntryRow();
 
-        // Biz sync (safe even if display els aren't in DOM)
+        detectRecoveryMode_().then((inRecovery) => {
+          if (!inRecovery) refreshStaffAuthUI_();
+        });
+
+        window.sb.auth.onAuthStateChange(() => {
+          if (authMode === "recovery") return;
+          refreshStaffAuthUI_();
+        });
+
+        $("btnStaffLogin")?.addEventListener("click", async () => {
+          const email = ($("staffEmail")?.value || "").trim();
+          const password = ($("staffPassword")?.value || "").trim();
+          if (!email || !email.includes("@")) {
+            setStaffAuthMsg_("Enter a valid email.", true);
+            return;
+          }
+          if (!password) {
+            setStaffAuthMsg_("Enter a password.", true);
+            return;
+          }
+          setStaffAuthMsg_("Logging in...");
+          const { error } = await window.sb.auth.signInWithPassword({ email, password });
+          if (error) {
+            console.log("LOGIN failed", error?.message || error);
+            setStaffAuthMsg_("LOGIN failed: " + (error?.message || "Unknown error"), true);
+            return;
+          }
+          $("staffEmail").value = "";
+          clearStaffPasswordFields_();
+          refreshStaffAuthUI_();
+        });
+
+        $("btnStaffLogout")?.addEventListener("click", async () => {
+          setStaffAuthMsg_("Logging out...");
+          const { error } = await window.sb.auth.signOut();
+          if (error) {
+            console.log("LOGOUT failed", error?.message || error);
+            setStaffAuthMsg_("Logout failed: " + (error?.message || "Unknown error"), true);
+            return;
+          }
+          clearStaffPasswordFields_();
+          refreshStaffAuthUI_();
+        });
+
+        $("btnStaffRecovery")?.addEventListener("click", async () => {
+          const newPassword = ($("staffRecoveryPassword")?.value || "").trim();
+          const confirmPassword = ($("staffRecoveryConfirm")?.value || "").trim();
+          if (!newPassword) {
+            setStaffRecoveryMsg_("Enter a new password.", true);
+            return;
+          }
+          if (newPassword.length < 6) {
+            setStaffRecoveryMsg_("Password must be at least 6 characters.", true);
+            return;
+          }
+          if (newPassword !== confirmPassword) {
+            setStaffRecoveryMsg_("Passwords do not match.", true);
+            return;
+          }
+          setStaffRecoveryMsg_("Updating password...");
+          const { error } = await window.sb.auth.updateUser({ password: newPassword });
+          if (error) {
+            console.log("PASSWORD UPDATE failed", error?.message || error);
+            setStaffRecoveryMsg_("Update failed: " + (error?.message || "Unknown error"), true);
+            return;
+          }
+
+          clearStaffPasswordFields_();
+          await window.sb.auth.signOut().catch(() => {});
+          setAuthMode_("login");
+          setStaffAuthMsg_("Password updated successfully. Please log in with your new password.");
+        });
+
         ["bizName","bizAddr","bizCity","bizPhone","bizEmail"].forEach((id) => {
           $(id)?.addEventListener("input", syncBizInfoDisplay);
         });
+
         $("clientContact")?.addEventListener("input", () => {
           setClientContactUI_($("clientContact")?.value || "");
         });
+
         if ($("paymentDate")) $("paymentDate").value = todayIso_();
         $("btnAddPayment")?.addEventListener("click", (e) => {
           e.preventDefault();
           addPaymentFromInputs_();
         });
+
         $("paymentAmount")?.addEventListener("keydown", (e) => {
           if (e.key === "Enter") {
             e.preventDefault();
             addPaymentFromInputs_();
           }
         });
+
         renderPayments_();
         syncBizInfoDisplay();
 
-        // Save Draft button: local backup first, then Supabase (creates or updates)
         $("btnSaveDraft")?.addEventListener("click", async () => {
           try {
             saveDraftToLocalStorage();
@@ -2731,32 +2941,6 @@ window.CURRENT_QUOTE_ID = quote.id;
             setLoadMsg(e?.message || "Save failed.", true);
           }
         });
-
-        // Restore Draft button: restore from local backup
-        $("btnRestoreDraft")?.addEventListener("click", () => {
-          const d = loadDraftFromLocalStorage();
-          if (!d) return alert("No local draft found on this browser.");
-          applyDraftObject(d);
-          setLoadMsg("Draft restored from this browser.");
-        });
-
-        // Auto-backup so Live Server reloads don’t wipe you out
-        setInterval(saveDraftToLocalStorage, 2000);
-        window.addEventListener("beforeunload", saveDraftToLocalStorage);
-
-        // On first load, if there's a draft and the page is empty, restore it
-        // Skip restore if the user explicitly cleared the draft in this browser.
-        const existingDraft = loadDraftFromLocalStorage();
-        const clearedFlag = (function(){ try { return localStorage.getItem('invoiceDraftCleared'); } catch { return null; } })();
-        if (
-          !clearedFlag &&
-          existingDraft &&
-          !($("invNo")?.value || "").trim() &&
-          document.querySelectorAll("#itemsTbody tr").length === 0
-        ) {
-          applyDraftObject(existingDraft);
-          setLoadMsg("Recovered draft from this browser.");
-        }
 
         $("btnLoadQuote")?.addEventListener("click", (e) => {
           e.preventDefault();
@@ -2781,14 +2965,9 @@ window.CURRENT_QUOTE_ID = quote.id;
 
         $("btnSend")?.addEventListener("click", async (e) => {
           e.preventDefault();
-          console.log("[Send] Send button clicked");
           const to = $("clientEmail")?.value?.trim() || "";
-          const invNo = $("invNo")?.value?.trim() || "";
-          console.log("[Send] preflight values", { clientEmail: to || "(empty)", invoiceNo: invNo || "(empty)" });
-
           if (!to) {
             setLoadMsg("Email failed: Client email is empty.", true);
-            console.error("[Send] blocked: client email is empty");
             return;
           }
 
@@ -2799,112 +2978,60 @@ window.CURRENT_QUOTE_ID = quote.id;
             setLoadMsg(toMsg);
           } catch (err) {
             console.error("Send error:", err);
-            console.error("[Send] caught error:", err?.message || err);
             setLoadMsg("Email failed: " + (err?.message || err), true);
           }
         });
 
         $("btnPrint")?.addEventListener("click", () => window.print());
         $("btnPdf")?.addEventListener("click", () => window.print());
-        // Hide load message during manual print (for browsers that don't apply @media print immediately)
-        window.addEventListener('beforeprint', () => {
-          const el = $("loadMsg"); if (el) { el._prevDisplay = el.style.display; el.style.display = 'none'; }
-          const btn = $("btnClearAll"); if (btn) { btn._prevDisplay = btn.style.display; btn.style.display = 'none'; }
-        });
-        window.addEventListener('afterprint', () => {
-          const el = $("loadMsg"); if (el) { el.style.display = el._prevDisplay || ''; delete el._prevDisplay; }
-          const btn = $("btnClearAll"); if (btn) { btn.style.display = btn._prevDisplay || ''; delete btn._prevDisplay; }
-        });
-      });
 
+        window.addEventListener("beforeprint", () => {
+          const el = $("loadMsg");
+          if (el) {
+            el._prevDisplay = el.style.display;
+            el.style.display = "none";
+          }
+          const btn = $("btnClearAll");
+          if (btn) {
+            btn._prevDisplay = btn.style.display;
+            btn.style.display = "none";
+          }
+        });
+
+        window.addEventListener("afterprint", () => {
+          const el = $("loadMsg");
+          if (el) {
+            el.style.display = el._prevDisplay || "";
+            delete el._prevDisplay;
+          }
+          const btn = $("btnClearAll");
+          if (btn) {
+            btn.style.display = btn._prevDisplay || "";
+            delete btn._prevDisplay;
+          }
+        });
+
+        const existingDraft = loadDraftFromLocalStorage();
+        const clearedFlag = (() => {
+          try { return localStorage.getItem("invoiceDraftCleared"); } catch { return null; }
+        })();
+
+        if (
+          !clearedFlag &&
+          existingDraft &&
+          !($("invNo")?.value || "").trim() &&
+          document.querySelectorAll("#itemsTbody tr").length === 0
+        ) {
+          applyDraftObject(existingDraft);
+          setLoadMsg("Recovered draft from this browser.");
+        }
+
+        setInterval(saveDraftToLocalStorage, 2000);
+        window.addEventListener("beforeunload", saveDraftToLocalStorage);
+      });
     })();
   </script>
 
-<script>
-const SHEETS_API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
-const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
-const TAB_NAME = "customer_quotes";
-
-async function loadQuoteByNumberFromSheet(quoteNoRaw) {
-  const quoteNo = String(quoteNoRaw || "").trim().replace(/^#/, "");
-  if (!quoteNo) throw new Error("Enter a quote number first.");
-
-  // A:T so column B and T are included
-  const range = `${TAB_NAME}!A:T`;
-  const url =
-    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SPREADSHEET_ID)}` +
-    `/values/${encodeURIComponent(range)}?key=${encodeURIComponent(SHEETS_API_KEY)}`;
-
-  const res = await fetch(url, { cache: "no-store" });
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data?.error?.message || `Sheets error ${res.status}`);
-  }
-
-  const rows = data.values || [];
-
-  // Skip header row, search column B (index 1)
-  const row = rows.slice(1).find(r => String(r[1] || "").trim() === quoteNo);
-
-  if (!row) {
-    throw new Error("Quote not found in sheet: " + quoteNo);
-  }
-
-  // Column T = index 19
-  const payloadCell = String(row[19] || "").trim();
-  if (!payloadCell) {
-    throw new Error(`Quote ${quoteNo} found, but payload_json in column T is empty.`);
-  }
-
-  let payload;
-  try {
-    payload = JSON.parse(payloadCell);
-  } catch (e) {
-    throw new Error(`Quote ${quoteNo} found, but payload_json is invalid JSON.`);
-  }
-
-  return {
-    quote_no: quoteNo,
-    name: String(row[2] || "").trim(),   // optional, if present
-    email: String(row[3] || "").trim(),  // optional, if present
-    phone: String(row[4] || "").trim(),  // optional, if present
-    notes: String(row[17] || "").trim(), // optional, adjust if needed
-    payload
-  };
-}
-</script>
-
-<script>
-(function () {
-  if (typeof window.loadQuoteByNumber !== "function") return;
-
-  const originalLoadQuoteByNumber = window.loadQuoteByNumber;
-
-  window.loadQuoteByNumber = async function (quoteNoRaw) {
-    const quoteNo = String(quoteNoRaw || "").trim().replace(/^#/, "");
-
-    try {
-      const quote = await loadQuoteByNumberFromSheet(quoteNo);
-      console.log("[sheet] Loaded quote", quoteNo);
-      return {
-        id: null,
-        quote_no: quote.quote_no,
-        name: quote.name || "",
-        email: quote.email || "",
-        phone: quote.phone || "",
-        notes: quote.notes || "",
-        payload: quote.payload || {}
-      };
-    } catch (err) {
-      console.log("[fallback] Sheet lookup failed, using original loader:", err.message);
-      return await originalLoadQuoteByNumber(quoteNoRaw);
-    }
-  };
-})();
-</script>
-
-  <!-- Size modal -->
   <div class="sizeModalBackdrop" id="sizeModalBackdrop" style="
     position:fixed; inset:0; background:rgba(0,0,0,.35);
     display:none; align-items:center; justify-content:center; z-index:9999;">

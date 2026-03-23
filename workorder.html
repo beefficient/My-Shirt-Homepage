@@ -70,7 +70,6 @@
     .modalBody img{max-width:100%;height:auto;display:block}
     .modalFooter{padding:14px;border-top:1px solid rgba(0,0,0,.08);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 
-    /* Preview (modal) 2-column layout for each item */
     .previewGrid{
       display:grid;
       grid-template-columns: 1.25fr .75fr;
@@ -86,27 +85,21 @@
     }
     .previewImages img{
       width:100%;
-      max-height:240px;        /* match your normal webpage image height */
+      max-height:240px;
       object-fit:contain;
       border:1px solid #bbb;
       border-radius:10px;
       background:#fff;
     }
 
-    /* Required field highlighting */
     .reqMark{color:var(--danger);font-weight:900;margin-left:4px}
     .invalid{border-color:var(--danger) !important; box-shadow:0 0 0 3px rgba(166,58,58,.14) !important}
 
-    /* Print */
     @media print{
       .noPrint{display:none !important}
       body{background:#fff; font-size:12.5px; line-height:1.35}
-
       .printOnly{font-size:12.5px; line-height:1.35}
-
-      /* Try to keep to one page */
-      @page { margin: 0.35in; } /* tight margins */
-
+      @page { margin: 0.35in; }
       .printOnly{display:block !important}
       .printCard{
         border:1px solid #bbb;
@@ -116,16 +109,12 @@
         page-break-inside: avoid;
         break-inside: avoid;
       }
-
-      /* Make item images SMALL */
       .printCard img{
         max-height:140px !important;
         width:auto !important;
         max-width:100% !important;
         object-fit:contain !important;
       }
-
-      /* Print 2-column item layout */
       .printItemGrid{
         display:grid;
         grid-template-columns: 1.25fr .75fr;
@@ -139,17 +128,13 @@
       }
       .printItemImages img{
         width:100% !important;
-        max-height:160px !important;  /* smaller for print */
+        max-height:160px !important;
         object-fit:contain !important;
         border:1px solid #bbb;
         border-radius:8px;
         background:#fff;
       }
-
-      /* Prevent awkward splits */
       .printSection, .printRow, .printCard { page-break-inside: avoid; break-inside: avoid; }
-
-      /* Hide links styling */
       a{color:inherit;text-decoration:none}
     }
     .printOnly{display:none}
@@ -179,7 +164,6 @@
     <div id="workorderSearchResults" class="hidden" style="margin-top:8px;border:1px solid var(--border);border-radius:12px;background:#fff;padding:8px"></div>
 
     <div class="grid">
-      <!-- LEFT -->
       <div class="card">
         <div class="cardHeader">
           <div class="cardTitle">
@@ -241,7 +225,6 @@
             <button class="tab" data-tab="approval">Customer Approval</button>
           </div>
 
-          <!-- ITEMS TAB -->
           <div id="tab-items" style="margin-top:10px">
             <div class="btnRow" style="justify-content:space-between">
               <div class="muted">Add each product/service line so production has everything they need.</div>
@@ -257,7 +240,6 @@
             <div id="itemsWrap" style="margin-top:12px;display:grid;gap:12px"></div>
           </div>
 
-          <!-- NOTES TAB -->
           <div id="tab-notes" class="hidden" style="margin-top:10px">
             <div class="row">
               <div>
@@ -335,7 +317,6 @@
             </div>
           </div>
 
-          <!-- APPROVAL TAB -->
           <div id="tab-approval" class="hidden" style="margin-top:10px">
             <div class="itemCard">
               <div class="itemTop">
@@ -378,7 +359,6 @@
         </div>
       </div>
 
-      <!-- RIGHT -->
       <div style="display:grid;gap:14px">
         <div class="card">
           <div class="cardHeader"><div class="cardTitle">Quick Summary</div></div>
@@ -404,10 +384,8 @@
     </div>
   </div>
 
-  <!-- PRINT VIEW -->
   <div class="printOnly" id="printView"></div>
 
-  <!-- CUSTOMER PREVIEW MODAL -->
   <div class="modalBackdrop hidden noPrint" id="modalBackdrop" role="dialog" aria-modal="true">
     <div class="modal">
       <div class="modalHeader">
@@ -427,7 +405,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
-  // ====== CONFIG ======
   const SERVICE_TYPES = [
     "Screen Printing",
     "Heat Transfers",
@@ -446,17 +423,24 @@
     "Sublimation",
   ]);
   const DEFAULT_SIZES = ["XS","S","M","L","XL","2XL","3XL","4XL"];
+  const TODDLER_SIZES = ["0-3mo","6mo","12mo","18mo","24mo","2T","3T","4T","5/6T"];
 
   const DRAFT_KEY = "workorder_mvp_html_v4_required_fields";
   const SAVED_WORKORDERS_KEY = "workorder_saved_records_v1";
+  const LEGACY_SAVED_WORKORDERS_KEYS = [
+    "workorder_saved_records",
+    "workorder_saved_records_v0",
+    "saved_work_orders",
+    "workorder_records"
+  ];
   const LOAD_MODE_KEY = "WORKORDER_LOAD_MODE";
   const LOAD_TARGET_KEY = "WORKORDER_LOAD_TARGET";
   const LOAD_INTENT_KEY = "WORKORDER_EXPLICIT_LOAD_INTENT";
+  const WO_SESSION_KEY = "WO_SESSION_MODE";
   const SUPABASE_URL = "https://tvtyjmeedapbsaopeebh.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHlqbWVlZGFwYnNhb3BlZWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzQ3MzUsImV4cCI6MjA4NzIxMDczNX0.VKNQc9G18OgJndoN3eiv5wcLWaAmqOcQ9qA4ve2tNsQ";
   const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-  // ====== HELPERS ======
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
   const isGarment = (type) => GARMENT_SERVICES.has(String(type||""));
@@ -486,6 +470,15 @@
     .replace(/^-+|-+$/g, "")
     .toUpperCase();
   const workOrderNoComparable_ = (value) => normalizeWorkOrderNo_(value).replace(/[^A-Z0-9]/g, "");
+  const parseLooseWorkOrderSequence_ = (value) => {
+    const s = normalizeWorkOrderNo_(value);
+    const m = s.match(/^WO-(\d{4})-(\d+)(?:-V\d+)?$/i);
+    if (!m) return null;
+    const year = Number(m[1]);
+    const seq = Number(m[2]);
+    if (!Number.isFinite(year) || !Number.isFinite(seq)) return null;
+    return { year, seq };
+  };
   const parseObject_ = (value) => {
     if (!value) return {};
     if (typeof value === "object") return value;
@@ -502,6 +495,14 @@
     if (!el) return;
     el.textContent = msg || "";
     el.style.color = isError ? "var(--danger)" : "var(--muted)";
+    console.log("SET LOAD MESSAGE ran", {
+      msg: String(msg || ""),
+      isError: !!isError,
+      woNumber: normalizeWorkOrderNo_(wo?.woNumber || ""),
+      mode: window.CURRENT_WORKORDER_MODE,
+      source: window.CURRENT_WORKORDER_SOURCE || null,
+      sessionMode: getSessionMode_()
+    });
   };
   const formatDateLabel_ = (value) => {
     const raw = String(value || "").trim();
@@ -529,9 +530,8 @@
     window.clearTimeout(toast._t);
     toast._t = setTimeout(()=>t.classList.add("hidden"), ms);
   };
-  const newSizeBreakdown = () => DEFAULT_SIZES.map(s => ({ size:s, enabled:false, qty:0 }));
+  const newSizeBreakdown = (sizes = DEFAULT_SIZES) => (Array.isArray(sizes) ? sizes : DEFAULT_SIZES).map(s => ({ size:String(s||""), enabled:false, qty:0 }));
   const sizeTotal = (rows) => Array.isArray(rows) ? rows.reduce((sum,r)=>sum + (r.enabled ? Number(r.qty||0) : 0), 0) : 0;
-  // Reuse the same business identity values used across invoice/internal quote pages.
   const SHOP_SENDER = {
     name: "My Shirt Company",
     email: "myshirtcustomerservice@gmail.com",
@@ -753,8 +753,7 @@
 
   function artworkKeyForItem(item){
     const ids = Array.isArray(item.artworkIds) ? item.artworkIds : [];
-    if(!ids.length) return `NO_ART_${item.id}`; // keep no-art items separate
-    // Key is based on the exact artwork IDs (order-sensitive)
+    if(!ids.length) return `NO_ART_${item.id}`;
     return ids.join("|");
   }
 
@@ -764,13 +763,11 @@
 
     await Promise.all(imgs.map(async (img) => {
       try{
-        // decode() is the most reliable when available (Chrome/Safari)
         if (img.decode) {
           await img.decode();
           return;
         }
       }catch(e){}
-      // fallback
       if(img.complete) return;
       await new Promise(res => { img.onload = res; img.onerror = res; });
     }));
@@ -789,11 +786,10 @@
     if(el && typeof el.focus === "function") el.focus();
   }
 
-  // ====== STATE ======
   let wo = null;
   window.CURRENT_WORKORDER_ID = null;
   window.CURRENT_WORKORDER_SOURCE = null;
-  window.CURRENT_WORKORDER_MODE = "new"; // "new" | "edit"
+  window.CURRENT_WORKORDER_MODE = "new";
   let SAVED_WORKORDERS_MEMORY = {};
   const SESSION_WO_HIGH_WATER = {};
 
@@ -879,13 +875,26 @@
 
   function getWorkOrderNumberVariants_(record){
     const payload = parseObject_(record?.payload);
+    const payloadState = payload?.state && typeof payload.state === "object" ? payload.state : {};
+    const payloadData = payload?.data && typeof payload.data === "object" ? payload.data : {};
     const raw = [
       record?.wo_number,
       record?.work_order_no,
       record?.workorder_no,
+      record?.woNumber,
+      record?.workOrderNo,
       payload?.woNumber,
       payload?.wo_number,
-      payload?.work_order_no
+      payload?.work_order_no,
+      payload?.workOrderNo,
+      payloadState?.woNumber,
+      payloadState?.wo_number,
+      payloadState?.work_order_no,
+      payloadState?.workOrderNo,
+      payloadData?.woNumber,
+      payloadData?.wo_number,
+      payloadData?.work_order_no,
+      payloadData?.workOrderNo
     ];
     const set = new Set();
     for (const value of raw) {
@@ -899,13 +908,35 @@
     const queryComparable = workOrderNoComparable_(queryRaw);
     if (!queryComparable) return false;
     const variants = getWorkOrderNumberVariants_(record);
-    return variants.some((no) => workOrderNoComparable_(no) === queryComparable);
+    if (variants.some((no) => workOrderNoComparable_(no) === queryComparable)) return true;
+
+    const querySeq = parseLooseWorkOrderSequence_(queryRaw);
+    if (!querySeq) return false;
+    return variants.some((no) => {
+      const vSeq = parseLooseWorkOrderSequence_(no);
+      return !!vSeq && vSeq.year === querySeq.year && vSeq.seq === querySeq.seq;
+    });
   }
 
   function getVisibleWorkOrderNumber_(){
     const fromState = normalizeWorkOrderNo_(wo?.woNumber || "");
     const fromInput = normalizeWorkOrderNo_($("loadWONumber")?.value || "");
-    return fromState || fromInput || buildWONumber();
+    return fromState || fromInput || "";
+  }
+
+  function removeSavedWorkOrderLocal_(workOrderNoRaw){
+    const workOrderNo = normalizeWorkOrderNo_(workOrderNoRaw);
+    if (!workOrderNo) return;
+    const records = getSavedWorkOrdersLocal_();
+    let changed = false;
+    for (const key of Object.keys(records)) {
+      const record = records[key];
+      if (normalizeWorkOrderNo_(key) === workOrderNo || workOrderRecordMatches_(record, workOrderNo)) {
+        delete records[key];
+        changed = true;
+      }
+    }
+    if (changed) setSavedWorkOrdersLocal_(records);
   }
 
   function hasCanonicalWONumber_(record, canonicalNo){
@@ -953,6 +984,29 @@
     } catch (e) {}
   }
 
+  function getSessionMode_() {
+    try { return sessionStorage.getItem(WO_SESSION_KEY) || ""; } catch (e) { return ""; }
+  }
+  function setSessionMode_(mode) {
+    try { sessionStorage.setItem(WO_SESSION_KEY, mode); } catch (e) {}
+  }
+  function woHasContent_(state) {
+    if (!state || typeof state !== "object") return false;
+    if ((state.customerName || "").trim()) return true;
+    if ((state.email || "").trim()) return true;
+    if ((state.phone || "").trim()) return true;
+    if ((state.company || "").trim()) return true;
+    if ((state.billingAddress || "").trim()) return true;
+    if ((state.shippingAddress || "").trim()) return true;
+    if ((state.notesCustomer || "").trim()) return true;
+    if ((state.notesInternal || "").trim()) return true;
+    if ((state.vendorName || "").trim()) return true;
+    if (Array.isArray(state.items) && state.items.some(i =>
+      (i.product || "").trim() || (i.location || "").trim() || (i.inkColors || "").trim()
+    )) return true;
+    return false;
+  }
+
   function clearWorkOrderSearchResults_(){
     const box = $("workorderSearchResults");
     if (!box) return;
@@ -972,7 +1026,6 @@
       if (workOrderNo || workOrderId) url.searchParams.set("mode", "edit");
       else url.searchParams.delete("mode");
 
-      // Never persist explicit auto-load flags in the URL.
       url.searchParams.delete("intent");
       url.searchParams.delete("autoload");
 
@@ -985,17 +1038,20 @@
     window.CURRENT_WORKORDER_SOURCE = null;
     window.CURRENT_WORKORDER_MODE = "new";
     clearLegacyLoadKeys_();
+    setSessionMode_("blank");
     syncWorkOrderUrl_("", "");
     clearDraftStorage_();
     clearWorkOrderSearchResults_();
     setLoadMsg("");
+    console.log("WO cleared stale load state", { reason: "clearWorkOrderLoadState_", sessionMode: getSessionMode_() });
   }
 
   async function resetToNewWorkOrder_(){
     clearWorkOrderLoadState_();
+    if ($("loadWONumber")) $("loadWONumber").value = "";
+    if ($("woNumber")) $("woNumber").textContent = "";
     wo = newWO();
-    await assignCanonicalWorkOrderNumber_({ force:true, reason:"new-work-order" });
-    if ($("loadWONumber")) $("loadWONumber").value = wo.woNumber || "";
+    console.log("WO reset to new", { woNumber: wo.woNumber, sessionMode: getSessionMode_() });
     renderAll();
   }
 
@@ -1023,8 +1079,8 @@
     quantity: 0,
     location: "",
     inkColors: "",
-    artNotes: "",      // OPTIONAL
-    artworkIds: [],    // references into wo.artworks[]
+    artNotes: "",
+    artworkIds: [],
   });
 
   const newWO = () => ({
@@ -1046,7 +1102,7 @@
     createdDate: todayISO(),
     dueDate: "",
     customerName: "",
-    company: "",          // OPTIONAL
+    company: "",
     email: "",
     phone: "",
     billingAddress: "",
@@ -1054,7 +1110,7 @@
     notesCustomer: "",
     notesInternal: "",
     items: [defaultItem()],
-    artworks: [], // shared artwork library for this work order
+    artworks: [],
     approval: { approved:false, approvedName:"", approvedDate:"", termsAccepted:false }
   });
 
@@ -1062,7 +1118,7 @@
     const parsed = input && typeof input === "object" ? deepClone_(input) : {};
     const next = { ...newWO(), ...parsed };
 
-    next.woNumber = normalizeWorkOrderNo_(next.woNumber) || buildWONumber();
+    next.woNumber = normalizeWorkOrderNo_(next.woNumber) || "";
     next.workOrderType = String(next.workOrderType || "customer").toLowerCase() === "vendor" ? "vendor" : "customer";
     next.parentWorkOrderId = next.parentWorkOrderId || null;
     next.parentWorkOrderNo = normalizeWorkOrderNo_(next.parentWorkOrderNo || "");
@@ -1362,11 +1418,12 @@
     };
   }
 
-  function applyWorkOrderCandidate_(candidate){
+  function applyWorkOrderCandidate_(candidate, options = {}){
     if (!candidate || !candidate.record) return;
     applyWorkOrderObject(candidate.record, {
       currentId: candidate.currentId || null,
-      source: candidate.source || (candidate.currentId ? "supabase" : "local")
+      source: candidate.source || (candidate.currentId ? "supabase" : "local"),
+      showLoadedMsg: options.showLoadedMsg !== false
     });
     if (candidate.record) saveWorkOrderRecordLocally_(candidate.record);
     clearWorkOrderSearchResults_();
@@ -1397,7 +1454,7 @@
         <div style="font-weight:900">${esc(m.workOrderNo || "(No Number)")}</div>
         <div class="help" style="margin-top:2px">${esc(m.customerName)} • ${esc(m.dateLabel)}${m.workOrderType === "vendor" ? " • Vendor" : ""}</div>
       `;
-      btn.addEventListener("click", () => applyWorkOrderCandidate_(m));
+      btn.addEventListener("click", () => applyWorkOrderCandidate_(m, { showLoadedMsg: true }));
       box.appendChild(btn);
     }
 
@@ -1406,13 +1463,10 @@
 
   function buildWorkOrderStateFromRecord_(record){
     const payload = parseObject_(record?.payload);
-    if (payload && Object.keys(payload).length) {
-      payload.woNumber = payload.woNumber || extractWorkOrderNumber_(record);
-      if (!payload.workOrderType && record?.work_order_type) payload.workOrderType = record.work_order_type;
-      return hydrateWorkOrderState_(payload);
-    }
-
-    return hydrateWorkOrderState_({
+    const payloadState = payload?.state && typeof payload.state === "object" ? payload.state : null;
+    const payloadData = payload?.data && typeof payload.data === "object" ? payload.data : null;
+    const payloadEffective = payloadState || payloadData || payload;
+    const rowState = {
       woNumber: extractWorkOrderNumber_(record),
       workOrderType: extractWorkOrderType_(record),
       parentWorkOrderId: record?.parent_work_order_id || null,
@@ -1441,15 +1495,56 @@
       approval: record?.approval || { approved:false, approvedName:"", approvedDate:"", termsAccepted:false },
       items: Array.isArray(record?.items_json) ? record.items_json : [],
       artworks: Array.isArray(record?.artworks_json) ? record.artworks_json : []
-    });
+    };
+
+    if (payloadEffective && Object.keys(payloadEffective).length) {
+      const merged = {
+        ...rowState,
+        ...payloadEffective,
+        woNumber:
+          extractWorkOrderNumber_(record) ||
+          payloadEffective?.woNumber ||
+          payloadEffective?.wo_number ||
+          payloadEffective?.work_order_no ||
+          payloadEffective?.workOrderNo ||
+          "",
+        workOrderType:
+          extractWorkOrderType_(record) ||
+          payloadEffective?.workOrderType ||
+          payloadEffective?.work_order_type ||
+          "customer"
+      };
+      return hydrateWorkOrderState_(merged);
+    }
+
+    return hydrateWorkOrderState_(rowState);
   }
 
   function applyWorkOrderObject(record, options = {}){
-    const state = buildWorkOrderStateFromRecord_(record);
+    console.log("WO load rollback path used");
+    console.log("WO load apply starting", { id: record?.id ?? null, woNumber: extractWorkOrderNumber_(record) });
+    let state;
+    try {
+      state = buildWorkOrderStateFromRecord_(record);
+    } catch (err) {
+      console.log("WO load apply failed", err);
+      setLoadMsg("Could not apply work order record: " + (err?.message || err), true);
+      return;
+    }
     wo = state;
     window.CURRENT_WORKORDER_ID = options.currentId ?? record?.id ?? null;
     window.CURRENT_WORKORDER_SOURCE = options.source || (window.CURRENT_WORKORDER_ID ? "supabase" : "local");
     window.CURRENT_WORKORDER_MODE = "edit";
+    setSessionMode_("edit");
+    console.log("WO applied state", {
+      woNumber: state?.woNumber || "",
+      currentId: window.CURRENT_WORKORDER_ID,
+      source: window.CURRENT_WORKORDER_SOURCE,
+      mode: window.CURRENT_WORKORDER_MODE,
+      items: Array.isArray(state?.items) ? state.items.length : 0
+    });
+    console.log("WO load apply success", { id: window.CURRENT_WORKORDER_ID, woNumber: state.woNumber, source: window.CURRENT_WORKORDER_SOURCE });
+    console.log("WO active saved record found", { id: window.CURRENT_WORKORDER_ID, woNumber: state.woNumber, source: window.CURRENT_WORKORDER_SOURCE });
 
     if ($("loadWONumber")) $("loadWONumber").value = state.woNumber || "";
 
@@ -1458,8 +1553,19 @@
     }
 
     renderAll();
-    const kind = isVendorWorkOrder_(state) ? "vendor work order" : "work order";
-    setLoadMsg(`${kind.charAt(0).toUpperCase() + kind.slice(1)} ${state.woNumber} loaded. Edit it and click "Save Work Order".`);
+    console.log("WO render after load", {
+      woNumber: normalizeWorkOrderNo_(wo?.woNumber || ""),
+      mode: window.CURRENT_WORKORDER_MODE,
+      source: window.CURRENT_WORKORDER_SOURCE || null,
+      currentId: window.CURRENT_WORKORDER_ID || null
+    });
+
+    if (options.showLoadedMsg !== false) {
+      const kind = isVendorWorkOrder_(state) ? "vendor work order" : "work order";
+      const msg = `${kind.charAt(0).toUpperCase() + kind.slice(1)} ${state.woNumber} loaded. Edit it and click "Save Work Order".`;
+      console.log("WO set loaded message", msg);
+      setLoadMsg(msg);
+    }
   }
 
   function getSavedWorkOrdersLocal_(){
@@ -1472,8 +1578,185 @@
     }
 
     const fromStorage = parsed && typeof parsed === "object" ? parsed : {};
-    SAVED_WORKORDERS_MEMORY = { ...fromStorage, ...SAVED_WORKORDERS_MEMORY };
+
+    const legacyMerged = {};
+    for (const key of LEGACY_SAVED_WORKORDERS_KEYS) {
+      try {
+        const rawLegacy = localStorage.getItem(key);
+        const legacyParsed = rawLegacy ? JSON.parse(rawLegacy) : {};
+        if (legacyParsed && typeof legacyParsed === "object") {
+          Object.assign(legacyMerged, legacyParsed);
+        }
+      } catch (e) {}
+    }
+
+    SAVED_WORKORDERS_MEMORY = { ...legacyMerged, ...fromStorage, ...SAVED_WORKORDERS_MEMORY };
     return { ...SAVED_WORKORDERS_MEMORY };
+  }
+
+  function extractPossibleWorkOrderRecordsFromValue_(value, out = []){
+    if (!value) return out;
+
+    if (Array.isArray(value)) {
+      value.forEach(v => extractPossibleWorkOrderRecordsFromValue_(v, out));
+      return out;
+    }
+
+    if (typeof value !== "object") return out;
+
+    const directNo = normalizeWorkOrderNo_(
+      value?.wo_number ||
+      value?.work_order_no ||
+      value?.woNumber ||
+      value?.workOrderNo ||
+      value?.payload?.wo_number ||
+      value?.payload?.work_order_no ||
+      value?.payload?.woNumber ||
+      value?.payload?.workOrderNo ||
+      value?.state?.wo_number ||
+      value?.state?.work_order_no ||
+      value?.state?.woNumber ||
+      value?.state?.workOrderNo ||
+      value?.data?.wo_number ||
+      value?.data?.work_order_no ||
+      value?.data?.woNumber ||
+      value?.data?.workOrderNo
+    );
+
+    if (directNo) {
+      if (value?.state && typeof value.state === "object") {
+        const draftState = hydrateWorkOrderState_(value.state);
+        out.push({
+          id: value?.meta?.currentId || null,
+          wo_number: directNo,
+          work_order_no: directNo,
+          work_order_type: draftState?.workOrderType || "customer",
+          payload: deepClone_(draftState),
+          customer_name: draftState?.customerName || null,
+          due_date: draftState?.dueDate || null,
+          status: draftState?.approval?.approved ? "approved" : "draft"
+        });
+      } else {
+        out.push(value);
+      }
+    }
+
+    Object.values(value).forEach(v => extractPossibleWorkOrderRecordsFromValue_(v, out));
+    return out;
+  }
+
+  function bootstrapLocalWorkOrdersIndex_(){
+    const merged = getSavedWorkOrdersLocal_();
+    let imported = 0;
+
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+
+        let parsed;
+        try {
+          parsed = JSON.parse(raw);
+        } catch (e) {
+          continue;
+        }
+
+        const found = extractPossibleWorkOrderRecordsFromValue_(parsed, []);
+        for (const rec of found) {
+          const no = extractWorkOrderNumber_(rec) || normalizeWorkOrderNo_(rec?.woNumber || rec?.workOrderNo || "");
+          if (!no) continue;
+
+          if (!merged[no]) {
+            merged[no] = {
+              ...rec,
+              wo_number: no,
+              work_order_no: no,
+              saved_at: new Date().toISOString()
+            };
+            imported++;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("bootstrapLocalWorkOrdersIndex_ failed:", e);
+    }
+
+    setSavedWorkOrdersLocal_(merged);
+
+    console.log("BOOTSTRAP local WO index", {
+      imported,
+      total: Object.keys(merged || {}).length
+    });
+
+    return merged;
+  }
+
+  function findDraftWorkOrderRecord_(workOrderNoRaw){
+    const workOrderNo = normalizeWorkOrderNo_(workOrderNoRaw);
+    if (!workOrderNo) return null;
+
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const state = parsed && parsed.state ? parsed.state : parsed;
+      const meta = parsed && parsed.meta ? parsed.meta : {};
+      const draftState = hydrateWorkOrderState_(state || {});
+      const draftNo = normalizeWorkOrderNo_(draftState?.woNumber || "");
+      if (!draftNo || workOrderNoComparable_(draftNo) !== workOrderNoComparable_(workOrderNo)) return null;
+
+      return {
+        id: meta?.currentId || null,
+        work_order_no: draftNo,
+        wo_number: draftNo,
+        work_order_type: draftState?.workOrderType || "customer",
+        payload: deepClone_(draftState),
+        customer_name: draftState?.customerName || null,
+        due_date: draftState?.dueDate || null,
+        status: draftState?.approval?.approved ? "approved" : "draft"
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function findWorkOrderInAllLocalStorage_(workOrderNoRaw){
+    const target = normalizeWorkOrderNo_(workOrderNoRaw);
+    if (!target) return null;
+
+    const tryCollect = (val, bucket = []) => {
+      if (!val) return bucket;
+      if (Array.isArray(val)) {
+        val.forEach(v => tryCollect(v, bucket));
+        return bucket;
+      }
+      if (typeof val === "object") {
+        bucket.push(val);
+        Object.values(val).forEach(v => tryCollect(v, bucket));
+      }
+      return bucket;
+    };
+
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        let parsed = null;
+        try { parsed = JSON.parse(raw); } catch (e) { continue; }
+
+        const objects = tryCollect(parsed, []);
+        for (const obj of objects) {
+          if (workOrderRecordMatches_(obj, target)) return obj;
+        }
+      }
+    } catch (e) {}
+
+    return null;
   }
 
   function setSavedWorkOrdersLocal_(records){
@@ -1529,69 +1812,37 @@
     }) || null;
   }
 
-  function buildSupabaseWorkOrderVariants_(draft){
-    const full = {
-      wo_number: draft.wo_number,
-      work_order_no: draft.wo_number,
-      work_order_type: draft.work_order_type,
-      parent_work_order_id: draft.parent_work_order_id,
-      parent_work_order_no: draft.parent_work_order_no,
-      vendor_name: draft.vendor_name,
-      vendor_contact: draft.vendor_contact,
-      vendor_email: draft.vendor_email,
-      vendor_phone: draft.vendor_phone,
-      vendor_type: draft.vendor_type,
-      vendor_method: draft.vendor_method,
-      vendor_status: draft.vendor_status,
-      internal_vendor_notes: draft.internal_vendor_notes,
-      vendor_notes: draft.vendor_notes,
-      vendor_item_ids: draft.vendor_item_ids,
-      related_vendor_workorders: draft.related_vendor_workorders,
-      created_date: draft.created_date,
-      due_date: draft.due_date,
-      customer_name: draft.customer_name,
-      company: draft.company,
-      email: draft.email,
-      phone: draft.phone,
-      billing_address: draft.billing_address,
-      shipping_address: draft.shipping_address,
-      notes_customer: draft.notes_customer,
-      notes_internal: draft.notes_internal,
-      status: draft.status,
-      approval: draft.approval,
-      items_json: draft.items_json,
-      artworks_json: draft.artworks_json,
-      payload: draft.payload
+  function buildSupabaseSafeWorkOrderRow_(draft){
+    const payload = parseObject_(draft?.payload || {});
+    const canonicalNumber = normalizeWorkOrderNo_(
+      draft?.wo_number ||
+      payload?.woNumber ||
+      payload?.wo_number ||
+      payload?.work_order_no ||
+      wo?.woNumber ||
+      buildWONumber()
+    );
+
+    const safePayload = {
+      ...payload,
+      woNumber: canonicalNumber,
+      wo_number: canonicalNumber,
+      work_order_no: canonicalNumber
     };
 
-    return [
-      full,
-      {
-        wo_number: draft.wo_number,
-        work_order_no: draft.wo_number,
-        work_order_type: draft.work_order_type,
-        parent_work_order_no: draft.parent_work_order_no,
-        vendor_name: draft.vendor_name,
-        vendor_contact: draft.vendor_contact,
-        vendor_email: draft.vendor_email,
-        vendor_phone: draft.vendor_phone,
-        vendor_type: draft.vendor_type,
-        vendor_method: draft.vendor_method,
-        vendor_status: draft.vendor_status,
-        customer_name: draft.customer_name,
-        due_date: draft.due_date,
-        status: draft.status,
-        payload: draft.payload
-      }
-    ];
+    return {
+      work_order_no: canonicalNumber,
+      wo_number: canonicalNumber,
+      payload: safePayload
+    };
   }
 
   async function fetchSupabaseWorkOrderRows_(){
     if (!sb) throw new Error("Supabase client not initialized.");
 
-    let result = await sb.from("work_orders").select("*").order("created_at", { ascending:false }).limit(500);
+    let result = await sb.from("work_orders").select("*").order("created_at", { ascending:false }).limit(5000);
     if (result.error) {
-      result = await sb.from("work_orders").select("*").limit(500);
+      result = await sb.from("work_orders").select("*").limit(5000);
     }
     if (result.error) throw result.error;
     return Array.isArray(result.data) ? result.data : [];
@@ -1601,38 +1852,19 @@
     const workOrderNo = normalizeWorkOrderNo_(workOrderNoRaw);
     const comparable = workOrderNoComparable_(workOrderNoRaw);
     if (!workOrderNo) return null;
-
     if (!sb) return null;
 
     const directAttempts = [
-      () => sb
-        .from("work_orders")
-        .select("*")
-        .eq("work_order_no", workOrderNo)
-        .order("created_at", { ascending:false })
-        .limit(1)
-        .maybeSingle(),
-      () => sb
-        .from("work_orders")
-        .select("*")
-        .eq("wo_number", workOrderNo)
-        .order("created_at", { ascending:false })
-        .limit(1)
-        .maybeSingle(),
-      () => sb
-        .from("work_orders")
-        .select("*")
-        .ilike("work_order_no", workOrderNo)
-        .order("created_at", { ascending:false })
-        .limit(1)
-        .maybeSingle(),
-      () => sb
-        .from("work_orders")
-        .select("*")
-        .ilike("wo_number", workOrderNo)
-        .order("created_at", { ascending:false })
-        .limit(1)
-        .maybeSingle()
+      () => sb.from("work_orders").select("*").eq("work_order_no", workOrderNo).order("created_at", { ascending:false }).limit(1).maybeSingle(),
+      () => sb.from("work_orders").select("*").eq("wo_number", workOrderNo).order("created_at", { ascending:false }).limit(1).maybeSingle(),
+      () => sb.from("work_orders").select("*").ilike("work_order_no", workOrderNo).order("created_at", { ascending:false }).limit(1).maybeSingle(),
+      () => sb.from("work_orders").select("*").ilike("wo_number", workOrderNo).order("created_at", { ascending:false }).limit(1).maybeSingle(),
+      () => sb.from("work_orders").select("*").eq("payload->>woNumber", workOrderNo).order("created_at", { ascending:false }).limit(1).maybeSingle(),
+      () => sb.from("work_orders").select("*").eq("payload->>wo_number", workOrderNo).order("created_at", { ascending:false }).limit(1).maybeSingle(),
+      () => sb.from("work_orders").select("*").eq("payload->>work_order_no", workOrderNo).order("created_at", { ascending:false }).limit(1).maybeSingle(),
+      () => sb.from("work_orders").select("*").eq("payload->state->>woNumber", workOrderNo).order("created_at", { ascending:false }).limit(1).maybeSingle(),
+      () => sb.from("work_orders").select("*").eq("payload->state->>wo_number", workOrderNo).order("created_at", { ascending:false }).limit(1).maybeSingle(),
+      () => sb.from("work_orders").select("*").eq("payload->data->>woNumber", workOrderNo).order("created_at", { ascending:false }).limit(1).maybeSingle()
     ];
 
     for (const attempt of directAttempts) {
@@ -1684,71 +1916,28 @@
 
   async function saveWorkOrderToSupabase_(draftOverride = null){
     const draft = draftOverride || getWorkOrderDraftObject();
-    const canonicalNumber = normalizeWorkOrderNo_(draft.wo_number || draft?.payload?.woNumber || wo?.woNumber || buildWONumber());
+    const safeRow = buildSupabaseSafeWorkOrderRow_(draft);
+    const canonicalNumber = safeRow.work_order_no;
+
     draft.wo_number = canonicalNumber;
-    draft.payload = {
-      ...parseObject_(draft.payload),
-      woNumber: canonicalNumber,
-      wo_number: canonicalNumber,
-      work_order_no: canonicalNumber
-    };
-    const variants = buildSupabaseWorkOrderVariants_(draft);
+    draft.payload = safeRow.payload;
 
-    const forceCanonicalOnRow_ = async (rowLike) => {
-      if (!rowLike?.id || !sb) return rowLike;
-      if (hasCanonicalWONumber_(rowLike, canonicalNumber)) return rowLike;
-
-      const patch = {
-        wo_number: canonicalNumber,
-        work_order_no: canonicalNumber,
-        payload: draft.payload
-      };
+    if (window.CURRENT_WORKORDER_ID) {
+      console.log("SAVE WO row being written", safeRow);
       const { data, error } = await sb
         .from("work_orders")
-        .update(patch)
-        .eq("id", rowLike.id)
+        .update(safeRow)
+        .eq("id", window.CURRENT_WORKORDER_ID)
         .select("*")
         .maybeSingle();
 
-      if (error) return rowLike;
-      return data || rowLike;
-    };
-
-    const ensureCanonicalRow_ = async (rowLike) => {
-      const fixed = await forceCanonicalOnRow_(rowLike);
-      if (!hasCanonicalWONumber_(fixed, canonicalNumber)) {
-        console.error("SAVE WO returned row mismatch", {
-          canonicalNumber,
-          returned: workOrderDebugFields_(fixed)
-        });
-        throw new Error(`Supabase did not persist canonical work order number ${canonicalNumber}.`);
-      }
-      return fixed;
-    };
-
-    if (window.CURRENT_WORKORDER_ID) {
-      let lastError = null;
-      for (const variant of variants) {
-        const rowToSave = {
-          ...variant,
-          wo_number: canonicalNumber,
-          work_order_no: canonicalNumber,
-          payload: draft.payload
-        };
-        console.log("SAVE WO row being written", rowToSave);
-        const { data, error } = await sb
-          .from("work_orders")
-          .update(rowToSave)
-          .eq("id", window.CURRENT_WORKORDER_ID)
-          .select("*")
-          .maybeSingle();
-
-        if (!error) {
-          return await ensureCanonicalRow_(data || { id: window.CURRENT_WORKORDER_ID, payload: draft.payload, work_order_no: canonicalNumber, wo_number: canonicalNumber });
-        }
-        lastError = error;
-      }
-      throw lastError || new Error("Could not update work order.");
+      if (error) throw error;
+      return data || {
+        id: window.CURRENT_WORKORDER_ID,
+        work_order_no: canonicalNumber,
+        wo_number: canonicalNumber,
+        payload: safeRow.payload
+      };
     }
 
     const existing = await findSupabaseWorkOrderByNumber_(canonicalNumber).catch(() => null);
@@ -1757,27 +1946,19 @@
       return saveWorkOrderToSupabase_(draft);
     }
 
-    let lastError = null;
-    for (const variant of variants) {
-      const rowToSave = {
-        ...variant,
-        wo_number: canonicalNumber,
-        work_order_no: canonicalNumber,
-        payload: draft.payload
-      };
-      console.log("SAVE WO row being written", rowToSave);
-      const { data, error } = await sb
-        .from("work_orders")
-        .insert(rowToSave)
-        .select("*")
-        .maybeSingle();
+    console.log("SAVE WO row being written", safeRow);
+    const { data, error } = await sb
+      .from("work_orders")
+      .insert(safeRow)
+      .select("*")
+      .maybeSingle();
 
-      if (!error) {
-        return await ensureCanonicalRow_(data || { payload: draft.payload, work_order_no: canonicalNumber, wo_number: canonicalNumber });
-      }
-      lastError = error;
-    }
-    throw lastError || new Error("Could not create work order.");
+    if (error) throw error;
+    return data || {
+      work_order_no: canonicalNumber,
+      wo_number: canonicalNumber,
+      payload: safeRow.payload
+    };
   }
 
   async function saveWorkOrderRecord_(){
@@ -1809,13 +1990,11 @@
 
     const canonicalNumber = workOrderNumber;
     console.log("SAVE WO canonical number", canonicalNumber);
-
     console.log("SAVE WO payload", draft.payload);
     console.log("SAVE WO number", workOrderNumber);
 
     setLoadMsg(`Saving ${workOrderNumber}...`);
 
-    // Mirror locally before remote save completes so immediate Load by number always works.
     const optimisticLocalRecord = {
       id: window.CURRENT_WORKORDER_ID || null,
       work_order_no: workOrderNumber,
@@ -1858,29 +2037,48 @@
 
       window.CURRENT_WORKORDER_MODE = "edit";
 
+      const persistedNumber =
+        extractWorkOrderNumber_(saved || {}) ||
+        normalizeWorkOrderNo_(draft.payload?.work_order_no || draft.payload?.woNumber || "") ||
+        workOrderNumber;
+      console.log("SAVE WO persistedNumber", persistedNumber);
+
+      wo.woNumber = persistedNumber;
+      draft.wo_number = persistedNumber;
+      draft.payload = {
+        ...parseObject_(draft.payload),
+        woNumber: persistedNumber,
+        wo_number: persistedNumber,
+        work_order_no: persistedNumber
+      };
+
+      if (persistedNumber && persistedNumber !== workOrderNumber) {
+        removeSavedWorkOrderLocal_(workOrderNumber);
+      }
+
       const record = {
         ...(saved || {}),
         id: saved?.id || window.CURRENT_WORKORDER_ID || null,
-        work_order_no: workOrderNumber,
-        wo_number: workOrderNumber,
-        work_order_type: draft.work_order_type,
-        parent_work_order_id: draft.parent_work_order_id,
-        parent_work_order_no: draft.parent_work_order_no,
-        vendor_name: draft.vendor_name,
-        vendor_contact: draft.vendor_contact,
-        vendor_email: draft.vendor_email,
-        vendor_phone: draft.vendor_phone,
-        vendor_type: draft.vendor_type,
-        vendor_method: draft.vendor_method,
-        vendor_status: draft.vendor_status,
-        internal_vendor_notes: draft.internal_vendor_notes,
-        vendor_notes: draft.vendor_notes,
-        vendor_item_ids: draft.vendor_item_ids,
-        related_vendor_workorders: draft.related_vendor_workorders,
+        work_order_no: persistedNumber,
+        wo_number: persistedNumber,
+        work_order_type: saved?.work_order_type || draft.work_order_type,
+        parent_work_order_id: saved?.parent_work_order_id ?? draft.parent_work_order_id,
+        parent_work_order_no: saved?.parent_work_order_no ?? draft.parent_work_order_no,
+        vendor_name: saved?.vendor_name ?? draft.vendor_name,
+        vendor_contact: saved?.vendor_contact ?? draft.vendor_contact,
+        vendor_email: saved?.vendor_email ?? draft.vendor_email,
+        vendor_phone: saved?.vendor_phone ?? draft.vendor_phone,
+        vendor_type: saved?.vendor_type ?? draft.vendor_type,
+        vendor_method: saved?.vendor_method ?? draft.vendor_method,
+        vendor_status: saved?.vendor_status ?? draft.vendor_status,
+        internal_vendor_notes: saved?.internal_vendor_notes ?? draft.internal_vendor_notes,
+        vendor_notes: saved?.vendor_notes ?? draft.vendor_notes,
+        vendor_item_ids: saved?.vendor_item_ids ?? draft.vendor_item_ids,
+        related_vendor_workorders: saved?.related_vendor_workorders ?? draft.related_vendor_workorders,
         payload: draft.payload,
-        customer_name: draft.customer_name,
-        due_date: draft.due_date,
-        status: draft.status
+        customer_name: saved?.customer_name ?? draft.customer_name,
+        due_date: saved?.due_date ?? draft.due_date,
+        status: saved?.status ?? draft.status
       };
       console.log("SAVE WO row being written", record);
       const localSaved = saveWorkOrderRecordLocally_(record);
@@ -1889,13 +2087,13 @@
       console.log("POST-SAVE saved row", saved || record);
       console.log("POST-SAVE saved row work order fields", workOrderDebugFields_(saved || localSaved || record));
 
-      syncWorkOrderUrl_(workOrderNumber, window.CURRENT_WORKORDER_ID || "");
-      if ($("loadWONumber")) $("loadWONumber").value = workOrderNumber;
+      syncWorkOrderUrl_(persistedNumber, window.CURRENT_WORKORDER_ID || "");
+      if ($("loadWONumber")) $("loadWONumber").value = persistedNumber;
       saveDraft();
 
       const savedWhere = window.CURRENT_WORKORDER_SOURCE === "supabase"
-        ? `Saved ${workOrderNumber}.`
-        : `Saved ${workOrderNumber} on this device.`;
+        ? `Saved ${persistedNumber}.`
+        : `Saved ${persistedNumber} on this device.`;
       setLoadMsg(savedWhere);
       toast(window.CURRENT_WORKORDER_SOURCE === "supabase" ? "Work order saved." : "Work order saved locally.");
       return record;
@@ -1946,113 +2144,90 @@
 
   async function loadWorkOrderByNumber(workOrderNoRaw){
     const workOrderNo = normalizeWorkOrderNo_(workOrderNoRaw);
-    const comparable = workOrderNoComparable_(workOrderNoRaw);
     if (!workOrderNo) throw new Error("Enter a work order number first.");
 
-    // Immediate in-memory fallback for the currently open work order.
-    if (workOrderNoComparable_(wo?.woNumber) === comparable) {
-      const draft = getWorkOrderDraftObject();
-      const currentRecord = {
-        id: window.CURRENT_WORKORDER_ID || null,
-        work_order_no: workOrderNo,
-        wo_number: workOrderNo,
-        work_order_type: draft.work_order_type,
-        payload: draft.payload,
-        customer_name: draft.customer_name,
-        due_date: draft.due_date,
-        status: draft.status
-      };
-      saveWorkOrderRecordLocally_(currentRecord);
-      console.log("LOAD WO local candidate", workOrderDebugFields_(currentRecord));
-      console.log("LOAD WO match decision", {
-        source: "in-memory",
-        query: workOrderNo,
-        queryComparable: comparable,
-        candidate: workOrderDebugFields_(currentRecord),
-        match: true
-      });
-      applyWorkOrderObject(currentRecord, {
-        currentId: window.CURRENT_WORKORDER_ID || null,
-        source: window.CURRENT_WORKORDER_ID ? "supabase" : "local"
-      });
-      console.log("LOAD WO found", currentRecord);
-      return currentRecord;
-    }
-
-    const localRows = Object.values(getSavedWorkOrdersLocal_() || {});
-    console.log("LOAD WO local rows", localRows);
-    localRows.forEach((row) => {
-      const candidate = workOrderDebugFields_(row);
-      const match = workOrderRecordMatches_(row, workOrderNo);
-      console.log("LOAD WO candidate number", candidate.work_order_no || candidate.wo_number || candidate.payload_work_order_no || candidate.payload_woNumber || "");
-      console.log("LOAD WO candidate top-level number", row?.work_order_no || row?.wo_number || "");
-      console.log("LOAD WO candidate payload number", parseObject_(row?.payload)?.work_order_no || parseObject_(row?.payload)?.woNumber || "");
-      console.log("LOAD WO match?", match);
-      console.log("LOAD WO local candidate", candidate);
-      console.log("LOAD WO match decision", {
-        source: "local",
-        query: workOrderNo,
-        queryComparable: comparable,
-        candidateComparable: candidate.comparable,
-        candidate,
-        match
-      });
-    });
+    console.log("WO load rollback path used", { query: workOrderNo });
+    console.log("WO load started", workOrderNo);
 
     clearWorkOrderSearchResults_();
     setLoadMsg(`Loading ${workOrderNo}...`);
 
     const local = findLocalWorkOrderRecord_(workOrderNo);
     if (local) {
-      const localCandidate = makeWorkOrderCandidate_(local, "local");
-      applyWorkOrderCandidate_(localCandidate);
+      console.log("WO load found raw record", local);
+      applyWorkOrderObject(local, {
+        currentId: local?.id || null,
+        source: "local",
+        showLoadedMsg: true
+      });
       console.log("LOAD WO found", local);
       return local;
+    }
+
+    const draftRecord = findDraftWorkOrderRecord_(workOrderNo);
+    if (draftRecord) {
+      console.log("WO load found raw record", draftRecord);
+      applyWorkOrderObject(draftRecord, {
+        currentId: draftRecord?.id || null,
+        source: draftRecord?.id ? "supabase" : "local",
+        showLoadedMsg: true
+      });
+      saveWorkOrderRecordLocally_(draftRecord);
+      console.log("LOAD WO found", draftRecord);
+      return draftRecord;
     }
 
     if (sb) {
       try {
         const remoteExact = await findSupabaseWorkOrderByNumber_(workOrderNo);
         if (remoteExact) {
-          const remoteCandidate = makeWorkOrderCandidate_(remoteExact, "supabase");
-          applyWorkOrderCandidate_(remoteCandidate);
+          console.log("WO load found raw record", remoteExact);
+          applyWorkOrderObject(remoteExact, {
+            currentId: remoteExact?.id || null,
+            source: "supabase",
+            showLoadedMsg: true
+          });
+          saveWorkOrderRecordLocally_(remoteExact);
           console.log("LOAD WO found", remoteExact);
           return remoteExact;
         }
       } catch (error) {
         console.error("Direct Supabase load-by-number failed:", error);
+        console.log("WO load apply failed", error);
       }
     }
 
     const { candidates, supabaseError } = await gatherSearchableWorkOrders_();
-    const matches = candidates.filter(c => {
-      const no = c.workOrderNo || "";
-      const decision = workOrderRecordMatches_(c.record, workOrderNo)
-        || no === workOrderNo
-        || workOrderNoComparable_(no) === comparable;
-      console.log("LOAD WO match decision", {
-        source: c.source || "candidate",
-        query: workOrderNo,
-        queryComparable: comparable,
-        candidate: {
-          id: c.currentId || null,
-          workOrderNo: no,
-          normalized: normalizeWorkOrderNo_(no),
-          comparable: workOrderNoComparable_(no),
-          variants: getWorkOrderNumberVariants_(c.record),
-          variantComparables: getWorkOrderNumberVariants_(c.record).map(v => workOrderNoComparable_(v))
-        },
-        match: decision
-      });
-      return decision;
-    });
+    const matches = candidates.filter(c => workOrderRecordMatches_(c.record, workOrderNo));
+
     if (!matches.length) {
+      const emergencyLocal = findWorkOrderInAllLocalStorage_(workOrderNo);
+      if (emergencyLocal) {
+        console.log("WO load found raw record", emergencyLocal);
+        applyWorkOrderObject(emergencyLocal, {
+          currentId: emergencyLocal?.id || null,
+          source: emergencyLocal?.id ? "supabase" : "local",
+          showLoadedMsg: true
+        });
+        saveWorkOrderRecordLocally_(emergencyLocal);
+        console.log("LOAD WO found", emergencyLocal);
+        return emergencyLocal;
+      }
+
       console.log("LOAD WO not found after all sources", workOrderNo);
+      setLoadMsg(`Work order not found: ${workOrderNo}`, true);
+      console.log("WO cleared stale load state", { query: workOrderNo });
       if (supabaseError) throw new Error(`Could not load ${workOrderNo} from Supabase, and no local copy was found.`);
       throw new Error(`Work order not found: ${workOrderNo}`);
     }
 
-    applyWorkOrderCandidate_(matches[0]);
+    console.log("WO load found raw record", matches[0].record);
+    applyWorkOrderObject(matches[0].record, {
+      currentId: matches[0].currentId || null,
+      source: matches[0].source || (matches[0].currentId ? "supabase" : "local"),
+      showLoadedMsg: true
+    });
+    saveWorkOrderRecordLocally_(matches[0].record);
     console.log("LOAD WO found", matches[0].record);
     return matches[0].record;
   }
@@ -2062,11 +2237,23 @@
     const selectedItems = masterState.items.filter(i => selectedIds.includes(i.id));
     if (!selectedItems.length) return { selectedIds: [], items: [], artworks: [] };
 
-    const items = selectedItems.map((src) => ({
-      ...deepClone_(src),
-      sourceItemId: src.id,
-      id: crypto.randomUUID()
-    }));
+    const items = selectedItems.map((src) => {
+      const cloned = deepClone_(src) || {};
+      const item = {
+        ...cloned,
+        sourceItemId: src.id,
+        id: crypto.randomUUID(),
+        sizeBreakdown: Array.isArray(src.sizeBreakdown)
+          ? src.sizeBreakdown.map((row, idx) => ({
+              size: row?.size || DEFAULT_SIZES[idx] || `Size ${idx+1}`,
+              enabled: !!row?.enabled,
+              qty: Number(row?.qty || 0)
+            }))
+          : newSizeBreakdown(),
+        artworkIds: Array.isArray(src.artworkIds) ? src.artworkIds.slice() : []
+      };
+      return item;
+    });
     const artIds = new Set();
     items.forEach(i => (Array.isArray(i.artworkIds) ? i.artworkIds : []).forEach(id => artIds.add(id)));
     const artworks = (Array.isArray(masterState.artworks) ? masterState.artworks : []).filter(a => artIds.has(a.id));
@@ -2096,9 +2283,14 @@
     const localRecord = {
       id: masterState.parentWorkOrderId || window.CURRENT_WORKORDER_ID || null,
       work_order_no: normalizeWorkOrderNo_(masterState.woNumber),
+      wo_number: normalizeWorkOrderNo_(masterState.woNumber),
       work_order_type: "customer",
-      related_vendor_workorders: deepClone_(masterState.relatedVendorWorkorders || []),
-      payload: deepClone_(masterState),
+      payload: deepClone_({
+        ...masterState,
+        woNumber: normalizeWorkOrderNo_(masterState.woNumber),
+        wo_number: normalizeWorkOrderNo_(masterState.woNumber),
+        work_order_no: normalizeWorkOrderNo_(masterState.woNumber)
+      }),
       customer_name: masterState.customerName || null,
       due_date: masterState.dueDate || null,
       status: masterState.approval?.approved ? "approved" : "draft"
@@ -2108,10 +2300,11 @@
     const masterId = masterState.parentWorkOrderId || window.CURRENT_WORKORDER_ID || null;
     if (!masterId || !sb) return;
     try {
-      await sb.from("work_orders").update({
-        related_vendor_workorders: deepClone_(masterState.relatedVendorWorkorders || []),
-        payload: deepClone_(masterState)
-      }).eq("id", masterId);
+      const safeRow = buildSupabaseSafeWorkOrderRow_({
+        wo_number: normalizeWorkOrderNo_(masterState.woNumber),
+        payload: localRecord.payload
+      });
+      await sb.from("work_orders").update(safeRow).eq("id", masterId);
     } catch (e) {
       console.warn("Could not persist master vendor links to Supabase:", e);
     }
@@ -2180,20 +2373,17 @@
     try {
       let saved = null;
       if (sb) {
-        const variants = buildSupabaseWorkOrderVariants_(vendorDraft);
-        let lastError = null;
-        for (const variant of variants) {
-          const { data, error } = await sb.from("work_orders").insert(variant).select("*").maybeSingle();
-          if (!error) { saved = data || null; break; }
-          lastError = error;
-        }
-        if (!saved && lastError) throw lastError;
+        const safeRow = buildSupabaseSafeWorkOrderRow_(vendorDraft);
+        const { data, error } = await sb.from("work_orders").insert(safeRow).select("*").maybeSingle();
+        if (error) throw error;
+        saved = data || null;
       }
 
       vendorRecord = {
         ...(saved || {}),
         id: saved?.id || null,
         work_order_no: vendorDraft.wo_number,
+        wo_number: vendorDraft.wo_number,
         work_order_type: "vendor",
         parent_work_order_id: vendorDraft.parent_work_order_id,
         parent_work_order_no: vendorDraft.parent_work_order_no,
@@ -2218,6 +2408,7 @@
       vendorRecord = {
         id: null,
         work_order_no: vendorDraft.wo_number,
+        wo_number: vendorDraft.wo_number,
         work_order_type: "vendor",
         parent_work_order_id: vendorDraft.parent_work_order_id,
         parent_work_order_no: vendorDraft.parent_work_order_no,
@@ -2249,7 +2440,8 @@
 
     applyWorkOrderObject(vendorRecord, {
       currentId: vendorRecord.id || null,
-      source: vendorRecord.id ? "supabase" : "local"
+      source: vendorRecord.id ? "supabase" : "local",
+      showLoadedMsg: false
     });
     toast("Vendor work order created and opened.");
   }
@@ -2271,11 +2463,13 @@
 
     const { candidates, supabaseError } = await gatherSearchableWorkOrders_();
     if (!candidates.length) {
+      setLoadMsg("No saved work orders found.", true);
       if (supabaseError) throw new Error("No work orders found locally, and Supabase is unavailable.");
       throw new Error("No saved work orders found.");
     }
 
-    applyWorkOrderCandidate_(candidates[0]);
+    console.log("WO load found raw record", candidates[0].record);
+    applyWorkOrderCandidate_(candidates[0], { showLoadedMsg: true });
     return candidates[0].record;
   }
 
@@ -2299,7 +2493,8 @@
     }
 
     if (matches.length === 1) {
-      applyWorkOrderCandidate_(matches[0]);
+      console.log("WO load found raw record", matches[0].record);
+      applyWorkOrderCandidate_(matches[0], { showLoadedMsg: true });
       return matches[0].record;
     }
 
@@ -2321,12 +2516,14 @@
         const { data, error } = await sb.from("work_orders").select("*").eq("id", workOrderId).maybeSingle();
         if (error) throw error;
         if (data) {
-          applyWorkOrderObject(data, { currentId: data.id || null, source: "supabase" });
+          console.log("WO load found raw record", data);
+          applyWorkOrderObject(data, { currentId: data.id || null, source: "supabase", showLoadedMsg: false });
           saveWorkOrderRecordLocally_(data);
           return true;
         }
       } catch (error) {
         console.error("Work order auto-load by id failed:", error);
+        console.log("WO load apply failed", error);
       }
     }
 
@@ -2338,34 +2535,107 @@
     return false;
   }
 
-  // ====== LOAD/SAVE ======
   function loadDraft(){
     const raw = localStorage.getItem(DRAFT_KEY);
-    if(!raw) return false;
+    if(!raw) {
+      console.log("LOAD DRAFT ran", { restored: false, reason: "no-local-draft", sessionMode: getSessionMode_() });
+      return { restored: false, kind: "none" };
+    }
+
     try{
       const parsed = JSON.parse(raw);
-
       const state = parsed && parsed.state ? parsed.state : parsed;
       const meta = parsed && parsed.meta ? parsed.meta : {};
-      wo = hydrateWorkOrderState_(state);
-      window.CURRENT_WORKORDER_ID = meta.currentId || null;
-      window.CURRENT_WORKORDER_SOURCE = meta.source || null;
-      window.CURRENT_WORKORDER_MODE = meta.mode === "edit" ? "edit" : "new";
-      return true;
-    }catch(e){}
-    return false;
+      const hydrated = hydrateWorkOrderState_(state);
+      const draftNo = normalizeWorkOrderNo_(hydrated?.woNumber || "");
+      const requestedMode = meta.mode === "edit" ? "edit" : "new";
+      const explicitUrlLoadTarget = getExplicitUrlLoadTarget_();
+
+      console.log("LOAD DRAFT meta", meta);
+      console.log("LOAD DRAFT requestedMode", requestedMode);
+      console.log("LOAD DRAFT currentId", meta.currentId || null);
+
+      const hasRealSavedEdit =
+        requestedMode === "edit" &&
+        (
+          !!meta.currentId ||
+          !!explicitUrlLoadTarget.intentional
+        );
+
+      wo = hydrated;
+      window.CURRENT_WORKORDER_ID = hasRealSavedEdit ? (meta.currentId || null) : null;
+      window.CURRENT_WORKORDER_SOURCE = hasRealSavedEdit ? (meta.source || null) : null;
+      window.CURRENT_WORKORDER_MODE = hasRealSavedEdit ? "edit" : "new";
+
+      if (requestedMode === "edit" && !hasRealSavedEdit) {
+        console.log("LOAD DRAFT downgraded local-only edit to new draft", {
+          draftNo,
+          currentId: meta.currentId || null,
+          explicitUrlLoad: explicitUrlLoadTarget.intentional,
+          urlWorkOrderNo: explicitUrlLoadTarget.workOrderNo || "",
+          urlWorkOrderId: explicitUrlLoadTarget.workOrderId || ""
+        });
+      }
+
+      const kind = hasRealSavedEdit ? "edit" : "draft";
+
+      console.log("LOAD DRAFT effectiveMode", window.CURRENT_WORKORDER_MODE);
+      console.log("LOAD DRAFT ran", {
+        restored: true,
+        kind,
+        requestedMode,
+        effectiveMode: window.CURRENT_WORKORDER_MODE,
+        woNumber: draftNo,
+        currentId: window.CURRENT_WORKORDER_ID,
+        source: window.CURRENT_WORKORDER_SOURCE,
+        sessionMode: getSessionMode_(),
+        storageSource: "localStorage"
+      });
+
+      return { restored: true, kind };
+    }catch(e){
+      console.log("LOAD DRAFT ran", { restored: false, reason: "parse-error", error: e?.message || String(e) });
+      return { restored: false, kind: "none" };
+    }
   }
 
   function saveDraft(){
     try{
+      const currentMode = window.CURRENT_WORKORDER_MODE;
+      const sessionMode = getSessionMode_();
+
+      if (currentMode === "edit") {
+        if (sessionMode !== "edit") setSessionMode_("edit");
+      } else if (sessionMode === "blank") {
+        if (woHasContent_(wo)) {
+          setSessionMode_("new-draft");
+          console.log("WO active draft found (upgraded from blank)", { woNumber: wo?.woNumber });
+        } else {
+          return;
+        }
+      } else if (sessionMode !== "new-draft") {
+        if (woHasContent_(wo)) {
+          setSessionMode_("new-draft");
+          console.log("WO active draft found", { woNumber: wo?.woNumber });
+        }
+      }
+
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
         state: wo,
         meta: {
-          mode: window.CURRENT_WORKORDER_MODE === "edit" ? "edit" : "new",
+          mode: currentMode === "edit" ? "edit" : "new",
           currentId: window.CURRENT_WORKORDER_ID || null,
           source: window.CURRENT_WORKORDER_SOURCE || null
         }
       }));
+      console.log("SAVE DRAFT ran", {
+        mode: currentMode,
+        sessionMode: getSessionMode_(),
+        woNumber: normalizeWorkOrderNo_(wo?.woNumber || ""),
+        currentId: window.CURRENT_WORKORDER_ID || null,
+        source: window.CURRENT_WORKORDER_SOURCE || null,
+        storageTarget: "localStorage"
+      });
     }catch(e){
       console.warn("Draft save failed:", e);
       toast(
@@ -2376,12 +2646,10 @@
     }
   }
 
-  // ====== VALIDATION ======
   function validateAllRequired({ includeApproval = false } = {}){
     clearInvalids();
     const vendorMode = isVendorWorkOrder_(wo);
 
-    // Top-level required fields (company is optional)
     const requiredTop = vendorMode
       ? [
           { id:"createdDate", label:"Created Date" },
@@ -2411,26 +2679,22 @@
       }
     }
 
-    // Items required fields (artNotes + image are OPTIONAL)
     if(!wo.items.length){
       missing.push("At least one item");
     }else{
       wo.items.forEach((it) => {
-        // product required
         if(!String(it.product||"").trim()){
           missing.push("Item: Product / Description");
           const el = document.querySelector(`input[data-field="product"][data-id="${it.id}"]`);
           markInvalid(el);
         }
 
-        // location required
         if(!String(it.location||"").trim()){
           missing.push("Item: Location / Finish");
           const el = document.querySelector(`input[data-field="location"][data-id="${it.id}"]`);
           markInvalid(el);
         }
 
-        // inkColors required
         if(!String(it.inkColors||"").trim()){
           missing.push("Item: Colors / Material");
           const el = document.querySelector(`input[data-field="inkColors"][data-id="${it.id}"]`);
@@ -2441,18 +2705,15 @@
           const total = sizeTotal(it.sizeBreakdown);
           if(total <= 0){
             missing.push("Item: Size breakdown (select sizes + quantities)");
-            // mark first size checkbox as invalid to show where to fix
             const el = document.querySelector(`input[type="checkbox"][data-sizecheck^="${it.id}:"]`);
             markInvalid(el);
           }
         }else{
-          // itemSize required
           if(!String(it.itemSize||"").trim()){
             missing.push("Item: Item Size / Dimensions");
             const el = document.querySelector(`input[data-field="itemSize"][data-id="${it.id}"]`);
             markInvalid(el);
           }
-          // quantity required (>0)
           if(Number(it.quantity||0) <= 0){
             missing.push("Item: Quantity");
             const el = document.querySelector(`input[data-field="quantity"][data-id="${it.id}"]`);
@@ -2462,7 +2723,6 @@
       });
     }
 
-    // Approval-specific required fields
     if(includeApproval){
       if(!wo.approval.termsAccepted){
         missing.push("Approval: Terms checked");
@@ -2475,7 +2735,6 @@
     }
 
     if(missing.length){
-      // de-dupe
       const uniq = [...new Set(missing)];
       toast("Missing required fields:\n• " + uniq.join("\n• "), "error", 5200);
       focusFirstInvalid();
@@ -2484,10 +2743,17 @@
     return true;
   }
 
-  // ====== RENDER ======
   function updateSummary(){
     if ($("loadWONumber")) $("loadWONumber").value = wo.woNumber || "";
     $("woNumber").textContent = wo.woNumber;
+    console.log("SET WO NUMBER ran", {
+      sourceFn: "updateSummary",
+      loadWONumber: $("loadWONumber")?.value || "",
+      woNumber: $("woNumber")?.textContent || "",
+      stateWoNumber: normalizeWorkOrderNo_(wo?.woNumber || ""),
+      mode: window.CURRENT_WORKORDER_MODE,
+      sessionMode: getSessionMode_()
+    });
     $("createdDate").value = wo.createdDate || todayISO();
     $("dueDate").value = wo.dueDate || "";
     $("customerName").value = wo.customerName || "";
@@ -2508,7 +2774,6 @@
     if ($("vendorStatus")) $("vendorStatus").value = wo.vendorStatus || "draft";
     if ($("internalVendorNotes")) $("internalVendorNotes").value = wo.internalVendorNotes || "";
 
-    // approval UI
     $("termsAccepted").checked = !!wo.approval.termsAccepted;
     $("approvedName").value = wo.approval.approvedName || "";
     $("approvedDate").value = wo.approval.approvedDate || "";
@@ -2624,7 +2889,10 @@
 
         <div class="inline2" style="margin-top:6px">
           <div>
-            <label>${esc(sizeFieldLabel(it.serviceType))} <span class="reqMark">*</span></label>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <label style="margin:0">${esc(sizeFieldLabel(it.serviceType))} <span class="reqMark">*</span></label>
+              <button type="button" class="btn small" data-action="toggleToddlerSizes" data-id="${it.id}" title="Toggle Toddler/Baby sizes">ToddlerBaby Sizes</button>
+            </div>
             <div data-slot="sizeArea"></div>
           </div>
 
@@ -2660,7 +2928,6 @@
         </div>
       `;
 
-      // size area
       const sizeArea = card.querySelector('[data-slot="sizeArea"]');
       if(garment){
         const box = document.createElement("div");
@@ -2693,7 +2960,6 @@
         sizeArea.appendChild(box);
       }
 
-      // image area (shared artwork)
       const imageArea = card.querySelector('[data-slot="imageArea"]');
       const ids = Array.isArray(it.artworkIds) ? it.artworkIds : [];
       const imgs = ids.map(id => wo.artworks.find(a => a.id === id)).filter(Boolean);
@@ -2734,7 +3000,6 @@
     saveDraft();
   }
 
-  // ====== APPROVAL ======
   function markApproved(){
     if(!validateAllRequired({ includeApproval: true })) return;
 
@@ -2751,11 +3016,9 @@
     renderAll();
   }
 
-  // ====== CUSTOMER PREVIEW ======
   async function openPreview(){
-    validateAllRequired({ includeApproval: false }); // warn + highlight, but don't block
+    validateAllRequired({ includeApproval: false });
 
-    // Group items by artwork
     const groupsMap = new Map();
     for(const item of wo.items){
       const key = artworkKeyForItem(item);
@@ -2813,7 +3076,8 @@
 
                       ${isGarment(i.serviceType) && i.variantColor?.trim()
                         ? `<div style="margin-top:6px"><b>Shirt Color:</b> ${esc(i.variantColor)}</div>`
-                        : ``}
+                        : ``
+                      }
 
                       <div style="margin-top:6px">
                         <div>
@@ -2835,7 +3099,8 @@
 
                       ${i.artNotes?.trim()
                         ? `<div style="margin-top:6px"><b>Notes:</b> <span style="white-space:pre-wrap">${esc(i.artNotes)}</span></div>`
-                        : ``}
+                        : ``
+                      }
                     </div>
                   `).join('<hr style="border:none;border-top:1px solid rgba(0,0,0,.08);margin:6px 0">')}
                 </div>
@@ -2858,17 +3123,14 @@
       }
     `;
     $("modalBody").innerHTML = html;
-    
-    // Wait for all images to load before showing modal
     await waitForImages($("modalBody"));
-    
     $("modalBackdrop").classList.remove("hidden");
   }
+
   function closePreview(){
     $("modalBackdrop").classList.add("hidden");
   }
 
-  // ====== PRINT VIEW ======
   function buildPrintView(){
     const status = wo.approval.approved ? "Approved" : "Draft";
     const vendorMode = isVendorWorkOrder_(wo);
@@ -2879,13 +3141,11 @@
       const woNotes = String(vendorNotesDisplay || "").trim();
       const methodNorm = String(vendorMethodDisplay || "").trim().toLowerCase();
 
-      // If item notes is just the same as method text (e.g., "DTG"), prefer real vendor notes.
       if (itemNotes && itemNotes.toLowerCase() !== methodNorm) return itemNotes;
       if (woNotes && woNotes !== "-") return woNotes;
       return itemNotes || "-";
     };
-    
-    // Group items by artwork
+
     const groupsMap = new Map();
     for(const item of wo.items){
       const key = artworkKeyForItem(item);
@@ -2894,10 +3154,10 @@
     }
     const groups = Array.from(groupsMap.values());
 
-    const items = groups.map((itemsInGroup, gIdx) => {
+    const items = groups.map((itemsInGroup) => {
       const ids = Array.isArray(itemsInGroup[0].artworkIds) ? itemsInGroup[0].artworkIds : [];
       const imgs = ids.map(id => wo.artworks.find(a => a.id === id)).filter(Boolean);
-      const printImgs = imgs.slice(0, 2); // keep print clean (2 max)
+      const printImgs = imgs.slice(0, 2);
 
       return `
         <div class="printCard">
@@ -2910,7 +3170,8 @@
 
                   ${isGarment(i.serviceType) && i.variantColor?.trim()
                     ? `<div style="margin-top:2px"><b>Shirt:</b> ${esc(i.variantColor)}</div>`
-                    : ``}
+                    : ``
+                  }
 
                   <div style="margin-top:2px">
                     <b>${esc(sizeFieldLabel(i.serviceType))}:</b>
@@ -3005,7 +3266,6 @@
     `;
   }
 
-  // ====== EVENTS ======
   function bindTopInputs(){
     const bind = (id, path) => {
       const el = $(id);
@@ -3050,7 +3310,6 @@
     $("termsAccepted").addEventListener("change",(e)=>{ wo.approval.termsAccepted = !!e.target.checked; renderAll(); });
     $("approvedName").addEventListener("input",(e)=>{ wo.approval.approvedName = e.target.value; renderAll(); });
 
-    // clear invalid highlight as user types
     document.querySelectorAll("input,textarea,select").forEach(el=>{
       el.addEventListener("input", ()=> el.classList.remove("invalid"));
       el.addEventListener("change", ()=> el.classList.remove("invalid"));
@@ -3101,7 +3360,6 @@
 
   function bindItemsEvents(){
     const wrap = $("itemsWrap");
-    const MAX_IMAGES_PER_ITEM = 6;
 
     wrap.addEventListener("click", async (e)=>{
       const btn = e.target.closest("[data-action]");
@@ -3119,11 +3377,13 @@
       if(action==="dupColor"){
         const src = wo.items.find(i => i.id === id);
         if(!src) return;
-
         const clone = {
           ...src,
           id: crypto.randomUUID(),
-          variantColor: "", // clear color so it's obvious what to change
+          variantColor: "",
+          // ensure sizeBreakdown is a deep copy so quantities don't sync across items
+          sizeBreakdown: Array.isArray(src.sizeBreakdown) ? src.sizeBreakdown.map(r => ({ size: r.size, enabled: !!r.enabled, qty: Number(r.qty||0) })) : newSizeBreakdown(),
+          artworkIds: Array.isArray(src.artworkIds) ? src.artworkIds.slice() : []
         };
 
         wo.items.push(clone);
@@ -3168,12 +3428,37 @@
           renderAll();
         }
       }
+
+      if(action==="toggleToddlerSizes"){
+        const it = wo.items.find(i=>i.id===id);
+        if(!it) return;
+
+        // determine current size set
+        const currentSizes = Array.isArray(it.sizeBreakdown) ? it.sizeBreakdown.map(r=>String(r.size||"")) : [];
+        const usingToddler = currentSizes.some(s => s && TODDLER_SIZES.includes(s));
+
+        const targetSizes = usingToddler ? DEFAULT_SIZES : TODDLER_SIZES;
+
+        // preserve quantities by name where possible
+        const qtyMap = {};
+        (it.sizeBreakdown || []).forEach(r => { qtyMap[String(r.size||"")] = { enabled: !!r.enabled, qty: Number(r.qty||0) }; });
+
+        it.sizeBreakdown = newSizeBreakdown(targetSizes).map(r => {
+          const saved = qtyMap[r.size];
+          return { size: r.size, enabled: !!(saved && saved.enabled), qty: Number(saved ? saved.qty : 0) };
+        });
+
+        // update total qty
+        it.quantity = sizeTotal(it.sizeBreakdown);
+        toast(`Switched to ${usingToddler ? 'regular' : 'toddler/baby'} sizes for item.`);
+        renderAll();
+        return;
+      }
     });
 
     wrap.addEventListener("change", async (e)=>{
       const el = e.target;
 
-      // upload artwork (shared library)
       if(el.matches('[data-action="uploadArtwork"]')){
         const id = el.dataset.id;
         const files = Array.from(el.files || []);
@@ -3184,7 +3469,8 @@
         if(!it) return;
 
         if(!Array.isArray(wo.artworks)) wo.artworks = [];
-        if(!Array.isArray(it.artworkIds)) it.artworkIds = [];
+        // ensure this item's artworkIds array is an independent copy
+        it.artworkIds = Array.isArray(it.artworkIds) ? it.artworkIds.slice() : [];
 
         for(const file of files){
           if(!file.type.startsWith("image/")){
@@ -3198,14 +3484,12 @@
 
           const dataUrl = await readFileAsDataUrl(file);
 
-          // De-dupe at the work order level
           let existing = wo.artworks.find(a => a.dataUrl === dataUrl);
           if(!existing){
             existing = { id: crypto.randomUUID(), name: file.name, dataUrl };
             wo.artworks.push(existing);
           }
 
-          // Link to this item (no duplicates)
           if(!it.artworkIds.includes(existing.id)){
             it.artworkIds.push(existing.id);
           }
@@ -3216,14 +3500,12 @@
         return;
       }
 
-      // service type
       if(el.matches('select[data-field="serviceType"]')){
         onServiceTypeChange(el.dataset.id, el.value);
         renderAll();
         return;
       }
 
-      // checkbox size
       if(el.matches('input[type="checkbox"][data-vendorselect]')){
         const id = String(el.dataset.vendorselect || "");
         if (!Array.isArray(wo.vendorItemIds)) wo.vendorItemIds = [];
@@ -3236,7 +3518,6 @@
         return;
       }
 
-      // checkbox size
       if(el.matches('input[type="checkbox"][data-sizecheck]')){
         const [id, idxStr] = el.dataset.sizecheck.split(":");
         const idx = Number(idxStr);
@@ -3245,9 +3526,8 @@
           const checked = !!el.checked;
           it.sizeBreakdown[idx].enabled = checked;
 
-          // If unchecked, erase the qty
           if(!checked){
-            it.sizeBreakdown[idx].qty = 0; // state
+            it.sizeBreakdown[idx].qty = 0;
           }
 
           it.quantity = sizeTotal(it.sizeBreakdown);
@@ -3256,7 +3536,6 @@
         return;
       }
 
-      // size qty
       if(el.matches('input[type="number"][data-sizeqty]')){
         const [id, idxStr] = el.dataset.sizeqty.split(":");
         const idx = Number(idxStr);
@@ -3269,7 +3548,6 @@
         return;
       }
 
-      // normal fields
       const field = el.dataset.field;
       const id = el.dataset.id;
       if(field && id){
@@ -3297,27 +3575,74 @@
     });
   }
 
-  // ====== INIT ======
   async function init(){
     const pendingLoad = getExplicitUrlLoadTarget_();
     const explicitUrlLoad = !!pendingLoad.intentional;
+    const sessionMode = getSessionMode_();
 
     disableBrowserFormRestore_();
     clearLegacyLoadKeys_();
+    setLoadMsg("");
 
-    // Restore in-progress work unless there is an explicit URL auto-load request.
-    const restoredDraft = explicitUrlLoad ? false : loadDraft();
-    if(!restoredDraft){
+    console.log("INIT ran", {
+      sessionMode,
+      explicitUrlLoad,
+      url: window.location.href,
+      sourceSessionStorage: "WO_SESSION_MODE",
+      sourceLocalStorage: DRAFT_KEY
+    });
+
+    let draftRestore = { restored: false, kind: "none" };
+
+    if (explicitUrlLoad) {
+      console.log("WO refresh restore source: url-explicit");
       window.CURRENT_WORKORDER_MODE = "new";
       window.CURRENT_WORKORDER_ID = null;
       window.CURRENT_WORKORDER_SOURCE = null;
       wo = newWO();
-    }
+      console.log("WO init restore source", { source: "url", woNumber: normalizeWorkOrderNo_(wo?.woNumber || "") });
+    } else if (!sessionMode || sessionMode === "blank") {
+      window.CURRENT_WORKORDER_MODE = "new";
+      window.CURRENT_WORKORDER_ID = null;
+      window.CURRENT_WORKORDER_SOURCE = null;
+      wo = newWO();
+      setSessionMode_("blank");
 
-    if (!explicitUrlLoad && isCustomerWorkOrder_(wo) && window.CURRENT_WORKORDER_MODE !== "edit") {
-      const parsed = parseWorkOrderSequence_(wo?.woNumber || "");
-      if (!parsed) {
-        await assignCanonicalWorkOrderNumber_({ force:true, reason: restoredDraft ? "init-repair" : "init-new" });
+      if ($("loadWONumber")) $("loadWONumber").value = "";
+      if ($("woNumber")) $("woNumber").textContent = "";
+
+      console.log("INIT blank/new state", { source: "blank" });
+    } else {
+      draftRestore = loadDraft();
+
+      if (!draftRestore.restored) {
+        window.CURRENT_WORKORDER_MODE = "new";
+        window.CURRENT_WORKORDER_ID = null;
+        window.CURRENT_WORKORDER_SOURCE = null;
+        wo = newWO();
+        setSessionMode_("blank");
+
+        if ($("loadWONumber")) $("loadWONumber").value = "";
+        if ($("woNumber")) $("woNumber").textContent = "";
+
+        console.log("INIT blank/new state", { source: "failed-draft-restore" });
+      } else if (draftRestore.kind === "edit") {
+        setSessionMode_("edit");
+        console.log("WO active saved record found", {
+          id: window.CURRENT_WORKORDER_ID,
+          woNumber: normalizeWorkOrderNo_(wo?.woNumber || "")
+        });
+        setLoadMsg(`Restored edit session ${normalizeWorkOrderNo_(wo?.woNumber || "") || ""}.`);
+      } else {
+        setSessionMode_("new-draft");
+        console.log("WO active draft found", {
+          woNumber: normalizeWorkOrderNo_(wo?.woNumber || "")
+        });
+        if (woHasContent_(wo)) {
+          setLoadMsg("Restored active draft.");
+        } else {
+          setLoadMsg("");
+        }
       }
     }
 
@@ -3327,8 +3652,6 @@
 
     $("addItem").addEventListener("click", ()=>{
       const next = defaultItem();
-
-      // Safe checkbox lookup (no optional chaining)
       const sameBox = document.getElementById("sameArtNext");
       const useSame = sameBox && sameBox.checked;
 
@@ -3391,10 +3714,11 @@
       buildPrintView();
 
       await waitForImages($("printView"));
-      await new Promise(r => setTimeout(r, 150)); // Safari-friendly
+      await new Promise(r => setTimeout(r, 150));
 
       window.print();
     });
+
     $("modalPrint").addEventListener("click", async ()=>{
       if(!validateAllRequired({ includeApproval: false })) return;
       buildPrintView();
@@ -3409,6 +3733,7 @@
     bindTopInputs();
     bindItemsEvents();
     bindCustomerLookup_();
+    bootstrapLocalWorkOrdersIndex_();
 
     renderAll();
 

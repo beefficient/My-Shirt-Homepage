@@ -1041,10 +1041,24 @@
     }
 
     function getTier(qty, tiersArray){
-      const tiers = [...(tiersArray || PRICING_TIERS)].sort((a,b)=>a.qty-b.qty);
-      let tier = tiers.find(t => Number(t.qty) >= qty);
-      if(!tier) tier = tiers[tiers.length - 1];
-      return tier;
+      const tiers = [...(tiersArray || PRICING_TIERS)]
+        .map(t => ({ ...t, qty: Number(t.qty) }))
+        .sort((a,b)=>a.qty-b.qty);
+
+      const actualQty = Math.max(1, Number(qty || 0));
+      const minimumTierQty = 12;
+      const pricedQty = Math.max(minimumTierQty, actualQty);
+
+      let tier = null;
+      for (const candidate of tiers) {
+        if (candidate.qty <= pricedQty) tier = candidate;
+        else break;
+      }
+
+      if (tier) return tier;
+      if (!tiers.length) return { qty: minimumTierQty };
+
+      return { ...tiers[0], qty: minimumTierQty };
     }
 
     function showResults(){
@@ -1201,6 +1215,10 @@
       const tier = getTier(qty, tierSource);
       const tierQty = Number(tier.qty);
 
+      console.log("GARMENT pricing actual qty", qty);
+      console.log("GARMENT pricing tier used", tierQty);
+      console.log("GARMENT pricing rule", "minimum tier is 12");
+
       let colorScreensTotal = 0;
       let underbaseScreensTotal = 0;
       let perGarmentTotalAllLocations = 0;
@@ -1210,11 +1228,20 @@
 
       const breakdownLines = [];
 
+      function shouldApplyUnderbase_(garmentIsDark, inkNotesRaw){
+        if (!garmentIsDark) return false;
+        const notes = String(inkNotesRaw || "").toLowerCase();
+        const noBasePattern = /\b(no\s*(underbase|base)|without\s*(underbase|base)|underbase\s*:\s*no|base\s*:\s*no)\b/;
+        if (noBasePattern.test(notes)) return false;
+        return true;
+      }
+
       for(const locObj of selected){
         const loc = locObj.loc;
         const artwork_status = locObj.artwork_status || "new";
         const colorsEl = document.querySelector(`.colors[data-loc="${loc}"]`);
         const colors = Number(colorsEl?.value || 1);
+        const inkNotes = (document.querySelector(`.inkNotes[data-loc="${loc}"]`)?.value || "").trim();
 
         const perGarmentBase = Number(tier[`c${colors}`]);
         if(!perGarmentBase || perGarmentBase <= 0){
@@ -1225,22 +1252,33 @@
 
         colorScreensTotal += colors;
 
-        const underbaseScreensForLoc = isDark ? 1 : 0;
+        const underbaseApplied = shouldApplyUnderbase_(isDark, inkNotes);
+        const underbaseScreensForLoc = underbaseApplied ? 1 : 0;
         underbaseScreensTotal += underbaseScreensForLoc;
 
         const dfBase = Number(tier.df) || 0;
-        let dfMultiplier;
-        if (loc === "Left Chest" || loc === "Right Chest") {
-          dfMultiplier = isDark ? 2 : 1;
-        } else {
-          const isPrimaryLoc = (loc === "Front Center" || loc === "Back Center");
-          dfMultiplier = isDark ? (isPrimaryLoc ? 1 : 2) : 0;
+        let dfCountUsed = 0;
+        if (underbaseApplied) {
+          if (loc === "Left Chest" || loc === "Right Chest") {
+            // Chest prints should not auto-count as double D/F.
+            dfCountUsed = 1;
+          } else {
+            const isPrimaryLoc = (loc === "Front Center" || loc === "Back Center");
+            dfCountUsed = isPrimaryLoc ? 1 : 2;
+          }
         }
-        const dfForLoc = dfBase * dfMultiplier;
+        const dfForLoc = dfBase * dfCountUsed;
 
 
         const perGarmentLocTotal = perGarmentBase + dfForLoc;
         perGarmentTotalAllLocations += perGarmentLocTotal;
+
+        console.log("LOCATION pricing location", loc);
+        console.log("LOCATION pricing garmentType", isDark ? "dark" : "light");
+        console.log("LOCATION pricing printColors", colors);
+        console.log("LOCATION pricing underbaseApplied", underbaseApplied);
+        console.log("LOCATION pricing dfCountUsed", dfCountUsed);
+        console.log("LOCATION pricing perGarmentTotal", perGarmentLocTotal);
 
         // screens for this location (colors + possible underbase)
         const screensForLoc = colors + underbaseScreensForLoc;
@@ -1257,16 +1295,15 @@
         filmCountTotal += filmsForLoc;
         filmFeeTotal += filmsForLoc * FILM_FEE;
 
-        const inkNotes = (document.querySelector(`.inkNotes[data-loc="${loc}"]`)?.value || "").trim();
         const labelInk = inkNotes ? `: ${inkNotes}` : "";
-        const dfText = dfMultiplier === 0 ? "" : (dfMultiplier === 1 ? ` + D.F ${money(dfBase)}` : ` + D.F ${money(dfBase)} × ${dfMultiplier}`);
+        const dfText = dfCountUsed === 0 ? "" : (dfCountUsed === 1 ? ` + Base ${money(dfBase)}` : ` + Base ${money(dfBase)} × ${dfCountUsed}`);
         breakdownLines.push(`
           <div class="loc">
             <strong>${loc}</strong> <span class="muted">(${colors} color${colors>1?"s":""})${labelInk}</span>
             <div class="muted">
               Per garment: ${money(perGarmentBase)}${dfText} = <b>${money(perGarmentLocTotal)}</b>
             </div>
-            ${isDark ? `<div class="muted">Underbase included for this location.</div>` : `<div class="muted">No underbase needed (light garment).</div>`}
+            ${underbaseApplied ? `<div class="muted">Underbase included for this location.</div>` : `<div class="muted">No underbase needed for this location.</div>`}
             <div class="muted">Films for this location: ${filmsForLoc}${filmsForLoc===0?" (reorder — no film fee)":""}</div>
           </div>
         `);

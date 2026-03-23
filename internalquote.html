@@ -341,8 +341,6 @@
           <div class="action-left">
             <button class="btn ghost" type="button" id="btnSave">Save</button>
             <button class="btn ghost" type="button" id="btnPrint">Print</button>
-            <button class="btn ghost" type="button" id="btnPdf">PDF</button>
-            <button class="btn primary" type="button" id="btnSend">Send</button>
             <button class="btn primary" type="button" id="btnCreateWO">Create Work Order</button>
             <input type="text" id="woSearch" placeholder="Enter Work Order #" style="margin-left:12px;max-width:140px;" />
             <button type="button" id="btnLoadWO">Load</button>
@@ -405,7 +403,10 @@
                 </div>
                 <div>
                   <label class="label">Quote Date</label>
-                  <input class="field" id="invDate" type="date" value="" />
+                  <div style="display:flex; gap:8px; align-items:center;">
+                    <input class="field" id="invDate" type="date" value="" style="flex:1;" />
+                    <button type="button" id="btnLoadQuoteNo" class="btn small" style="white-space:nowrap; flex:0 0 auto;">Load</button>
+                  </div>
                 </div>
               </div>
 
@@ -1182,7 +1183,6 @@
 
     function getQuotePayload(){
       return {
-        quote_number: document.getElementById("invNo")?.value?.trim() || null,
         quote_date: document.getElementById("invDate")?.value || null,
         client_name: document.getElementById("clientName")?.value?.trim() || null,
         client_email: document.getElementById("clientEmail")?.value?.trim() || null,
@@ -1230,9 +1230,37 @@
 
       // INSERT
       else {
+        // First, insert into customer_quotes to obtain the canonical numeric quote_no
+        const custPayload = Object.assign({}, payload);
+        // include items if present
+        if (window.__getItems && typeof window.__getItems === 'function') {
+          custPayload.items = window.__getItems();
+        }
+
+        const { data: custData, error: custError } = await window.sb
+          .from("customer_quotes")
+          .insert({ name: document.getElementById("clientName")?.value?.trim() || null,
+                    phone: document.getElementById("clientPhone")?.value?.trim() || null,
+                    email: document.getElementById("clientEmail")?.value?.trim() || null,
+                    payload: custPayload })
+          .select("id, quote_no")
+          .single();
+
+        if (custError) {
+          console.error(custError);
+          alert(custError.message || 'Could not reserve quote number');
+          return null;
+        }
+
+        const reservedQuoteNo = custData?.quote_no;
+
+        // Now insert into internal `quotes` table. `quotes` expects `quote_number` (string),
+        // so store the reserved numeric value as `quote_number` to avoid schema mismatch.
+        const rowToInsert = Object.assign({}, payload, { quote_number: String(reservedQuoteNo) });
+
         const { data, error } = await window.sb
           .from("quotes")
-          .insert(payload)
+          .insert(rowToInsert)
           .select("*")
           .single();
 
@@ -1248,15 +1276,15 @@
       // Store current ID
       window.currentQuoteId = savedRow.id;
 
-      // Put generated quote number into the field
-      if (savedRow && savedRow.quote_number && qs("invNo")) {
-        qs("invNo").value = savedRow.quote_number;
-      }
+      // Put generated quote number into the field (numeric string from reservedQuoteNo or savedRow)
+      const displayQuoteNo = typeof reservedQuoteNo !== 'undefined' ? String(reservedQuoteNo) : (savedRow && (savedRow.quote_number || savedRow.quote_no) ? String(savedRow.quote_number || savedRow.quote_no) : "");
+      if (qs("invNo")) qs("invNo").value = displayQuoteNo;
 
       // ✅ Mirror to Google Sheet (internal_quotes tab)
       mirrorInternalQuoteToSheet({
         created_at: new Date().toISOString(),
-        quote_no: savedRow.quote_number || savedRow.quote_no || "",
+        // Use the reserved numeric quote (from customer_quotes) for the sheet mirror
+        quote_no: displayQuoteNo,
         status: "draft",
         customer_name: document.getElementById("clientName")?.value?.trim() || "",
         customer_email: document.getElementById("clientEmail")?.value?.trim() || "",
@@ -1326,6 +1354,155 @@
 
     window.loadQuote = loadQuote;
 
+    // Load a quote by its quote_number (the numeric string shown in `invNo`).
+    async function loadQuoteByNumber(quoteNumber){
+      if (!window.sb) { alert('Supabase client not initialized.'); return null; }
+      const q = String((quoteNumber || qs('invNo')?.value || '')).trim();
+      if (!q){ alert('Enter a quote number to load.'); return null; }
+
+      // Try to match trailing digits like invoice loader does
+      const tailMatch = String(q).trim().match(/(\d+)$/);
+      const tailDigits = tailMatch ? tailMatch[1] : null;
+
+      // 1) Try customer_quotes (numeric quote_no) if we have tail digits
+      if (tailDigits){
+        const numericQuoteNo = parseInt(tailDigits, 10);
+        if (Number.isFinite(numericQuoteNo)){
+          try {
+            const { data, error } = await window.sb
+              .from('customer_quotes')
+              .select('*')
+              .eq('quote_no', numericQuoteNo)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (error) throw error;
+            if (data){
+              // normalize payload
+              if (typeof data.payload === 'string'){
+                try { data.payload = JSON.parse(data.payload); } catch { data.payload = {}; }
+              }
+              fillFromCustomerQuote(data);
+              window.CURRENT_QUOTE = data;
+              return data.id || null;
+            }
+          } catch (err){ console.warn('customer_quotes lookup failed', err); }
+        }
+      }
+
+      // 2) Fallback: look in `quotes` table by quote_number string
+      try {
+        const { data, error } = await window.sb
+          .from('quotes')
+          .select('*')
+          .eq('quote_number', q)
+          .limit(1)
+          .maybeSingle();
+
+        if (error){ console.error(error); alert(error.message || 'Lookup failed'); return null; }
+        if (!data){ alert('Quote not found: ' + q); return null; }
+
+        // Populate form using the internal quotes row
+        window.currentQuoteId = data.id;
+        if (qs('invNo')) qs('invNo').value = data.quote_number || '';
+        if (qs('invDate')) qs('invDate').value = data.quote_date || '';
+        if (qs('clientName')) qs('clientName').value = data.client_name || '';
+        if (qs('clientEmail')) qs('clientEmail').value = data.client_email || '';
+        if (qs('clientPhone')) qs('clientPhone').value = data.client_phone || '';
+        if (qs('clientAddr')) qs('clientAddr').value = data.client_addr || '';
+        if (qs('notes')) qs('notes').value = data.notes || '';
+        if (qs('terms')) qs('terms').value = data.terms || '';
+        if (window.__fillItems) window.__fillItems(Array.isArray(data.items) ? data.items : []);
+
+        alert('Quote loaded ✅');
+        return data.id;
+      } catch (err){ console.error('Lookup error', err); alert('Lookup failed'); return null; }
+    }
+
+    // Populate the internal quote form using a `customer_quotes`-style object
+    function fillFromCustomerQuote(q){
+      try {
+        // `q` shape may vary: { quote_no, name, email, phone, notes, payload }
+        const quoteNo = q.quote_no || q.quote_no_raw || q.quote_no_raw || qs('invNo')?.value || '';
+        if (qs('invNo')) qs('invNo').value = String(quoteNo || '').trim();
+
+        // payload may be nested under `payload` or be the object itself
+        const payload = (q.payload && typeof q.payload === 'object') ? q.payload : (q.payload ? JSON.parse(q.payload || '{}') : (q || {}));
+
+        if (qs('clientName')) qs('clientName').value = q.name || payload.client_name || payload.name || '';
+        if (qs('clientEmail')) qs('clientEmail').value = q.email || payload.client_email || payload.email || '';
+        if (qs('clientPhone')) qs('clientPhone').value = q.phone || payload.client_phone || payload.phone || '';
+        if (qs('clientAddr')) qs('clientAddr').value = payload.client_addr || payload.address || '';
+        if (qs('notes')) qs('notes').value = q.notes || payload.notes || '';
+        if (qs('terms')) qs('terms').value = payload.terms || '';
+        if (qs('invDate')) qs('invDate').value = payload.quote_date || '';
+
+        // Items: normalize common payload shapes into internal line-item format
+        if (window.__fillItems){
+          const rawItems = payload.items || payload.line_items || payload.lineItems || payload.pricing_items || payload.invoice_items || (q.payload && q.payload.items) || [];
+          const norm = normalizeQuoteItems(Array.isArray(rawItems) ? rawItems : []);
+          if (norm && norm.length) window.__fillItems(norm);
+        }
+
+        // Clear currentQuoteId because this record may come from a different table
+        window.currentQuoteId = q.id || null;
+        alert('Quote loaded ✅');
+      } catch (err){ console.error('fillFromCustomerQuote failed', err); alert('Failed to populate quote'); }
+    }
+
+    // Normalize various quote item shapes (from invoice payloads or sheets)
+    function normalizeQuoteItems(items){
+      const toNum = (v) => {
+        if (v == null) return 0;
+        if (typeof v === 'number') return v;
+        const s = String(v).replace(/[^0-9.-]/g, '');
+        const n = parseFloat(s);
+        return Number.isFinite(n) ? n : 0;
+      };
+
+      return (Array.isArray(items) ? items : []).map(it => {
+        // common label/description fields
+        const desc = String(it.product || it.desc || it.description || it.label || it.name || it.item || it.title || '').trim();
+
+        // common price fields
+        const rawUnit = (it.unit_price ?? it.unitPrice ?? it.price ?? it.amount);
+        let unitPrice = toNum(rawUnit);
+        // if price appears stored in cents under *_cents fields
+        if (!unitPrice){
+          if (it.unit_price_cents) unitPrice = toNum(it.unit_price_cents) / 100;
+          else if (it.price_cents) unitPrice = toNum(it.price_cents) / 100;
+        }
+
+        const qty = Math.max(0, toNum(it.qty ?? it.quantity ?? it.count ?? it.qty_count ?? 1));
+        const taxable = (typeof it.taxable === 'boolean') ? it.taxable : (it.taxable == null ? true : !!it.taxable);
+
+        const amount = unitPrice * qty;
+        const taxRate = (toNum(document.getElementById('taxRate')?.value) || 0) / 100;
+        const tax = (taxable && !/discount/i.test(it.type || it.label || desc)) ? amount * taxRate : 0;
+        const total = amount + tax;
+
+        // Decide type
+        let type = String(it.type || it.item_type || it.category || '').trim();
+        if (!type){
+          if (/garment|shirt|hoodie|tee|product/i.test(desc)) type = 'Product';
+          else if (/discount/i.test(desc)) type = 'Discount';
+          else type = 'Services';
+        }
+
+        return {
+          type,
+          desc: desc,
+          price: Number(unitPrice || 0),
+          qty: Number(qty || 0),
+          amount: Number(amount || 0),
+          taxable: !!taxable,
+          tax: Number(tax || 0),
+          total: Number(total || 0)
+        };
+      }).filter(it => it.desc || it.price || it.qty);
+    }
+
     // Wire Save button
     document.addEventListener("DOMContentLoaded", () => {
 
@@ -1340,16 +1517,68 @@
         await saveQuote();
       });
 
+      // Wire the new Load-by-quote-number button
+      const loadBtn = document.getElementById('btnLoadQuoteNo');
+      if (loadBtn){
+        loadBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          let q = qs('invNo')?.value?.trim() || '';
+          if (!q) q = prompt('Enter quote number to load:');
+          if (!q) return;
+          qs('invNo').value = q;
+
+          // Try to reuse invoice.html's loader if available (cleanest)
+          try {
+            if (typeof window.loadQuoteByNumberFromSheet === 'function'){
+              try {
+                const quote = await window.loadQuoteByNumberFromSheet(q);
+                if (quote) { fillFromCustomerQuote(quote); return; }
+              } catch (err) {
+                console.warn('Sheet loader failed, falling back:', err?.message || err);
+              }
+            }
+
+            if (typeof window.loadQuoteByNumber === 'function'){
+              try {
+                const quote = await window.loadQuoteByNumber(q);
+                if (quote) { fillFromCustomerQuote(quote); return; }
+              } catch (err) {
+                console.warn('Invoice loader failed, falling back:', err?.message || err);
+              }
+            }
+          } catch (e){ console.error('External loader attempt failed', e); }
+
+          // Final fallback: local lookup in `quotes` table by quote_number
+          await loadQuoteByNumber(q);
+        });
+      }
+
     });
 
   })();
   </script>
   <script>
+    // Wire Print button to open the browser print dialog
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn = document.getElementById("btnPrint");
+      if (!btn) {
+        console.warn("btnPrint not found");
+        return;
+      }
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        try { window.print(); }
+        catch (err) { console.error('Print failed', err); }
+      });
+    });
+  </script>
+  <script>
   /* =========================
      MIRROR INTERNAL QUOTE -> GOOGLE SHEET
   ========================= */
-  window.MIRROR_WEBAPP_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE"; // same /exec as customer quotes mirror
-  window.MIRROR_SECRET = "PASTE_YOUR_SECRET_HERE"; // your Apps Script secret (NOT Supabase)
+  window.MIRROR_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyK3LZVt_91OIPLoWMTM7cf21t_h9sjM46qiGYJll49b9fwV2OdUZM0GLP6hx0FFMaJ/exec"; // same /exec as customer quotes mirror
+; // same /exec as customer quotes mirror
+  window.MIRROR_SECRET = "myshirt_customer_quote_2026"; // your Apps Script secret (NOT Supabase)
 
   async function mirrorInternalQuoteToSheet(row){
     if (!window.MIRROR_WEBAPP_URL) return console.warn("Missing MIRROR_WEBAPP_URL");
