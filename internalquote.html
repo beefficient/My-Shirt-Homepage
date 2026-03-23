@@ -341,20 +341,10 @@
           <div class="action-left">
             <button class="btn ghost" type="button" id="btnSave">Save</button>
             <button class="btn ghost" type="button" id="btnPrint">Print</button>
-            <button class="btn primary" type="button" id="btnCreateWO">Create Work Order</button>
-            <input type="text" id="woSearch" placeholder="Enter Work Order #" style="margin-left:12px;max-width:140px;" />
-            <button type="button" id="btnLoadWO">Load</button>
+            
           </div>
 
           <div class="action-right">
-            <details class="menu" id="moreMenu">
-              <summary>More Actions… <span aria-hidden="true">▾</span></summary>
-              <div class="menuPanel" role="menu" aria-label="More actions">
-                <button type="button" id="btnDuplicate">Duplicate</button>
-                <button type="button" id="btnVoid">Void</button>
-                <button type="button" id="btnDownloadJson">Download JSON</button>
-              </div>
-            </details>
           </div>
         </div>
 
@@ -388,10 +378,7 @@
                 <label class="label">Phone</label>
                 <input class="field" id="bizPhone" value="669-231-9059" />
               </div>
-              <div style="margin-top:10px">
-                <label class="label">Payment Link</label>
-                <input class="field" id="bizPaymentLink" value="https://square.link/u/HE22n772" readonly style="font-size:13px;" />
-              </div>
+              
             </div>
 
             <div class="box">
@@ -1193,7 +1180,6 @@
         biz_phone: document.getElementById("bizPhone")?.value?.trim() || null,
         biz_addr: document.getElementById("bizAddr")?.value?.trim() || null,
         biz_city: document.getElementById("bizCity")?.value?.trim() || null,
-        payment_link: document.getElementById("bizPaymentLink")?.value?.trim() || null,
         notes: document.getElementById("notes")?.value?.trim() || null,
         terms: document.getElementById("terms")?.value?.trim() || null
       };
