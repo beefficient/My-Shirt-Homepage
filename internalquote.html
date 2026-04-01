@@ -648,14 +648,18 @@
         <td class="t-right" data-col="total">${money(total)}</td>
         <td class="t-right noPrintCell">
           <button type="button" class="iconbtn" data-action="delete" title="Delete">✕</button>
+            <div id="grandTotalRow" style="text-align:right; font-weight:800; font-size:1.15em; margin:10px 0 0 0;">
+              Grand Total: <span id="grandTotalValue">$0.00</span>
+            </div>
         </td>
       `;
-      tr.querySelector('[data-action="delete"]')?.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        tr.remove();
-      });
-      tbody.appendChild(tr);
-
+      if ($("itemDesc")) $("itemDesc").value = "";
+      if ($("itemPrice")) $("itemPrice").value = "";
+      if ($("itemQty")) $("itemQty").value = "1";
+      if ($("itemType")) $("itemType").value = "Product";
+      if ($("itemTaxable")) { $("itemTaxable").checked = true; $("itemTaxable").disabled = false; }
+      $("itemDesc")?.focus();
+      updateGrandTotal();
       if ($("itemDesc")) $("itemDesc").value = "";
       if ($("itemPrice")) $("itemPrice").value = "";
       if ($("itemQty")) $("itemQty").value = "1";
@@ -1017,13 +1021,57 @@
           <td class="t-right" data-col="total">${moneyUSD(total)}</td>
           <td class="t-right noPrintCell">
             <button type="button" class="iconbtn" data-action="edit" title="Edit">✏️</button>
+            <button type="button" class="iconbtn" data-action="tax-toggle" title="Tax/No Tax" style="margin-left:6px;">${taxable ? '🟩' : '⬜️'}</button>
             <button type="button" class="iconbtn" data-action="delete" title="Delete" style="margin-left:6px;">✕</button>
           </td>
         `;
 
+
         tr.querySelector('[data-action="edit"]').addEventListener("click", (e) => {
+          ev.preventDefault();
+          tr.remove();
+          updateGrandTotal();
+        });
+    // Update grand total display
+    function updateGrandTotal() {
+      const tbody = document.getElementById("itemsBody");
+      let sum = 0;
+      if (tbody) {
+        tbody.querySelectorAll("tr").forEach(tr => {
+          sum += parseFloat(tr.dataset.total || 0) || 0;
+        });
+      }
+      const el = document.getElementById("grandTotalValue");
+      if (el) el.textContent = (Number.isFinite(sum) ? sum : 0).toLocaleString(undefined, { style: "currency", currency: "USD" });
+    }
+    // Update grand total when toggling tax
+    document.addEventListener("click", function(e) {
+      if (e.target && e.target.matches("button[data-action='tax-toggle']")) {
+        setTimeout(updateGrandTotal, 0);
+      }
+    });
+  // Update grand total on page load (in case of prefilled items)
+  document.addEventListener("DOMContentLoaded", updateGrandTotal);
+
+        tr.querySelector('[data-action="tax-toggle"]').addEventListener("click", (e) => {
           e.preventDefault();
-          startEditRow(tr);
+          // Toggle taxable
+          const isTaxable = tr.dataset.taxable === "1";
+          tr.dataset.taxable = isTaxable ? "0" : "1";
+          // Recalculate tax and total
+          const type = tr.dataset.type;
+          const price = parseFloat(tr.dataset.price || 0) || 0;
+          const qty = parseFloat(tr.dataset.qty || 0) || 0;
+          const amount = price * qty;
+          const taxRate = (typeof getTaxRatePct === 'function' ? getTaxRatePct() : 0) / 100;
+          const tax = (!isTaxable && !/discount/i.test(type)) ? amount * taxRate : 0;
+          const total = amount + tax;
+          tr.dataset.tax = String(tax);
+          tr.dataset.total = String(total);
+          tr.querySelector("[data-col='tax']").textContent = moneyUSD(tax);
+          tr.querySelector("[data-col='total']").textContent = moneyUSD(total);
+          // Update button icon
+          e.target.textContent = isTaxable ? '⬜️' : '🟩';
         });
 
         tr.querySelector('[data-action="delete"]').addEventListener("click", (e) => {
@@ -1133,6 +1181,7 @@
             <td class="t-right" data-col="total">${moneyUSD(total)}</td>
             <td class="t-right noPrintCell">
               <button type="button" class="iconbtn" data-action="edit" title="Edit">✏️</button>
+              <button type="button" class="iconbtn" data-action="tax-toggle" title="Tax/No Tax" style="margin-left:6px;">${taxable ? '🟩' : '⬜️'}</button>
               <button type="button" class="iconbtn" data-action="delete" title="Delete" style="margin-left:6px;">✕</button>
             </td>
           `;
@@ -1140,6 +1189,27 @@
           tr.querySelector('[data-action="edit"]').addEventListener("click", (e) => {
             e.preventDefault();
             startEditRow(tr);
+          });
+
+          tr.querySelector('[data-action="tax-toggle"]').addEventListener("click", (e) => {
+            e.preventDefault();
+            // Toggle taxable
+            const isTaxable = tr.dataset.taxable === "1";
+            tr.dataset.taxable = isTaxable ? "0" : "1";
+            // Recalculate tax and total
+            const type = tr.dataset.type;
+            const price = parseFloat(tr.dataset.price || 0) || 0;
+            const qty = parseFloat(tr.dataset.qty || 0) || 0;
+            const amount = price * qty;
+            const taxRate = (typeof getTaxRatePct === 'function' ? getTaxRatePct() : 0) / 100;
+            const tax = (!isTaxable && !/discount/i.test(type)) ? amount * taxRate : 0;
+            const total = amount + tax;
+            tr.dataset.tax = String(tax);
+            tr.dataset.total = String(total);
+            tr.querySelector("[data-col='tax']").textContent = moneyUSD(tax);
+            tr.querySelector("[data-col='total']").textContent = moneyUSD(total);
+            // Update button icon
+            e.target.textContent = isTaxable ? '⬜️' : '🟩';
           });
 
           tr.querySelector('[data-action="delete"]').addEventListener("click", (e) => {
@@ -1169,6 +1239,7 @@
     window.currentQuoteId = null;
 
     function getQuotePayload(){
+      const items = (window.__getItems && typeof window.__getItems === 'function') ? window.__getItems() : [];
       return {
         quote_date: document.getElementById("invDate")?.value || null,
         client_name: document.getElementById("clientName")?.value?.trim() || null,
@@ -1181,7 +1252,8 @@
         biz_addr: document.getElementById("bizAddr")?.value?.trim() || null,
         biz_city: document.getElementById("bizCity")?.value?.trim() || null,
         notes: document.getElementById("notes")?.value?.trim() || null,
-        terms: document.getElementById("terms")?.value?.trim() || null
+        terms: document.getElementById("terms")?.value?.trim() || null,
+        items: items
       };
     }
 
@@ -1198,16 +1270,18 @@
 
       // UPDATE
       if (window.currentQuoteId){
+        console.log('[Supabase] UPDATE quotes', { id: window.currentQuoteId, payload });
         const { data, error } = await window.sb
           .from("quotes")
           .update(payload)
           .eq("id", window.currentQuoteId)
           .select("*")
-          .single();
+          .limit(1)
+          .maybeSingle();
 
         if (error){
-          console.error(error);
-          alert(error.message);
+          console.error('[Supabase ERROR] UPDATE quotes', error);
+          alert('Could not update quote. Please try again.');
           return null;
         }
 
@@ -1223,6 +1297,7 @@
           custPayload.items = window.__getItems();
         }
 
+        console.log('[Supabase] INSERT customer_quotes', { custPayload });
         const { data: custData, error: custError } = await window.sb
           .from("customer_quotes")
           .insert({ name: document.getElementById("clientName")?.value?.trim() || null,
@@ -1230,11 +1305,12 @@
                     email: document.getElementById("clientEmail")?.value?.trim() || null,
                     payload: custPayload })
           .select("id, quote_no")
-          .single();
+          .limit(1)
+          .maybeSingle();
 
         if (custError) {
-          console.error(custError);
-          alert(custError.message || 'Could not reserve quote number');
+          console.error('[Supabase ERROR] INSERT customer_quotes', custError);
+          alert('Could not reserve quote number. Please try again.');
           return null;
         }
 
@@ -1244,15 +1320,17 @@
         // so store the reserved numeric value as `quote_number` to avoid schema mismatch.
         const rowToInsert = Object.assign({}, payload, { quote_number: String(reservedQuoteNo) });
 
+        console.log('[Supabase] INSERT quotes', { rowToInsert });
         const { data, error } = await window.sb
           .from("quotes")
           .insert(rowToInsert)
           .select("*")
-          .single();
+          .limit(1)
+          .maybeSingle();
 
         if (error){
-          console.error(error);
-          alert(error.message);
+          console.error('[Supabase ERROR] INSERT quotes', error);
+          alert('Could not save quote. Please try again.');
           return null;
         }
 
@@ -1307,15 +1385,18 @@
     async function loadQuote(id){
       if (!window.sb) return;
 
+
+      console.log('[Supabase] LOAD quotes by id', { id });
       const { data, error } = await window.sb
         .from("quotes")
         .select("*")
         .eq("id", id)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (error){
-        console.error(error);
-        alert(error.message);
+        console.error('[Supabase ERROR] LOAD quotes by id', error);
+        alert('Could not load quote. Please try again.');
         return;
       }
 

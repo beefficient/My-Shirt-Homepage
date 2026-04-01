@@ -644,6 +644,7 @@
       </div>
 
       <!-- OUTPUT -->
+      <!-- OUTPUT -->
       <div class="card outputCard" id="outputPanel">
         <div class="emptyBox" id="emptyState">
           Your quote will appear here after you click <b>Calculate Quote.</b>
@@ -724,9 +725,52 @@
           </div>
         </div>
 
-        <div class="saveBox" style="margin-top:12px;">
+
+        <div class="saveBox" style="margin-top:12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
           <button class="btn secondary" id="saveQuoteBtn" type="button" onclick="saveCustomerQuote()">Save Quote</button>
+          <button class="btn secondary" id="printQuoteBtn" type="button" onclick="window.print()">Print</button>
           <div class="saveMsg" id="saveMsg"></div>
+  <style>
+    @media print {
+      /* Hide all non-quote content, including any intro/title/hero */
+      header, nav, .wrap > h1, .wrap > p, .wrap > .grid > .card:not(#outputPanel), .saveBox, .divider, .error, .row, .btn, .smallNote, .garmentBox .note, #customerInfoPanel, #g_err, #saveMsg, #priceMatchFile, #priceMatchFileCount, #artFile, #fileError, #limitText, #fileCount, #sharingDirectly, #discMsg, #discountCode, #garmentQuoteBtn, #outputPanel .error, #outputPanel .btn, #outputPanel .saveBox, #outputPanel .divider, #outputPanel .row, #outputPanel .smallNote, #outputPanel .garmentBox .note, #outputPanel #customerInfoPanel, #outputPanel #g_err, #outputPanel #saveMsg, #outputPanel #priceMatchFile, #outputPanel #priceMatchFileCount, #outputPanel #artFile, #outputPanel #fileError, #outputPanel #limitText, #outputPanel #fileCount, #outputPanel #sharingDirectly, #outputPanel #discMsg, #outputPanel #discountCode, #outputPanel #garmentQuoteBtn {
+        display: none !important;
+      }
+      #outputPanel {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        page-break-before: auto !important;
+        break-before: auto !important;
+      }
+      /* Show only the quote results container */
+      #outputPanel {
+        display: block !important;
+        position: static !important;
+        margin: 0 auto !important;
+        float: none !important;
+        clear: both !important;
+      }
+      body, html {
+        background: #fff !important;
+        color: #222 !important;
+      }
+      .card, .outputCard, .garmentBox {
+        box-shadow: none !important;
+        border: 1px solid #bbb !important;
+        background: #fff !important;
+      }
+      /* Avoid page breaks inside important sections */
+      #outputPanel, #summary, #breakdown, .garmentBox {
+        page-break-inside: avoid;
+      }
+      /* Make sure content fits on Letter size */
+      @page {
+        size: Letter;
+        margin: 0.5in;
+      }
+    }
+  </style>
+
 
           <div id="customerInfoPanel" style="display:none; margin-top:10px;">
             <div class="title">Your information (so we can follow up)</div>
@@ -1221,6 +1265,7 @@
 
       let colorScreensTotal = 0;
       let underbaseScreensTotal = 0;
+      let specialOneColorBaseScreensTotal = 0; // for 1 color + base logic
       let perGarmentTotalAllLocations = 0;
       let setupFeeTotal = 0;
       let filmFeeTotal = 0;
@@ -1236,6 +1281,7 @@
         return true;
       }
 
+
       for(const locObj of selected){
         const loc = locObj.loc;
         const artwork_status = locObj.artwork_status || "new";
@@ -1250,11 +1296,22 @@
           return;
         }
 
-        colorScreensTotal += colors;
-
         const underbaseApplied = shouldApplyUnderbase_(isDark, inkNotes);
         const underbaseScreensForLoc = underbaseApplied ? 1 : 0;
-        underbaseScreensTotal += underbaseScreensForLoc;
+
+        // Special rule: 1 color + underbase = 1 screen (not 2)
+        let screensForLoc;
+        if (colors === 1 && underbaseScreensForLoc === 1) {
+          screensForLoc = 1;
+          specialOneColorBaseScreensTotal += 1;
+          // For summary/debugging
+          console.log("[DEBUG] 1 color + underbase detected:", { colors, underbaseApplied, screensForLoc });
+        } else {
+          screensForLoc = colors + underbaseScreensForLoc;
+          colorScreensTotal += colors;
+          underbaseScreensTotal += underbaseScreensForLoc;
+        }
+
 
         const dfBase = Number(tier.df) || 0;
         let dfCountUsed = 0;
@@ -1269,19 +1326,18 @@
         }
         const dfForLoc = dfBase * dfCountUsed;
 
-
         const perGarmentLocTotal = perGarmentBase + dfForLoc;
         perGarmentTotalAllLocations += perGarmentLocTotal;
 
-        console.log("LOCATION pricing location", loc);
-        console.log("LOCATION pricing garmentType", isDark ? "dark" : "light");
-        console.log("LOCATION pricing printColors", colors);
-        console.log("LOCATION pricing underbaseApplied", underbaseApplied);
-        console.log("LOCATION pricing dfCountUsed", dfCountUsed);
-        console.log("LOCATION pricing perGarmentTotal", perGarmentLocTotal);
+        // Debug logs for this location
+        console.log("[DEBUG] Location:", loc, {
+          colors,
+          underbaseApplied,
+          screensForLoc,
+          setupFeeTotal,
+          perGarmentLocTotal
+        });
 
-        // screens for this location (colors + possible underbase)
-        const screensForLoc = colors + underbaseScreensForLoc;
 
         // per-location setup rate (inline vs normal)
         const setupRateForLoc = isInline
@@ -1309,8 +1365,19 @@
         `);
       }
 
+
       document.getElementById("breakdown").innerHTML = breakdownLines.join("");
-      const totalScreens = colorScreensTotal + underbaseScreensTotal;
+      // Compose total screens, including special rule
+      const totalScreens = (specialOneColorBaseScreensTotal > 0)
+        ? specialOneColorBaseScreensTotal + colorScreensTotal + underbaseScreensTotal
+        : colorScreensTotal + underbaseScreensTotal;
+      // Debug log for summary
+      console.log("[DEBUG] SUMMARY total screens:", {
+        specialOneColorBaseScreensTotal,
+        colorScreensTotal,
+        underbaseScreensTotal,
+        totalScreens
+      });
 
       const setupFee = setupFeeTotal;
       const filmFee = filmFeeTotal;

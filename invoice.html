@@ -2082,14 +2082,26 @@
       async function saveDraftToSupabase() {
         try { await requireInvoiceAuth_(); } catch { return; }
 
+        // 1. Recalculate totals before building payload
+        recalcTotals();
         const draft = getInvoiceDraftObject();
         if (!draft.items_json.length) {
           alert("No line items yet. Add at least one item before saving.");
           return;
         }
 
-        setLoadMsg("Saving draft...");
+        // 2. Calculate total and log it
+        let subtotal = 0, taxableSubtotal = 0;
+        (draft.items_json || []).forEach((item) => {
+          const amt = Number(item.unit_price) * Math.max(1, Number(item.qty));
+          subtotal += amt;
+          if (item.taxable) taxableSubtotal += amt;
+        });
+        const tax = subtotal > 0 ? (Number(draft.tax_rate) / 100) * taxableSubtotal : 0;
+        const total = subtotal + tax;
+        console.log("[INVOICE] Recalculated total:", { subtotal, tax, total });
 
+        // 3. Build payload with updated total
         const safePayload = {
           invoice_date: draft.invoice_date || null,
           client_name: draft.client_name || null,
@@ -2097,10 +2109,17 @@
           client_phone: draft.client_phone || null,
           payment_link: window.CURRENT_PAYMENT_LINK || null,
           notes: draft.notes || null,
-          items_json: buildStoredItemsPayload_(draft.items_json, draft.payments)
+          items_json: buildStoredItemsPayload_(draft.items_json, draft.payments),
+          total: total,
+          subtotal: subtotal,
+          tax: tax,
+          invoice_no: draft.invoice_no || null
         };
 
+        // 4. Save to Supabase (update or insert)
+        let isUpdate = false;
         if (window.CURRENT_INVOICE_ID) {
+          isUpdate = true;
           const { error } = await window.sb
             .from("invoices")
             .update(safePayload)
@@ -2111,12 +2130,7 @@
             setLoadMsg(error.message || "Could not save draft.", true);
             return;
           }
-
-          setLoadMsg("Draft saved.");
-          return;
-        }
-
-        if (draft.invoice_no) {
+        } else if (draft.invoice_no) {
           const { data: found, error: findErr } = await window.sb
             .from("invoices")
             .select("id, invoice_no")
@@ -2128,26 +2142,44 @@
 
           if (found?.id) {
             window.CURRENT_INVOICE_ID = found.id;
+            isUpdate = true;
             return await saveDraftToSupabase();
           }
         }
 
-        const { data, error } = await window.sb
-          .from("invoices")
-          .insert(safePayload)
-          .select("*")
-          .single();
+        if (!isUpdate) {
+          const { data, error } = await window.sb
+            .from("invoices")
+            .insert(safePayload)
+            .select("*")
+            .single();
 
-        if (error) {
-          console.error(error);
-          setLoadMsg(error.message || "Could not create invoice.", true);
-          return;
+          if (error) {
+            console.error(error);
+            setLoadMsg(error.message || "Could not create invoice.", true);
+            return;
+          }
+
+          window.CURRENT_INVOICE_ID = data.id;
+          window.CURRENT_PAYMENT_LINK = data.payment_link || null;
+          if ($("invNo")) $("invNo").value = data.invoice_no || "";
+          setLoadMsg(`Draft saved as ${data.invoice_no}`);
+        } else {
+          setLoadMsg("Draft saved.");
         }
 
-        window.CURRENT_INVOICE_ID = data.id;
-        window.CURRENT_PAYMENT_LINK = data.payment_link || null;
-        if ($("invNo")) $("invNo").value = data.invoice_no || "";
-        setLoadMsg(`Draft saved as ${data.invoice_no}`);
+        // 5. Sync to Google Sheets after save (for both create and update)
+        await syncInvoiceToSheet({
+          invoice_no: draft.invoice_no,
+          total,
+          subtotal,
+          tax,
+          client_name: draft.client_name,
+          client_email: draft.client_email,
+          client_phone: draft.client_phone,
+          invoice_date: draft.invoice_date,
+          notes: draft.notes
+        });
       }
 
       function stripHtml_(value) {
@@ -2679,38 +2711,91 @@
         }
       }
 
-      async function syncSheetNow() {
+      async function syncInvoiceToSheet(invoice) {
         if (!INVOICE_SYNC_WEBAPP_URL) return;
-
+        const url = INVOICE_SYNC_WEBAPP_URL;
+        const payloadObj = {
+          secret: INVOICE_SYNC_SECRET,
+          action: "update_invoice",
+          invoice_no: invoice.invoice_no,
+          total: invoice.total,
+          subtotal: invoice.subtotal,
+          tax: invoice.tax,
+          client_name: invoice.client_name,
+          client_email: invoice.client_email,
+          client_phone: invoice.client_phone,
+          invoice_date: invoice.invoice_date,
+          notes: invoice.notes
+        };
+        // Debug logging before request
+        console.log("[INVOICE][SHEET SYNC] Webhook URL:", url);
+        console.log("[INVOICE][SHEET SYNC] Invoice number:", invoice.invoice_no);
+        console.log("[INVOICE][SHEET SYNC] Subtotal:", invoice.subtotal, "Tax:", invoice.tax, "Total:", invoice.total);
+        console.log("[INVOICE][SHEET SYNC] Payload object:", payloadObj);
+        const jsonPayload = JSON.stringify(payloadObj);
+        console.log("[INVOICE][SHEET SYNC] JSON payload:", jsonPayload);
         try {
-          const body = new URLSearchParams({
-            secret: INVOICE_SYNC_SECRET,
-            action: "sync"
-          });
-
-          const res = await fetch(INVOICE_SYNC_WEBAPP_URL, {
+          const res = await fetch(url, {
             method: "POST",
-            body,
+            headers: { "Content-Type": "application/json" },
+            body: jsonPayload,
             cache: "no-store"
           });
-
-          const text = await res.text();
-          let data = null;
-          try { data = JSON.parse(text); } catch {}
-
-          if (!res.ok || !data?.ok) {
-            console.warn("Sheet sync failed:", data || text);
-            setLoadMsg("Invoice created, but sheet sync returned an error (check console).", true);
-            return;
+          const rawText = await res.text();
+          // Response logging
+          console.log("[INVOICE][SHEET SYNC] HTTP status:", res.status);
+          console.log("[INVOICE][SHEET SYNC] response.ok:", res.ok);
+          console.log("[INVOICE][SHEET SYNC] Raw response text:", rawText);
+          let parsed = null;
+          let parseError = null;
+          if (rawText && rawText.trim().length > 0) {
+            try {
+              parsed = JSON.parse(rawText);
+              console.log("[INVOICE][SHEET SYNC] Parsed JSON response:", parsed);
+            } catch (e) {
+              parseError = e;
+              console.error("[INVOICE][SHEET SYNC] JSON.parse failed:", e, rawText);
+            }
+          } else {
+            console.warn("[INVOICE][SHEET SYNC] Empty response body");
           }
-
-          setLoadMsg("Invoice created + synced to sheet.");
+          // Error handling
+          if (!res.ok) {
+            const errMsg = `Google Sheets sync failed: webhook returned ${res.status} - ${rawText}`;
+            setLoadMsg(errMsg, true);
+            throw new Error(errMsg);
+          }
+          if (parseError) {
+            const errMsg = `Google Sheets sync failed: response was not valid JSON - ${rawText}`;
+            setLoadMsg(errMsg, true);
+            throw new Error(errMsg);
+          }
+          if (!parsed || parsed.ok === false || parsed.success === false || parsed.error) {
+            let errMsg = "Google Sheets sync failed: ";
+            if (parsed && (parsed.error || parsed.message)) {
+              errMsg += parsed.error || parsed.message;
+              if (/row not found/i.test(parsed.error || parsed.message) && invoice.invoice_no) {
+                errMsg += ` (row not found for invoice ${invoice.invoice_no})`;
+              }
+              if (/missing.*total/i.test(parsed.error || parsed.message)) {
+                errMsg += " (missing total field)";
+              }
+            } else if (typeof rawText === "string") {
+              errMsg += rawText;
+            } else {
+              errMsg += "Unknown error";
+            }
+            setLoadMsg(errMsg, true);
+            throw new Error(errMsg);
+          }
+          setLoadMsg("Invoice saved + synced to sheet.");
         } catch (err) {
-          console.error("Sheet sync fetch failed:", err);
-          setLoadMsg("Invoice created, but sheet sync could not connect (check Network/CORS).", true);
+          setLoadMsg("Google Sheets sync failed: " + (err?.message || err), true);
+          console.error("[INVOICE][SHEET SYNC] Thrown error:", err);
+          if (err && err.stack) console.error("[INVOICE][SHEET SYNC] Stack:", err.stack);
         }
       }
-      window.syncSheetNow = syncSheetNow;
+      window.syncInvoiceToSheet = syncInvoiceToSheet;
 
       async function createInvoiceFromLoadedQuote() {
         try { await requireInvoiceAuth_(); } catch { return; }
