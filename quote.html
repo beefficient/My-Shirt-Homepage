@@ -376,6 +376,42 @@
     .saveMsg.bad{color:var(--danger);}
     .smallNote{font-size:13px;color:var(--muted); margin-top:6px;}
 
+    .toteBagToggleRow{
+      display:flex;
+      justify-content:flex-start;
+      align-items:center;
+      width:100%;
+      margin-top:18px;
+    }
+    .toteBagToggleLabel{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-weight:700;
+      cursor:pointer;
+      color:var(--text);
+      margin:0;
+    }
+    .toteBagToggleLabel input[type="checkbox"]{
+      width:auto;
+      margin:0;
+      flex:0 0 auto;
+    }
+    .toteBagToggleLabel span{
+      display:inline-block;
+      line-height:1.2;
+    }
+    .toteLocDetails{
+      display:none;
+      margin-left:24px;
+      margin-top:8px;
+    }
+    @media (max-width: 520px){
+      .toteBagToggleLabel{
+        align-items:flex-start;
+      }
+    }
+
     @media (max-width: 860px){
       .grid{grid-template-columns:1fr}
       .outputCard{align-self:auto}
@@ -472,6 +508,102 @@
         <label for="discountCode">Discount code</label>
         <input id="discountCode" type="text" autocomplete="off" placeholder="" />
         <div class="discMsg" id="discMsg"></div>
+
+        <div class="toteBagToggleRow">
+          <label for="enableToteBagPrinting" class="toteBagToggleLabel">
+            <input type="checkbox" id="enableToteBagPrinting">
+            <span>Add tote / bag printing</span>
+          </label>
+        </div>
+
+        <div id="toteBagSection" style="display:none; margin-top:10px;">
+          <div class="section-title" id="toteBagAccordionToggle" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;">
+            <span>Tote / Bag Print Locations</span>
+            <span id="toteBagAccordionArrow" style="font-size:1.2em;">▾</span>
+          </div>
+
+          <div id="toteLocationsAccordion" style="display:block;">
+            <div class="choices" id="toteLocations">
+              <div class="choice">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                  <input type="checkbox" class="toteLocCheck" data-tote-loc="Tote Front Only" id="toteFrontOnly">
+                  Front Only
+                </label>
+                <div class="toteLocDetails" id="toteFrontOnlyDetails">
+                  <div class="inline">
+                    <span class="pill">Colors:
+                      <select class="toteColors" data-tote-loc="Tote Front Only">
+                        <option selected>1</option><option>2</option><option>3</option><option>4</option>
+                        <option>5</option><option>6</option><option>7</option><option>8</option>
+                      </select>
+                    </span>
+                    <span class="pill">Ink colors:
+                      <input class="toteInkNotes" data-tote-loc="Tote Front Only" placeholder="ex: white" autocomplete="off" />
+                    </span>
+                    <span class="pill">Artwork status:
+                      <select class="toteArtworkStatus" data-tote-loc="Tote Front Only">
+                        <option value="new" selected>New</option>
+                        <option value="reorder">Reorder</option>
+                      </select>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="choice">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                  <input type="checkbox" class="toteLocCheck" data-tote-loc="Tote Back Only" id="toteBackOnly">
+                  Back Only
+                </label>
+                <div class="toteLocDetails" id="toteBackOnlyDetails">
+                  <div class="inline">
+                    <span class="pill">Colors:
+                      <select class="toteColors" data-tote-loc="Tote Back Only">
+                        <option selected>1</option><option>2</option><option>3</option><option>4</option>
+                        <option>5</option><option>6</option><option>7</option><option>8</option>
+                      </select>
+                    </span>
+                    <span class="pill">Ink colors:
+                      <input class="toteInkNotes" data-tote-loc="Tote Back Only" placeholder="ex: black" autocomplete="off" />
+                    </span>
+                    <span class="pill">Artwork status:
+                      <select class="toteArtworkStatus" data-tote-loc="Tote Back Only">
+                        <option value="new" selected>New</option>
+                        <option value="reorder">Reorder</option>
+                      </select>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="choice">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                  <input type="checkbox" class="toteLocCheck" data-tote-loc="Tote Both Sides" id="toteBothSides">
+                  Both Sides
+                </label>
+                <div class="toteLocDetails" id="toteBothSidesDetails">
+                  <div class="inline">
+                    <span class="pill">Colors:
+                      <select class="toteColors" data-tote-loc="Tote Both Sides">
+                        <option selected>1</option><option>2</option><option>3</option><option>4</option>
+                        <option>5</option><option>6</option><option>7</option><option>8</option>
+                      </select>
+                    </span>
+                    <span class="pill">Ink colors:
+                      <input class="toteInkNotes" data-tote-loc="Tote Both Sides" placeholder="ex: white, black" autocomplete="off" />
+                    </span>
+                    <span class="pill">Artwork status:
+                      <select class="toteArtworkStatus" data-tote-loc="Tote Both Sides">
+                        <option value="new" selected>New</option>
+                        <option value="reorder">Reorder</option>
+                      </select>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <label>Print Locations</label>
         <div class="choices" id="locations">
@@ -680,7 +812,7 @@
             <div>
               <label for="g_color">Color (type it)</label>
               <input id="g_color" type="text" placeholder="ex: Black" autocomplete="off" />
-              <div class="muted" style="margin-top:6px;">We’ll confirm color availability after review.</div>
+              <div class="muted" style="margin-top:6px;">We'll confirm color availability after review.</div>
             </div>
           </div>
 
@@ -732,7 +864,6 @@
           <div class="saveMsg" id="saveMsg"></div>
   <style>
     @media print {
-      /* Hide all non-quote content, including any intro/title/hero */
       header, nav, .wrap > h1, .wrap > p, .wrap > .grid > .card:not(#outputPanel), .saveBox, .divider, .error, .row, .btn, .smallNote, .garmentBox .note, #customerInfoPanel, #g_err, #saveMsg, #priceMatchFile, #priceMatchFileCount, #artFile, #fileError, #limitText, #fileCount, #sharingDirectly, #discMsg, #discountCode, #garmentQuoteBtn, #outputPanel .error, #outputPanel .btn, #outputPanel .saveBox, #outputPanel .divider, #outputPanel .row, #outputPanel .smallNote, #outputPanel .garmentBox .note, #outputPanel #customerInfoPanel, #outputPanel #g_err, #outputPanel #saveMsg, #outputPanel #priceMatchFile, #outputPanel #priceMatchFileCount, #outputPanel #artFile, #outputPanel #fileError, #outputPanel #limitText, #outputPanel #fileCount, #outputPanel #sharingDirectly, #outputPanel #discMsg, #outputPanel #discountCode, #outputPanel #garmentQuoteBtn {
         display: none !important;
       }
@@ -742,7 +873,6 @@
         page-break-before: auto !important;
         break-before: auto !important;
       }
-      /* Show only the quote results container */
       #outputPanel {
         display: block !important;
         position: static !important;
@@ -759,11 +889,9 @@
         border: 1px solid #bbb !important;
         background: #fff !important;
       }
-      /* Avoid page breaks inside important sections */
       #outputPanel, #summary, #breakdown, .garmentBox {
         page-break-inside: avoid;
       }
-      /* Make sure content fits on Letter size */
       @page {
         size: Letter;
         margin: 0.5in;
@@ -939,6 +1067,55 @@
   </script>
 
   <script>
+    document.addEventListener("DOMContentLoaded", function(){
+      const enableTote = document.getElementById("enableToteBagPrinting");
+      const toteSection = document.getElementById("toteBagSection");
+      const accordionToggle = document.getElementById("toteBagAccordionToggle");
+      const accordionArrow = document.getElementById("toteBagAccordionArrow");
+      const accordion = document.getElementById("toteLocationsAccordion");
+
+      const toteLocs = [
+        { id: "toteFrontOnly", details: "toteFrontOnlyDetails" },
+        { id: "toteBackOnly", details: "toteBackOnlyDetails" },
+        { id: "toteBothSides", details: "toteBothSidesDetails" }
+      ];
+
+      if (enableTote && toteSection) {
+        enableTote.addEventListener("change", function(){
+          toteSection.style.display = this.checked ? "block" : "none";
+
+          if (!this.checked) {
+            toteLocs.forEach(t => {
+              const cb = document.getElementById(t.id);
+              const det = document.getElementById(t.details);
+              if (cb) cb.checked = false;
+              if (det) det.style.display = "none";
+            });
+          }
+        });
+      }
+
+      if (accordionToggle && accordion && accordionArrow) {
+        accordionToggle.addEventListener("click", function(){
+          const isOpen = accordion.style.display !== "none";
+          accordion.style.display = isOpen ? "none" : "block";
+          accordionArrow.textContent = isOpen ? "▸" : "▾";
+        });
+      }
+
+      toteLocs.forEach(t => {
+        const cb = document.getElementById(t.id);
+        const det = document.getElementById(t.details);
+        if (cb && det) {
+          cb.addEventListener("change", function(){
+            det.style.display = this.checked ? "block" : "none";
+          });
+        }
+      });
+    });
+  </script>
+
+  <script>
     /* ================================
        SUPABASE INIT
     ================================ */
@@ -984,7 +1161,6 @@
         const ts = Date.now();
         const path = `quotes/${quoteNo}/${ts}-${safeName(file.name)}`;
 
-        // Logging before upload
         console.log("Uploading to:", QUOTE_BUCKET);
         console.log("Uploading path:", path);
         console.log("File:", file.name, file.size, file.type);
@@ -1013,11 +1189,18 @@
        PRICING + CALC
     ================================ */
     const PRICING_TIERS = [
-      { qty: 24,  c1: 3.55, c2: 3.70, c3: 3.95, c4: 4.20, c5: 4.45, c6: 4.70, c7: 4.95, c8: 5.20, df: 1.70 },
-      { qty: 48,  c1: 3.35, c2: 3.60, c3: 3.85, c4: 4.10, c5: 4.35, c6: 4.60, c7: 4.85, c8: 5.10, df: 1.70 },
-      { qty: 72,  c1: 3.15, c2: 3.40, c3: 3.65, c4: 3.90, c5: 4.15, c6: 4.40, c7: 4.65, c8: 4.90, df: 1.60 },
-      { qty: 100, c1: 2.95, c2: 3.20, c3: 3.45, c4: 3.70, c5: 3.95, c6: 4.20, c7: 4.45, c8: 4.70, df: 1.50 },
-    ];
+  { qty: 12,  c1: 5.95, c2: 6.45, c3: 6.95, c4: 7.45, c5: 7.95, c6: 8.45, c7: 8.95, c8: 9.45, df: 2.20 },
+  { qty: 24,  c1: 3.95, c2: 4.10, c3: 4.25, c4: 4.40, c5: 4.45, c6: 4.70, c7: 4.90, c8: 5.15, df: 1.95 },
+  { qty: 36,  c1: 3.65, c2: 3.85, c3: 4.05, c4: 4.25, c5: 4.50, c6: 4.75, c7: 4.95, c8: 5.20, df: 1.80 },
+  { qty: 48,  c1: 3.35, c2: 3.60, c3: 3.85, c4: 4.10, c5: 4.35, c6: 4.60, c7: 4.85, c8: 5.10, df: 1.70 },
+  { qty: 72,  c1: 3.00, c2: 3.15, c3: 3.30, c4: 3.45, c5: 3.60, c6: 3.75, c7: 3.90, c8: 4.05, df: 1.60 },
+  { qty: 144, c1: 2.90, c2: 3.05, c3: 3.15, c4: 3.25, c5: 3.35, c6: 3.45, c7: 3.55, c8: 3.65, df: 1.55 },
+  { qty: 288, c1: 2.70, c2: 2.80, c3: 2.90, c4: 3.00, c5: 3.10, c6: 3.15, c7: 3.25, c8: 3.40, df: 1.50 },
+  { qty: 600, c1: 2.45, c2: 2.55, c3: 2.65, c4: 2.75, c5: 2.85, c6: 2.95, c7: 3.05, c8: 3.15, df: 1.45 },
+  { qty: 1200,c1: 2.33, c2: 2.38, c3: 2.43, c4: 2.48, c5: 2.53, c6: 2.58, c7: 2.63, c8: 2.68, df: 1.45 },
+  { qty: 2400,c1: 2.28, c2: 2.30, c3: 2.38, c4: 2.43, c5: 2.48, c6: 2.52, c7: 2.57, c8: 2.62, df: 1.35 },
+  { qty: 5000,c1: 2.22, c2: 2.27, c3: 2.32, c4: 2.37, c5: 2.42, c6: 2.45, c7: 2.52, c8: 2.57, df: 1.30 }
+];
 
     const INLINE_PRICING_TIERS = [
       { qty: 12,  c1: 3.70, c2: 4.70, c3: 5.20, c4: 5.70, c5: 6.20, c6: 6.70, c7: 7.20, c8: 7.70, df: 2.00 },
@@ -1179,7 +1362,6 @@
         items.push({ type: "Discount", product: desc, unit_price: -Math.abs(discountAmount), qty: 1, taxable: false });
       }
 
-      // Fallback: if no items were created, compute a total and add it as a single line
       if (!items.length) {
         const total = (printingOnlyTotal || 0) + (setupFee || 0) + (filmFee || 0) + (rushFee || 0) - (discountAmount || 0) + (garmentsSubtotal || 0);
         if (total > 0) {
@@ -1219,8 +1401,8 @@
     }
 
     function calc(){
-      console.log("★★★ CALC FUNCTION CALLED [2026-03-17 NEW VERSION] ★★★");
-      
+      console.log("★★★ CALC FUNCTION CALLED [TOTE AS SLEEVE VERSION] ★★★");
+
       const errorEl = document.getElementById("error");
       const discMsgEl = document.getElementById("discMsg");
       errorEl.textContent = "";
@@ -1244,7 +1426,7 @@
 
       const isDark = garmentTone === "dark";
 
-      const selected = [...document.querySelectorAll(".locCheck")]
+      const garmentSelected = [...document.querySelectorAll(".locCheck")]
         .filter(cb => cb.checked)
         .map(cb => {
           const loc = cb.dataset.loc;
@@ -1253,19 +1435,46 @@
           return { loc, artwork_status };
         });
 
-      if(selected.length === 0){ errorEl.textContent = "Please select at least one print location."; hideResults(); return; }
+      const toteEnabled = document.getElementById("enableToteBagPrinting")?.checked;
+      const toteSelected = toteEnabled
+        ? [...document.querySelectorAll(".toteLocCheck")]
+            .filter(cb => cb.checked)
+            .map(cb => {
+              const toteLoc = cb.dataset.toteLoc;
+              const colorsEl = document.querySelector(`.toteColors[data-tote-loc="${toteLoc}"]`);
+              const colors = Number(colorsEl?.value || 1);
+              const inkNotes = (document.querySelector(`.toteInkNotes[data-tote-loc="${toteLoc}"]`)?.value || "").trim();
+              const artEl = document.querySelector(`.toteArtworkStatus[data-tote-loc="${toteLoc}"]`);
+              const artwork_status = (artEl?.value || "new");
+              return { toteLoc, colors, inkNotes, artwork_status };
+            })
+        : [];
+
+      const expandedToteSelected = [];
+      for (const t of toteSelected) {
+        if (t.toteLoc === "Tote Both Sides") {
+          expandedToteSelected.push(
+            { toteLoc: "Tote Front Only", colors: t.colors, inkNotes: t.inkNotes, artwork_status: t.artwork_status },
+            { toteLoc: "Tote Back Only", colors: t.colors, inkNotes: t.inkNotes, artwork_status: t.artwork_status }
+          );
+        } else {
+          expandedToteSelected.push(t);
+        }
+      }
+
+      if (garmentSelected.length === 0 && expandedToteSelected.length === 0) {
+        errorEl.textContent = "Please select at least one print location.";
+        hideResults();
+        return;
+      }
 
       const tierSource = isInline ? INLINE_PRICING_TIERS : PRICING_TIERS;
       const tier = getTier(qty, tierSource);
       const tierQty = Number(tier.qty);
 
-      console.log("GARMENT pricing actual qty", qty);
-      console.log("GARMENT pricing tier used", tierQty);
-      console.log("GARMENT pricing rule", "minimum tier is 12");
-
       let colorScreensTotal = 0;
       let underbaseScreensTotal = 0;
-      let specialOneColorBaseScreensTotal = 0; // for 1 color + base logic
+      let specialOneColorBaseScreensTotal = 0;
       let perGarmentTotalAllLocations = 0;
       let setupFeeTotal = 0;
       let filmFeeTotal = 0;
@@ -1281,103 +1490,112 @@
         return true;
       }
 
-
-      for(const locObj of selected){
-        const loc = locObj.loc;
-        const artwork_status = locObj.artwork_status || "new";
-        const colorsEl = document.querySelector(`.colors[data-loc="${loc}"]`);
-        const colors = Number(colorsEl?.value || 1);
-        const inkNotes = (document.querySelector(`.inkNotes[data-loc="${loc}"]`)?.value || "").trim();
-
+      function addLocationCharge({
+        displayName,
+        sleeveLike = false,
+        isTote = false,
+        colors,
+        inkNotes,
+        artwork_status
+      }){
         const perGarmentBase = Number(tier[`c${colors}`]);
         if(!perGarmentBase || perGarmentBase <= 0){
           errorEl.textContent = `Missing pricing for ${colors} colors at tier ${tierQty}. Update PRICING_TIERS.`;
           hideResults();
-          return;
+          throw new Error("Missing pricing tier");
         }
 
         const underbaseApplied = shouldApplyUnderbase_(isDark, inkNotes);
         const underbaseScreensForLoc = underbaseApplied ? 1 : 0;
 
-        // Special rule: 1 color + underbase = 1 screen (not 2)
         let screensForLoc;
         if (colors === 1 && underbaseScreensForLoc === 1) {
           screensForLoc = 1;
           specialOneColorBaseScreensTotal += 1;
-          // For summary/debugging
-          console.log("[DEBUG] 1 color + underbase detected:", { colors, underbaseApplied, screensForLoc });
         } else {
           screensForLoc = colors + underbaseScreensForLoc;
           colorScreensTotal += colors;
           underbaseScreensTotal += underbaseScreensForLoc;
         }
 
-
         const dfBase = Number(tier.df) || 0;
         let dfCountUsed = 0;
-        if (underbaseApplied) {
-          if (loc === "Left Chest" || loc === "Right Chest") {
-            // Chest prints should not auto-count as double D/F.
+
+        if (isTote) {
+          // Tote/bag D/F should behave like a sleeve:
+          // light tote/bag = 1 D/F
+          // dark tote/bag = 2 D/F
+          dfCountUsed = isDark ? 2 : 1;
+        } else if (underbaseApplied) {
+          if (sleeveLike) {
+            dfCountUsed = 2;
+          } else if (displayName === "Left Chest" || displayName === "Right Chest") {
             dfCountUsed = 1;
           } else {
-            const isPrimaryLoc = (loc === "Front Center" || loc === "Back Center");
+            const isPrimaryLoc = (displayName === "Front Center" || displayName === "Back Center");
             dfCountUsed = isPrimaryLoc ? 1 : 2;
           }
         }
-        const dfForLoc = dfBase * dfCountUsed;
 
+        const dfForLoc = dfBase * dfCountUsed;
         const perGarmentLocTotal = perGarmentBase + dfForLoc;
         perGarmentTotalAllLocations += perGarmentLocTotal;
 
-        // Debug logs for this location
-        console.log("[DEBUG] Location:", loc, {
-          colors,
-          underbaseApplied,
-          screensForLoc,
-          setupFeeTotal,
-          perGarmentLocTotal
-        });
-
-
-        // per-location setup rate (inline vs normal)
         const setupRateForLoc = isInline
           ? ((artwork_status === "reorder") ? INLINE_SCREEN_SETUP_FEE_REORDER : INLINE_SCREEN_SETUP_FEE_NEW)
           : ((artwork_status === "reorder") ? SCREEN_SETUP_FEE_REORDER : SCREEN_SETUP_FEE_NEW);
 
         setupFeeTotal += screensForLoc * setupRateForLoc;
 
-        // Film fees should only be charged for NEW artwork locations
         const filmsForLoc = (artwork_status === "new") ? screensForLoc : 0;
         filmCountTotal += filmsForLoc;
         filmFeeTotal += filmsForLoc * FILM_FEE;
 
         const labelInk = inkNotes ? `: ${inkNotes}` : "";
         const dfText = dfCountUsed === 0 ? "" : (dfCountUsed === 1 ? ` + Base ${money(dfBase)}` : ` + Base ${money(dfBase)} × ${dfCountUsed}`);
+
         breakdownLines.push(`
           <div class="loc">
-            <strong>${loc}</strong> <span class="muted">(${colors} color${colors>1?"s":""})${labelInk}</span>
-            <div class="muted">
-              Per garment: ${money(perGarmentBase)}${dfText} = <b>${money(perGarmentLocTotal)}</b>
-            </div>
+            <strong>${displayName}</strong> <span class="muted">(${colors} color${colors>1?"s":""})${labelInk}</span>
+            <div class="muted">Per garment: ${money(perGarmentBase)}${dfText} = <b>${money(perGarmentLocTotal)}</b></div>
             ${underbaseApplied ? `<div class="muted">Underbase included for this location.</div>` : `<div class="muted">No underbase needed for this location.</div>`}
             <div class="muted">Films for this location: ${filmsForLoc}${filmsForLoc===0?" (reorder — no film fee)":""}</div>
           </div>
         `);
       }
 
+      for(const locObj of garmentSelected){
+        const loc = locObj.loc;
+        const artwork_status = locObj.artwork_status || "new";
+        const colorsEl = document.querySelector(`.colors[data-loc="${loc}"]`);
+        const colors = Number(colorsEl?.value || 1);
+        const inkNotes = (document.querySelector(`.inkNotes[data-loc="${loc}"]`)?.value || "").trim();
+
+        addLocationCharge({
+          displayName: loc,
+          sleeveLike: (loc === "Left Sleeve" || loc === "Right Sleeve"),
+          colors,
+          inkNotes,
+          artwork_status
+        });
+      }
+
+      for(const toteObj of expandedToteSelected){
+        addLocationCharge({
+          displayName: toteObj.toteLoc.replace("Tote ", "Tote / Bag "),
+          sleeveLike: true,
+          isTote: true,
+          colors: Number(toteObj.colors || 1),
+          inkNotes: (toteObj.inkNotes || "").trim(),
+          artwork_status: toteObj.artwork_status || "new"
+        });
+      }
 
       document.getElementById("breakdown").innerHTML = breakdownLines.join("");
-      // Compose total screens, including special rule
+
       const totalScreens = (specialOneColorBaseScreensTotal > 0)
         ? specialOneColorBaseScreensTotal + colorScreensTotal + underbaseScreensTotal
         : colorScreensTotal + underbaseScreensTotal;
-      // Debug log for summary
-      console.log("[DEBUG] SUMMARY total screens:", {
-        specialOneColorBaseScreensTotal,
-        colorScreensTotal,
-        underbaseScreensTotal,
-        totalScreens
-      });
 
       const setupFee = setupFeeTotal;
       const filmFee = filmFeeTotal;
@@ -1422,8 +1640,6 @@
         : "";
 
       const pricingLabel = isInline ? "INLINE pricing" : "pricing";
-
-      // display average setup rate per screen for summary (preserves UI shape)
       const setupRateDisplay = totalScreens ? (setupFeeTotal / totalScreens) : (isInline ? INLINE_SCREEN_SETUP_FEE_NEW : SCREEN_SETUP_FEE_NEW);
 
       renderSummary({
@@ -1463,8 +1679,11 @@
         pricingLabel,
         total: grandTotal,
         garmentsSubtotal,
-        garments: garmentsObj
+        garments: garmentsObj,
+        tote_bag_enabled: !!toteEnabled,
+        tote_bag_locations: toteSelected
       };
+
       window.LAST_QUOTE_INVOICE_ITEMS = buildQuoteInvoiceItems_({
         garmentsObj,
         setupFee,
@@ -1479,13 +1698,6 @@
         rushFee,
         garmentsSubtotal
       });
-
-      console.log("✓ CALC COMPLETE - GLOBALS SET");
-      console.log("window.LAST_QUOTE_SUMMARY items:", window.LAST_QUOTE_SUMMARY?.total ? "✓ has total: " + window.LAST_QUOTE_SUMMARY.total : "✗ missing");
-      console.log("window.LAST_QUOTE_INVOICE_ITEMS:", window.LAST_QUOTE_INVOICE_ITEMS?.length ? `✓ has ${window.LAST_QUOTE_INVOICE_ITEMS.length} items` : "✗ missing or empty");
-      if (window.LAST_QUOTE_INVOICE_ITEMS && window.LAST_QUOTE_INVOICE_ITEMS.length > 0) {
-        console.log("First invoice item:", window.LAST_QUOTE_INVOICE_ITEMS[0]);
-      }
 
       document.getElementById("totalEstimate").textContent = money(grandTotal);
       showResults();
@@ -1505,6 +1717,22 @@
       document.querySelectorAll(".colors").forEach(sel => sel.value = "1");
       document.querySelectorAll(".inkNotes").forEach(inp => inp.value = "");
       document.querySelectorAll(".artworkStatus").forEach(sel => sel.value = "new");
+
+      const enableTote = document.getElementById("enableToteBagPrinting");
+      const toteSection = document.getElementById("toteBagSection");
+      const toteAccordion = document.getElementById("toteLocationsAccordion");
+      const toteArrow = document.getElementById("toteBagAccordionArrow");
+
+      if (enableTote) enableTote.checked = false;
+      if (toteSection) toteSection.style.display = "none";
+      if (toteAccordion) toteAccordion.style.display = "block";
+      if (toteArrow) toteArrow.textContent = "▾";
+
+      document.querySelectorAll(".toteLocCheck").forEach(cb => cb.checked = false);
+      document.querySelectorAll(".toteColors").forEach(sel => sel.value = "1");
+      document.querySelectorAll(".toteInkNotes").forEach(inp => inp.value = "");
+      document.querySelectorAll(".toteArtworkStatus").forEach(sel => sel.value = "new");
+      document.querySelectorAll(".toteLocDetails").forEach(el => el.style.display = "none");
 
       document.getElementById("error").textContent = "";
       document.getElementById("summary").innerHTML = "";
@@ -1541,14 +1769,13 @@
   const gSubtotalEl = qs("g_subtotal");
 
   let currentProduct = null;
-  let currentVariants = []; // unified: { size, price_cents, price_display, source }
+  let currentVariants = [];
   let garmentLines = [];
 
   function moneyUSD(n){
     return new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(Number(n||0));
   }
 
-  // Converts display (e.g., "$12.34", "12.34", "$12") to cents
   function displayToCents(msrp_display){
     const s = String(msrp_display || "").replace(/[^0-9.]/g, "");
     const n = Number(s);
@@ -1596,7 +1823,6 @@
     const subtotal = garmentLines.reduce((sum, ln) => sum + ((ln.price_cents || 0) * (ln.qty || 0)), 0);
     if (gSubtotalEl) gSubtotalEl.textContent = moneyUSD(subtotal / 100);
 
-    // If printing summary is visible, re-calc total estimate to include garments
     const summaryVisible = document.getElementById("summary") && document.getElementById("summary").style.display !== "none";
     if (summaryVisible && typeof window.calc === "function") {
       try { window.calc(); } catch(e) {}
@@ -1613,7 +1839,6 @@
     });
   }
 
-  // ---------- Supabase helpers ----------
   function ensureSB(){
     const sb = getSB();
     if (!sb) throw new Error("Supabase is not ready yet.");
@@ -1631,9 +1856,7 @@
     return data || null;
   }
 
-  // Try product_variants first, then fallback to staging_price_update
   async function fetchAllSizesAndPrices(sb, style){
-    // 1) product_variants
     try{
       const { data: v, error: vErr } = await sb
         .from("product_variants")
@@ -1659,11 +1882,9 @@
         }).filter(x => x.size);
       }
     } catch(e){
-      // ignore and fallback
       console.warn("product_variants lookup failed or empty for", style, e);
     }
 
-    // 2) staging_price_update
     const { data: s, error: sErr } = await sb
       .from("staging_price_update")
       .select("size, customer_piece_price")
@@ -1690,7 +1911,6 @@
     const styleN = normStr(style);
     const sizeN = normStr(size);
 
-    // Try product_variants exact match
     try{
       const { data: pv, error: pvErr } = await sb
         .from("product_variants")
@@ -1717,7 +1937,6 @@
       console.warn("product_variants single lookup failed for", styleN, size, e);
     }
 
-    // Fallback staging_price_update exact match
     const { data: sp, error: spErr } = await sb
       .from("staging_price_update")
       .select("size, customer_piece_price")
@@ -1737,7 +1956,6 @@
       };
     }
 
-    // If no exact match, try a normalized scan (helps with weird spacing/case)
     const { data: all, error: allErr } = await sb
       .from("staging_price_update")
       .select("size, customer_piece_price")
@@ -1759,7 +1977,6 @@
     return null;
   }
 
-  // ---------- Style load + Add Garment ----------
   async function loadStyle(){
     try{
       setError("");
@@ -1773,7 +1990,6 @@
       const style = normStr(gStyle?.value);
       if (!style) return;
 
-      // product meta (products table)
       const p = await fetchProductMeta(sb, style);
       if (!p){
         setError("Style number not found in products table.");
@@ -1783,7 +1999,6 @@
       currentProduct = p;
       if (gStyleMeta) gStyleMeta.textContent = p.style_description || "";
 
-      // sizes/prices from variants OR staging fallback
       const variants = await fetchAllSizesAndPrices(sb, style);
       if (!variants.length){
         setError("No sizes/prices found for this style (checked product_variants and staging_price_update).");
@@ -1831,7 +2046,6 @@
         if (!size) { setError("Select a size."); return; }
         if (!qty || qty < 1) { setError("Enter a valid garment quantity."); return; }
 
-        // Ensure product is loaded (or fetch)
         if (!currentProduct || normStr(currentProduct.style_number) !== style){
           const p = await fetchProductMeta(sb, style);
           if (!p){
@@ -1842,10 +2056,8 @@
           if (gStyleMeta) gStyleMeta.textContent = p.style_description || "";
         }
 
-        // Try cached variant first
         let found = currentVariants.find(x => normStr(x.size) === normStr(size));
 
-        // If not cached, fetch single price
         if (!found){
           const one = await fetchOnePrice(sb, style, size);
           if (!one){
@@ -1898,7 +2110,6 @@
     garmentCsvErr.textContent = msg || "";
   }
 
-  // Basic CSV parser that supports quoted values
   function parseCSV(text) {
     const rows = [];
     let row = [];
@@ -1924,7 +2135,7 @@
         continue;
       }
       if (!inQuotes && (ch === "\n" || ch === "\r")) {
-        if (ch === "\r" && next === "\n") i++; // CRLF
+        if (ch === "\r" && next === "\n") i++;
         row.push(cur);
         cur = "";
         if (row.some(v => String(v).trim() !== "")) rows.push(row);
@@ -1979,7 +2190,6 @@
 
       const header = table[0].map(v => String(v || "").trim());
 
-      // Accept a few header name variations
       const idxStyle = pickIndex(header, ["Style Number", "Style", "Style#", "Item", "style_number"]);
       const idxColor = pickIndex(header, ["Color", "Colour"]);
       const idxSize  = pickIndex(header, ["Size"]);
@@ -1994,8 +2204,8 @@
         return;
       }
 
-      const productCache = new Map(); // style -> product meta
-      const priceCache = new Map();   // style|size -> {price_cents, price_display}
+      const productCache = new Map();
+      const priceCache = new Map();
 
       const added = [];
       const warnings = [];
@@ -2062,7 +2272,6 @@
         setCsvErr("Imported " + added.length + " rows ✅");
       }
 
-      // allow re-upload of same file
       garmentCsv.value = "";
     } catch(err){
       console.error(err);
@@ -2132,11 +2341,12 @@
           console.error("Mirror non-JSON response:", text);
         }
       }
+
 window.saveCustomerQuote = async function saveCustomerQuote() {
   const sb = getSB();
   const msgEl = document.getElementById("saveMsg");
 
-  console.log("★★★ SAVE CUSTOMER QUOTE FUNCTION CALLED [2026-03-17 NEW VERSION] ★★★");
+  console.log("★★★ SAVE CUSTOMER QUOTE FUNCTION CALLED [TOTE VERSION] ★★★");
 
   function setMsg(text, good) {
     if (!msgEl) return;
@@ -2155,7 +2365,6 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
       return;
     }
 
-    // Must calculate first
     const summaryVisible =
       document.getElementById("summary") &&
       document.getElementById("summary").style.display !== "none";
@@ -2165,7 +2374,6 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
       return;
     }
 
-    // Show panel first time
     const panel = document.getElementById("customerInfoPanel");
     if (panel && panel.style.display === "none") {
       panel.style.display = "block";
@@ -2174,7 +2382,6 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
       return;
     }
 
-    // Customer fields
     const name = (document.getElementById("custName")?.value || "").trim();
     const email = (document.getElementById("custEmail")?.value || "").trim();
     const phone = (document.getElementById("custPhone")?.value || "").trim();
@@ -2185,31 +2392,42 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
       return;
     }
 
-    // Build payload
     const garments =
       window.getGarmentLinesForQuote?.() || { lines: [], subtotal_cents: 0, subtotal_display: "$0.00" };
-
-  // EXPLICIT CHECK: Do the globals exist?
-  console.log("BEFORE PAYLOAD BUILD:");
-  console.log("  window.LAST_QUOTE_SUMMARY:", window.LAST_QUOTE_SUMMARY ? "✓ EXISTS" : "✗ MISSING");
-  console.log("  window.LAST_QUOTE_INVOICE_ITEMS:", window.LAST_QUOTE_INVOICE_ITEMS ? `✓ EXISTS (${window.LAST_QUOTE_INVOICE_ITEMS.length} items)` : "✗ MISSING");
 
     const payload = {
       qty: document.getElementById("qty")?.value?.trim() || "",
       garment_tone: document.getElementById("garmentTone")?.value || "",
       rush: document.getElementById("rush")?.value || "",
       discount_code: document.getElementById("discountCode")?.value?.trim() || "",
-      locations: Array.from(document.querySelectorAll(".locCheck"))
-        .filter(cb => cb.checked)
-        .map(cb => cb.dataset.loc),
-      ink_notes: Object.fromEntries(
-        Array.from(document.querySelectorAll(".inkNotes"))
-          .map(inp => [inp.dataset.loc, (inp.value || "").trim()])
-      ),
-      location_artwork_status: Object.fromEntries(
-        Array.from(document.querySelectorAll(".artworkStatus"))
-          .map(s => [s.dataset.loc, (s.value || "new")])
-      ),
+      locations: [
+        ...Array.from(document.querySelectorAll(".locCheck"))
+          .filter(cb => cb.checked)
+          .map(cb => cb.dataset.loc),
+        ...Array.from(document.querySelectorAll(".toteLocCheck"))
+          .filter(cb => cb.checked && document.getElementById("enableToteBagPrinting")?.checked)
+          .map(cb => cb.dataset.toteLoc)
+      ],
+      ink_notes: {
+        ...Object.fromEntries(
+          Array.from(document.querySelectorAll(".inkNotes"))
+            .map(inp => [inp.dataset.loc, (inp.value || "").trim()])
+        ),
+        ...Object.fromEntries(
+          Array.from(document.querySelectorAll(".toteInkNotes"))
+            .map(inp => [inp.dataset.toteLoc, (inp.value || "").trim()])
+        )
+      },
+      location_artwork_status: {
+        ...Object.fromEntries(
+          Array.from(document.querySelectorAll(".artworkStatus"))
+            .map(s => [s.dataset.loc, (s.value || "new")])
+        ),
+        ...Object.fromEntries(
+          Array.from(document.querySelectorAll(".toteArtworkStatus"))
+            .map(s => [s.dataset.toteLoc, (s.value || "new")])
+        )
+      },
       total_estimate: document.getElementById("totalEstimate")?.textContent || "",
       garments,
       garments_subtotal_cents: Number(garments.subtotal_cents || 0),
@@ -2220,11 +2438,8 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
     };
 
     console.log("★★★ PAYLOAD BUILT - FINAL CHECK BEFORE SAVE ★★★");
-    console.log("FINAL SAVE PAYLOAD payload.invoice_items:", payload.invoice_items);
-    console.log("FINAL SAVE PAYLOAD payload.quote_summary:", payload.quote_summary);
     console.log("FINAL SAVE PAYLOAD", payload);
 
-    // 1) INSERT FIRST (quote_no comes from DB)
     const ins = await sb
       .from("customer_quotes")
       .insert({ name, phone, email, payload })
@@ -2232,12 +2447,6 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
       .single();
 
     console.log("INSERT RESULT:", ins);
-    if (ins.data) {
-      console.log("✓ SUPABASE INSERT SUCCESS");
-      console.log("  Quote ID:", ins.data.id);
-      console.log("  Quote Number:", ins.data.quote_no);
-      console.log("  Payload that was saved should include invoice_items and quote_summary");
-    }
 
     if (ins.error) {
       setMsg("Save failed:\n" + ins.error.message, false);
@@ -2247,11 +2456,9 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
 
     const data = ins.data;
 
-    // ✅ Set quote number immediately
     document.getElementById("quoteNo").textContent = data?.quote_no || "(no quote # returned)";
     setMsg(`Saved quote #${data?.quote_no || "(missing)"}.\nUploading files / sending email…`, true);
 
-    // 2) UPLOAD FILES (do not block quote # if this fails)
     const okFiles = window.validateFiles ? window.validateFiles() : true;
     if (!okFiles) {
       setMsg(`Saved quote #${data.quote_no}.\nFiles too large — please email or share Drive link.`, false);
@@ -2288,7 +2495,6 @@ window.saveCustomerQuote = async function saveCustomerQuote() {
       console.log("No files selected, skipping upload.");
     }
 
-    // 3) MIRROR/EMAIL (never block success)
     try {
       console.log("Mirroring to Apps Script...");
       await mirrorCustomerQuoteToSheet(data, payload);

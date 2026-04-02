@@ -302,7 +302,7 @@
 <body>
   <!-- REQUIRED for Quote Mode calculator (can be hidden) -->
   <div id="quoteCalcHidden" style="display:none;">
-    <input id="taxRate" type="number" value="9.375" />
+    <input id="taxRate" type="number" value="9.750" />
     <div id="taxAmount">$0.00</div>
   </div>
 
@@ -509,6 +509,58 @@
               <div id="addItemHint" class="small" style="margin-top:10px; font-weight:800; color:var(--muted);"></div>
             </div>
           </div>
+
+
+          <!-- Order Summary (VISIBLE) -->
+          <div class="box" id="orderSummaryBox" style="margin-top:18px; max-width:340px; float:right; clear:both;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span>Subtotal:</span>
+              <span id="internalSubtotal">$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span>Tax:</span>
+              <span id="internalTax">$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:1.13em;">
+              <span>Grand Total:</span>
+              <span id="internalGrandTotal">$0.00</span>
+            </div>
+          </div>
+
+          <script>
+          // Render order summary (Subtotal, Tax, Grand Total) into visible summary block
+          function renderOrderSummary() {
+            const tbody = document.getElementById("itemsBody");
+            let subtotal = 0, tax = 0, grand = 0;
+            let rowCount = 0;
+            if (tbody) {
+              tbody.querySelectorAll("tr").forEach(tr => {
+                subtotal += parseFloat(tr.dataset.amount || 0) || 0;
+                tax += parseFloat(tr.dataset.tax || 0) || 0;
+                grand += parseFloat(tr.dataset.total || 0) || 0;
+                rowCount++;
+              });
+            }
+            const money = n => (Number.isFinite(n) ? n : 0).toLocaleString(undefined, { style: "currency", currency: "USD" });
+            const elSubtotal = document.getElementById("internalSubtotal");
+            const elTax = document.getElementById("internalTax");
+            const elGrand = document.getElementById("internalGrandTotal");
+            console.log('[OrderSummary] rows found:', rowCount);
+            console.log('[OrderSummary] subtotal:', subtotal);
+            console.log('[OrderSummary] tax:', tax);
+            console.log('[OrderSummary] grand total:', grand);
+            if (elSubtotal && elTax && elGrand) {
+              elSubtotal.textContent = money(subtotal);
+              elTax.textContent = money(tax);
+              elGrand.textContent = money(grand);
+              console.log('[OrderSummary] Found all summary DOM elements. Updated values.');
+            } else {
+              console.warn('[OrderSummary] One or more summary DOM elements not found:', {
+                elSubtotal, elTax, elGrand
+              });
+            }
+          }
+          </script>
 
           <!-- Notes / Terms -->
           <div style="margin-top:14px;" class="row2">
