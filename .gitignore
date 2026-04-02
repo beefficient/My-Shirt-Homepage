@@ -25,3 +25,5 @@ group-orders-v2/.next/
 group-orders-v2/node_modules/
 group-orders-v2/.cache/
 
+apps-script/invoice-webapp.gs
+INVOICE_SYNC_DEPLOY.md

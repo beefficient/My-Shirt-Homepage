@@ -2716,7 +2716,7 @@
         const url = INVOICE_SYNC_WEBAPP_URL;
         const payloadObj = {
           secret: INVOICE_SYNC_SECRET,
-          action: "update_invoice",
+          action: "sync",
           invoice_no: invoice.invoice_no,
           total: invoice.total,
           subtotal: invoice.subtotal,
@@ -2727,22 +2727,24 @@
           invoice_date: invoice.invoice_date,
           notes: invoice.notes
         };
-        // Debug logging before request
+        const formBody = new URLSearchParams();
+        Object.entries(payloadObj).forEach(([key, value]) => {
+          formBody.set(key, value == null ? "" : String(value));
+        });
+        formBody.set("payload_json", JSON.stringify(payloadObj));
+
         console.log("[INVOICE][SHEET SYNC] Webhook URL:", url);
         console.log("[INVOICE][SHEET SYNC] Invoice number:", invoice.invoice_no);
         console.log("[INVOICE][SHEET SYNC] Subtotal:", invoice.subtotal, "Tax:", invoice.tax, "Total:", invoice.total);
         console.log("[INVOICE][SHEET SYNC] Payload object:", payloadObj);
-        const jsonPayload = JSON.stringify(payloadObj);
-        console.log("[INVOICE][SHEET SYNC] JSON payload:", jsonPayload);
+        console.log("[INVOICE][SHEET SYNC] Form payload:", formBody.toString());
         try {
           const res = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: jsonPayload,
+            body: formBody,
             cache: "no-store"
           });
           const rawText = await res.text();
-          // Response logging
           console.log("[INVOICE][SHEET SYNC] HTTP status:", res.status);
           console.log("[INVOICE][SHEET SYNC] response.ok:", res.ok);
           console.log("[INVOICE][SHEET SYNC] Raw response text:", rawText);
@@ -2790,9 +2792,29 @@
           }
           setLoadMsg("Invoice saved + synced to sheet.");
         } catch (err) {
-          setLoadMsg("Google Sheets sync failed: " + (err?.message || err), true);
+          const errMsg = String(err?.message || err || "");
           console.error("[INVOICE][SHEET SYNC] Thrown error:", err);
           if (err && err.stack) console.error("[INVOICE][SHEET SYNC] Stack:", err.stack);
+
+          if (/failed to fetch/i.test(errMsg)) {
+            try {
+              const retryBody = new URLSearchParams(formBody);
+              await fetch(url, {
+                method: "POST",
+                body: retryBody,
+                mode: "no-cors",
+                cache: "no-store",
+                keepalive: true
+              });
+              console.warn("[INVOICE][SHEET SYNC] Retried in no-cors mode; browser cannot confirm response.");
+              setLoadMsg("Draft saved. Google Sheets sync was submitted, but the browser could not verify the response.");
+              return;
+            } catch (retryErr) {
+              console.error("[INVOICE][SHEET SYNC] no-cors retry failed:", retryErr);
+            }
+          }
+
+          setLoadMsg("Google Sheets sync failed: " + errMsg, true);
         }
       }
       window.syncInvoiceToSheet = syncInvoiceToSheet;
@@ -2861,7 +2883,6 @@
 
           saveDraftToLocalStorage();
           setLoadMsg(`Invoice created: ${data.invoice_no} (edit it, then click "Save Draft").`);
-          syncSheetNow();
         } catch (err) {
           console.error(err);
           setLoadMsg(err?.message || "Could not create invoice.", true);
@@ -3096,7 +3117,23 @@
           }
         });
 
-        const existingDraft = loadDraftFromLocalStorage();
+        const isReloadNavigation = (() => {
+          try {
+            const navEntry = window.performance?.getEntriesByType?.("navigation")?.[0];
+            return navEntry?.type === "reload";
+          } catch {
+            return false;
+          }
+        })();
+
+        if (isReloadNavigation) {
+          try {
+            localStorage.removeItem(DRAFT_KEY);
+            localStorage.removeItem("invoiceDraftCleared");
+          } catch {}
+        }
+
+        const existingDraft = isReloadNavigation ? null : loadDraftFromLocalStorage();
         const clearedFlag = (() => {
           try { return localStorage.getItem("invoiceDraftCleared"); } catch { return null; }
         })();
