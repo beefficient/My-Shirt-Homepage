@@ -492,6 +492,27 @@
       body{ background:#fff; }
       .hero{ padding: 0; }
       .sheet{ border:none; box-shadow:none; }
+      .bottomgrid{
+        display:flex !important;
+        flex-direction:column !important;
+        width:100% !important;
+        align-items:stretch !important;
+      }
+      .bottomgrid > *{
+        width:100% !important;
+        max-width:none !important;
+        align-self:stretch !important;
+      }
+      .totals{
+        order:1 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .notesTermsBox{
+        order:2 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
       *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
 
@@ -828,7 +849,7 @@
           </div>
 
           <div class="bottomgrid">
-            <div class="box" style="background: rgba(234,244,255,.45);">
+            <div class="box notesTermsBox" style="background: rgba(234,244,255,.45);">
               <h3>Notes / Terms</h3>
               <label class="label">Notes</label>
               <textarea class="field" id="notes"></textarea>
@@ -2716,7 +2737,7 @@
         const url = INVOICE_SYNC_WEBAPP_URL;
         const payloadObj = {
           secret: INVOICE_SYNC_SECRET,
-          action: "sync",
+          action: "update_invoice",
           invoice_no: invoice.invoice_no,
           total: invoice.total,
           subtotal: invoice.subtotal,
@@ -2727,24 +2748,22 @@
           invoice_date: invoice.invoice_date,
           notes: invoice.notes
         };
-        const formBody = new URLSearchParams();
-        Object.entries(payloadObj).forEach(([key, value]) => {
-          formBody.set(key, value == null ? "" : String(value));
-        });
-        formBody.set("payload_json", JSON.stringify(payloadObj));
-
+        // Debug logging before request
         console.log("[INVOICE][SHEET SYNC] Webhook URL:", url);
         console.log("[INVOICE][SHEET SYNC] Invoice number:", invoice.invoice_no);
         console.log("[INVOICE][SHEET SYNC] Subtotal:", invoice.subtotal, "Tax:", invoice.tax, "Total:", invoice.total);
         console.log("[INVOICE][SHEET SYNC] Payload object:", payloadObj);
-        console.log("[INVOICE][SHEET SYNC] Form payload:", formBody.toString());
+        const jsonPayload = JSON.stringify(payloadObj);
+        console.log("[INVOICE][SHEET SYNC] JSON payload:", jsonPayload);
         try {
           const res = await fetch(url, {
             method: "POST",
-            body: formBody,
+            headers: { "Content-Type": "application/json" },
+            body: jsonPayload,
             cache: "no-store"
           });
           const rawText = await res.text();
+          // Response logging
           console.log("[INVOICE][SHEET SYNC] HTTP status:", res.status);
           console.log("[INVOICE][SHEET SYNC] response.ok:", res.ok);
           console.log("[INVOICE][SHEET SYNC] Raw response text:", rawText);
@@ -2792,29 +2811,9 @@
           }
           setLoadMsg("Invoice saved + synced to sheet.");
         } catch (err) {
-          const errMsg = String(err?.message || err || "");
+          setLoadMsg("Google Sheets sync failed: " + (err?.message || err), true);
           console.error("[INVOICE][SHEET SYNC] Thrown error:", err);
           if (err && err.stack) console.error("[INVOICE][SHEET SYNC] Stack:", err.stack);
-
-          if (/failed to fetch/i.test(errMsg)) {
-            try {
-              const retryBody = new URLSearchParams(formBody);
-              await fetch(url, {
-                method: "POST",
-                body: retryBody,
-                mode: "no-cors",
-                cache: "no-store",
-                keepalive: true
-              });
-              console.warn("[INVOICE][SHEET SYNC] Retried in no-cors mode; browser cannot confirm response.");
-              setLoadMsg("Draft saved. Google Sheets sync was submitted, but the browser could not verify the response.");
-              return;
-            } catch (retryErr) {
-              console.error("[INVOICE][SHEET SYNC] no-cors retry failed:", retryErr);
-            }
-          }
-
-          setLoadMsg("Google Sheets sync failed: " + errMsg, true);
         }
       }
       window.syncInvoiceToSheet = syncInvoiceToSheet;
@@ -2883,6 +2882,7 @@
 
           saveDraftToLocalStorage();
           setLoadMsg(`Invoice created: ${data.invoice_no} (edit it, then click "Save Draft").`);
+          syncSheetNow();
         } catch (err) {
           console.error(err);
           setLoadMsg(err?.message || "Could not create invoice.", true);
@@ -3117,23 +3117,7 @@
           }
         });
 
-        const isReloadNavigation = (() => {
-          try {
-            const navEntry = window.performance?.getEntriesByType?.("navigation")?.[0];
-            return navEntry?.type === "reload";
-          } catch {
-            return false;
-          }
-        })();
-
-        if (isReloadNavigation) {
-          try {
-            localStorage.removeItem(DRAFT_KEY);
-            localStorage.removeItem("invoiceDraftCleared");
-          } catch {}
-        }
-
-        const existingDraft = isReloadNavigation ? null : loadDraftFromLocalStorage();
+        const existingDraft = loadDraftFromLocalStorage();
         const clearedFlag = (() => {
           try { return localStorage.getItem("invoiceDraftCleared"); } catch { return null; }
         })();
