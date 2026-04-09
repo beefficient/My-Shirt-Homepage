@@ -2882,7 +2882,6 @@
           if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
           renderPayments_();
           setLoadMsg(`Invoice created: ${data.invoice_no} (edit it, then click "Save Draft").`);
-          syncSheetNow();
         } catch (err) {
           console.error(err);
           setLoadMsg(err?.message || "Could not create invoice.", true);
