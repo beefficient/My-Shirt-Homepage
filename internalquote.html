@@ -302,7 +302,7 @@
 <body>
   <!-- REQUIRED for Quote Mode calculator (can be hidden) -->
   <div id="quoteCalcHidden" style="display:none;">
-    <input id="taxRate" type="number" value="9.750" />
+    <input id="taxRate" type="number" value="9.75" />
     <div id="taxAmount">$0.00</div>
   </div>
 
@@ -532,33 +532,25 @@
           function renderOrderSummary() {
             const tbody = document.getElementById("itemsBody");
             let subtotal = 0, tax = 0, grand = 0;
-            let rowCount = 0;
             if (tbody) {
               tbody.querySelectorAll("tr").forEach(tr => {
                 subtotal += parseFloat(tr.dataset.amount || 0) || 0;
                 tax += parseFloat(tr.dataset.tax || 0) || 0;
                 grand += parseFloat(tr.dataset.total || 0) || 0;
-                rowCount++;
               });
             }
             const money = n => (Number.isFinite(n) ? n : 0).toLocaleString(undefined, { style: "currency", currency: "USD" });
             const elSubtotal = document.getElementById("internalSubtotal");
             const elTax = document.getElementById("internalTax");
             const elGrand = document.getElementById("internalGrandTotal");
-            console.log('[OrderSummary] rows found:', rowCount);
-            console.log('[OrderSummary] subtotal:', subtotal);
-            console.log('[OrderSummary] tax:', tax);
-            console.log('[OrderSummary] grand total:', grand);
             if (elSubtotal && elTax && elGrand) {
               elSubtotal.textContent = money(subtotal);
               elTax.textContent = money(tax);
               elGrand.textContent = money(grand);
-              console.log('[OrderSummary] Found all summary DOM elements. Updated values.');
-            } else {
-              console.warn('[OrderSummary] One or more summary DOM elements not found:', {
-                elSubtotal, elTax, elGrand
-              });
             }
+
+            const legacyGrand = document.getElementById("grandTotalValue");
+            if (legacyGrand) legacyGrand.textContent = money(grand);
           }
           </script>
 
@@ -637,6 +629,7 @@
     ========================== */
     window.NEW_CUSTOMERS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzeCDuKCpxYfS_Eefrn4Skf6G0XasekzgsJxn1cVZhu2wbrokqc9zIwApr4MWcNDALI/exec";
     window.CONTACTS_SECRET = "msp-invoice-contacts-2026-m@g0wie!!!";
+    window.DEFAULT_TAX_RATE_PCT = 9.75;
 
     window.SUPABASE_URL = "https://tvtyjmeedapbsaopeebh.supabase.co";
     window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHlqbWVlZGFwYnNhb3BlZWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzQ3MzUsImV4cCI6MjA4NzIxMDczNX0.VKNQc9G18OgJndoN3eiv5wcLWaAmqOcQ9qA4ve2tNsQ";
@@ -677,7 +670,7 @@
 
       let amount = price * qty;
       if (isDiscount(type) && amount > 0) amount = -amount;
-      const taxRate = (num($("taxRate")?.value || 0) / 100) || 0;
+      const taxRate = ((num($("taxRate")?.value) || window.DEFAULT_TAX_RATE_PCT || 9.75) / 100) || 0;
       const tax = taxable && !isDiscount(type) ? amount * taxRate : 0;
       const total = amount + tax;
 
@@ -700,18 +693,21 @@
         <td class="t-right" data-col="total">${money(total)}</td>
         <td class="t-right noPrintCell">
           <button type="button" class="iconbtn" data-action="delete" title="Delete">✕</button>
-            <div id="grandTotalRow" style="text-align:right; font-weight:800; font-size:1.15em; margin:10px 0 0 0;">
-              Grand Total: <span id="grandTotalValue">$0.00</span>
-            </div>
         </td>
       `;
+      tr.querySelector('[data-action="delete"]').addEventListener("click", (event) => {
+        event.preventDefault();
+        tr.remove();
+        if (typeof window.renderOrderSummary === "function") window.renderOrderSummary();
+      });
+      tbody.appendChild(tr);
       if ($("itemDesc")) $("itemDesc").value = "";
       if ($("itemPrice")) $("itemPrice").value = "";
       if ($("itemQty")) $("itemQty").value = "1";
       if ($("itemType")) $("itemType").value = "Product";
       if ($("itemTaxable")) { $("itemTaxable").checked = true; $("itemTaxable").disabled = false; }
       $("itemDesc")?.focus();
-      updateGrandTotal();
+      if (typeof window.renderOrderSummary === "function") window.renderOrderSummary();
       if ($("itemDesc")) $("itemDesc").value = "";
       if ($("itemPrice")) $("itemPrice").value = "";
       if ($("itemQty")) $("itemQty").value = "1";
@@ -933,7 +929,10 @@
       function isDiscountType(type){
         return String(type || "").trim().toLowerCase() === "discount";
       }
-      function getTaxRatePct(){ return toNum($("taxRate")?.value || 0); }
+      function getTaxRatePct(){
+        const value = toNum($("taxRate")?.value);
+        return value > 0 ? value : (window.DEFAULT_TAX_RATE_PCT || 9.75);
+      }
 
       function enforceEntryTaxableRules(){
         const typeEl = $("itemType");
@@ -958,6 +957,67 @@
         if (isDiscountType(type)) return 0;
         const rate = (getTaxRatePct() / 100) || 0;
         return amount * rate;
+      }
+
+      function refreshTotals(){
+        if (typeof window.renderOrderSummary === "function") {
+          window.renderOrderSummary();
+        }
+      }
+
+      function resetEntryFields(){
+        if ($("itemDesc")) $("itemDesc").value = "";
+        if ($("itemPrice")) $("itemPrice").value = "";
+        if ($("itemQty")) $("itemQty").value = "1";
+        if ($("itemType")) $("itemType").value = "Product";
+        if ($("itemTaxable")) {
+          $("itemTaxable").checked = true;
+          $("itemTaxable").disabled = false;
+        }
+      }
+
+      function recalcRow(tr){
+        const type = tr.dataset.type || "Product";
+        const price = parseFloat(tr.dataset.price || 0) || 0;
+        const qty = parseFloat(tr.dataset.qty || 0) || 0;
+        const taxable = tr.dataset.taxable === "1";
+        const amount = calcAmount(type, price, qty);
+        const tax = calcTax(amount, taxable, type);
+        const total = amount + tax;
+
+        tr.dataset.amount = String(amount);
+        tr.dataset.tax = String(tax);
+        tr.dataset.total = String(total);
+
+        const cells = tr.querySelectorAll("td");
+        if (cells[4]) cells[4].textContent = moneyUSD(amount);
+        tr.querySelector("[data-col='tax']").textContent = moneyUSD(tax);
+        tr.querySelector("[data-col='total']").textContent = moneyUSD(total);
+
+        return { amount, tax, total };
+      }
+
+      function bindRowActions(tr){
+        tr.querySelector('[data-action="edit"]')?.addEventListener("click", (e) => {
+          e.preventDefault();
+          startEditRow(tr);
+        });
+
+        tr.querySelector('[data-action="tax-toggle"]')?.addEventListener("click", (e) => {
+          e.preventDefault();
+          const nextTaxable = tr.dataset.taxable !== "1";
+          tr.dataset.taxable = nextTaxable ? "1" : "0";
+          recalcRow(tr);
+          e.currentTarget.textContent = nextTaxable ? '🟩' : '⬜️';
+          refreshTotals();
+        });
+
+        tr.querySelector('[data-action="delete"]')?.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (editingRow === tr) stopEditMode();
+          tr.remove();
+          refreshTotals();
+        });
       }
 
       function updateEntryPreview(){
@@ -1049,6 +1109,7 @@
           editingRow.querySelector("[data-col='total']").textContent = moneyUSD(total);
 
           stopEditMode();
+          refreshTotals();
           return;
         }
 
@@ -1078,70 +1139,14 @@
           </td>
         `;
 
-
-        tr.querySelector('[data-action="edit"]').addEventListener("click", (e) => {
-          ev.preventDefault();
-          tr.remove();
-          updateGrandTotal();
-        });
-    // Update grand total display
-    function updateGrandTotal() {
-      const tbody = document.getElementById("itemsBody");
-      let sum = 0;
-      if (tbody) {
-        tbody.querySelectorAll("tr").forEach(tr => {
-          sum += parseFloat(tr.dataset.total || 0) || 0;
-        });
-      }
-      const el = document.getElementById("grandTotalValue");
-      if (el) el.textContent = (Number.isFinite(sum) ? sum : 0).toLocaleString(undefined, { style: "currency", currency: "USD" });
-    }
-    // Update grand total when toggling tax
-    document.addEventListener("click", function(e) {
-      if (e.target && e.target.matches("button[data-action='tax-toggle']")) {
-        setTimeout(updateGrandTotal, 0);
-      }
-    });
-  // Update grand total on page load (in case of prefilled items)
-  document.addEventListener("DOMContentLoaded", updateGrandTotal);
-
-        tr.querySelector('[data-action="tax-toggle"]').addEventListener("click", (e) => {
-          e.preventDefault();
-          // Toggle taxable
-          const isTaxable = tr.dataset.taxable === "1";
-          tr.dataset.taxable = isTaxable ? "0" : "1";
-          // Recalculate tax and total
-          const type = tr.dataset.type;
-          const price = parseFloat(tr.dataset.price || 0) || 0;
-          const qty = parseFloat(tr.dataset.qty || 0) || 0;
-          const amount = price * qty;
-          const taxRate = (typeof getTaxRatePct === 'function' ? getTaxRatePct() : 0) / 100;
-          const tax = (!isTaxable && !/discount/i.test(type)) ? amount * taxRate : 0;
-          const total = amount + tax;
-          tr.dataset.tax = String(tax);
-          tr.dataset.total = String(total);
-          tr.querySelector("[data-col='tax']").textContent = moneyUSD(tax);
-          tr.querySelector("[data-col='total']").textContent = moneyUSD(total);
-          // Update button icon
-          e.target.textContent = isTaxable ? '⬜️' : '🟩';
-        });
-
-        tr.querySelector('[data-action="delete"]').addEventListener("click", (e) => {
-          e.preventDefault();
-          if (editingRow === tr) stopEditMode();
-          tr.remove();
-        });
+        bindRowActions(tr);
 
         tbody.appendChild(tr);
 
-        // reset entry fields
-        $("itemDesc").value = "";
-        $("itemPrice").value = "";
-        $("itemQty").value = "1";
-        $("itemType").value = "Product";
-        if ($("itemTaxable")) { $("itemTaxable").checked = true; $("itemTaxable").disabled = false; }
+        resetEntryFields();
 
         updateEntryPreview();
+        refreshTotals();
         $("itemDesc")?.focus();
       }
 
@@ -1171,13 +1176,13 @@
           updateEntryPreview();
         });
 
-        const addBtn = $("addItemBtn");
-        const addBtnFallback = $("addItemBtnFallback");
-        addBtn?.addEventListener("click", safeUpsert);
-        addBtnFallback?.addEventListener("click", safeUpsert);
+        if ($("taxRate") && !toNum($("taxRate").value)) {
+          $("taxRate").value = String(window.DEFAULT_TAX_RATE_PCT || 9.75);
+        }
 
         enforceEntryTaxableRules();
         updateEntryPreview();
+        refreshTotals();
       }
 
       if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
@@ -1238,40 +1243,12 @@
             </td>
           `;
 
-          tr.querySelector('[data-action="edit"]').addEventListener("click", (e) => {
-            e.preventDefault();
-            startEditRow(tr);
-          });
-
-          tr.querySelector('[data-action="tax-toggle"]').addEventListener("click", (e) => {
-            e.preventDefault();
-            // Toggle taxable
-            const isTaxable = tr.dataset.taxable === "1";
-            tr.dataset.taxable = isTaxable ? "0" : "1";
-            // Recalculate tax and total
-            const type = tr.dataset.type;
-            const price = parseFloat(tr.dataset.price || 0) || 0;
-            const qty = parseFloat(tr.dataset.qty || 0) || 0;
-            const amount = price * qty;
-            const taxRate = (typeof getTaxRatePct === 'function' ? getTaxRatePct() : 0) / 100;
-            const tax = (!isTaxable && !/discount/i.test(type)) ? amount * taxRate : 0;
-            const total = amount + tax;
-            tr.dataset.tax = String(tax);
-            tr.dataset.total = String(total);
-            tr.querySelector("[data-col='tax']").textContent = moneyUSD(tax);
-            tr.querySelector("[data-col='total']").textContent = moneyUSD(total);
-            // Update button icon
-            e.target.textContent = isTaxable ? '⬜️' : '🟩';
-          });
-
-          tr.querySelector('[data-action="delete"]').addEventListener("click", (e) => {
-            e.preventDefault();
-            if (editingRow === tr) stopEditMode();
-            tr.remove();
-          });
+          bindRowActions(tr);
 
           tbody.appendChild(tr);
         });
+
+        refreshTotals();
       };
     })();
   </script>
@@ -1411,7 +1388,7 @@
         business_phone: document.getElementById("bizPhone")?.value?.trim() || "",
         business_address: document.getElementById("bizAddr")?.value?.trim() || "",
         business_city: document.getElementById("bizCity")?.value?.trim() || "",
-        tax_rate: document.getElementById("taxRate")?.value || "0",
+        tax_rate: document.getElementById("taxRate")?.value || String(window.DEFAULT_TAX_RATE_PCT || 9.75),
         subtotal: "",
         tax: "",
         total: "",
@@ -1465,6 +1442,7 @@
 
       if (qs("notes")) qs("notes").value = data.notes || "";
       if (qs("terms")) qs("terms").value = data.terms || "";
+      if (qs("taxRate")) qs("taxRate").value = data.tax_rate || String(window.DEFAULT_TAX_RATE_PCT || 9.75);
 
       if (window.__fillItems){
         window.__fillItems(Array.isArray(data.items) ? data.items : []);
@@ -1532,6 +1510,7 @@
         if (qs('clientAddr')) qs('clientAddr').value = data.client_addr || '';
         if (qs('notes')) qs('notes').value = data.notes || '';
         if (qs('terms')) qs('terms').value = data.terms || '';
+        if (qs('taxRate')) qs('taxRate').value = data.tax_rate || String(window.DEFAULT_TAX_RATE_PCT || 9.75);
         if (window.__fillItems) window.__fillItems(Array.isArray(data.items) ? data.items : []);
 
         alert('Quote loaded ✅');
@@ -1556,6 +1535,7 @@
         if (qs('notes')) qs('notes').value = q.notes || payload.notes || '';
         if (qs('terms')) qs('terms').value = payload.terms || '';
         if (qs('invDate')) qs('invDate').value = payload.quote_date || '';
+        if (qs('taxRate')) qs('taxRate').value = payload.tax_rate || q.tax_rate || String(window.DEFAULT_TAX_RATE_PCT || 9.75);
 
         // Items: normalize common payload shapes into internal line-item format
         if (window.__fillItems){

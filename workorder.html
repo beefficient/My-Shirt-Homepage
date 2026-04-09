@@ -376,7 +376,7 @@
               <div><b>Status:</b> <span id="summaryStatus">Draft</span></div>
               <div class="help" id="summaryApprovedDate"></div>
             </div>
-            <div class="help">Drafts auto-save on this device.</div>
+            <div class="help">Use Save Work Order to keep a copy you can load later.</div>
           </div>
         </div>
       </div>
@@ -2600,50 +2600,7 @@
   }
 
   function saveDraft(){
-    try{
-      const currentMode = window.CURRENT_WORKORDER_MODE;
-      const sessionMode = getSessionMode_();
-
-      if (currentMode === "edit") {
-        if (sessionMode !== "edit") setSessionMode_("edit");
-      } else if (sessionMode === "blank") {
-        if (woHasContent_(wo)) {
-          setSessionMode_("new-draft");
-          console.log("WO active draft found (upgraded from blank)", { woNumber: wo?.woNumber });
-        } else {
-          return;
-        }
-      } else if (sessionMode !== "new-draft") {
-        if (woHasContent_(wo)) {
-          setSessionMode_("new-draft");
-          console.log("WO active draft found", { woNumber: wo?.woNumber });
-        }
-      }
-
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({
-        state: wo,
-        meta: {
-          mode: currentMode === "edit" ? "edit" : "new",
-          currentId: window.CURRENT_WORKORDER_ID || null,
-          source: window.CURRENT_WORKORDER_SOURCE || null
-        }
-      }));
-      console.log("SAVE DRAFT ran", {
-        mode: currentMode,
-        sessionMode: getSessionMode_(),
-        woNumber: normalizeWorkOrderNo_(wo?.woNumber || ""),
-        currentId: window.CURRENT_WORKORDER_ID || null,
-        source: window.CURRENT_WORKORDER_SOURCE || null,
-        storageTarget: "localStorage"
-      });
-    }catch(e){
-      console.warn("Draft save failed:", e);
-      toast(
-        "Draft too large to save on this device. Remove some images or use smaller files, then try again.",
-        "error",
-        6500
-      );
-    }
+    clearDraftStorage_();
   }
 
   function validateAllRequired({ includeApproval = false } = {}){
@@ -3576,75 +3533,29 @@
   }
 
   async function init(){
-    const pendingLoad = getExplicitUrlLoadTarget_();
-    const explicitUrlLoad = !!pendingLoad.intentional;
-    const sessionMode = getSessionMode_();
-
     disableBrowserFormRestore_();
     clearLegacyLoadKeys_();
+    clearDraftStorage_();
+    setSessionMode_("blank");
+    syncWorkOrderUrl_("", "");
     setLoadMsg("");
 
     console.log("INIT ran", {
-      sessionMode,
-      explicitUrlLoad,
+      sessionMode: "blank",
+      explicitUrlLoad: false,
       url: window.location.href,
       sourceSessionStorage: "WO_SESSION_MODE",
       sourceLocalStorage: DRAFT_KEY
     });
+    window.CURRENT_WORKORDER_MODE = "new";
+    window.CURRENT_WORKORDER_ID = null;
+    window.CURRENT_WORKORDER_SOURCE = null;
+    wo = newWO();
 
-    let draftRestore = { restored: false, kind: "none" };
+    if ($("loadWONumber")) $("loadWONumber").value = "";
+    if ($("woNumber")) $("woNumber").textContent = "";
 
-    if (explicitUrlLoad) {
-      console.log("WO refresh restore source: url-explicit");
-      window.CURRENT_WORKORDER_MODE = "new";
-      window.CURRENT_WORKORDER_ID = null;
-      window.CURRENT_WORKORDER_SOURCE = null;
-      wo = newWO();
-      console.log("WO init restore source", { source: "url", woNumber: normalizeWorkOrderNo_(wo?.woNumber || "") });
-    } else if (!sessionMode || sessionMode === "blank") {
-      window.CURRENT_WORKORDER_MODE = "new";
-      window.CURRENT_WORKORDER_ID = null;
-      window.CURRENT_WORKORDER_SOURCE = null;
-      wo = newWO();
-      setSessionMode_("blank");
-
-      if ($("loadWONumber")) $("loadWONumber").value = "";
-      if ($("woNumber")) $("woNumber").textContent = "";
-
-      console.log("INIT blank/new state", { source: "blank" });
-    } else {
-      draftRestore = loadDraft();
-
-      if (!draftRestore.restored) {
-        window.CURRENT_WORKORDER_MODE = "new";
-        window.CURRENT_WORKORDER_ID = null;
-        window.CURRENT_WORKORDER_SOURCE = null;
-        wo = newWO();
-        setSessionMode_("blank");
-
-        if ($("loadWONumber")) $("loadWONumber").value = "";
-        if ($("woNumber")) $("woNumber").textContent = "";
-
-        console.log("INIT blank/new state", { source: "failed-draft-restore" });
-      } else if (draftRestore.kind === "edit") {
-        setSessionMode_("edit");
-        console.log("WO active saved record found", {
-          id: window.CURRENT_WORKORDER_ID,
-          woNumber: normalizeWorkOrderNo_(wo?.woNumber || "")
-        });
-        setLoadMsg(`Restored edit session ${normalizeWorkOrderNo_(wo?.woNumber || "") || ""}.`);
-      } else {
-        setSessionMode_("new-draft");
-        console.log("WO active draft found", {
-          woNumber: normalizeWorkOrderNo_(wo?.woNumber || "")
-        });
-        if (woHasContent_(wo)) {
-          setLoadMsg("Restored active draft.");
-        } else {
-          setLoadMsg("");
-        }
-      }
-    }
+    console.log("INIT blank/new state", { source: "blank" });
 
     document.querySelectorAll(".tab").forEach(t => {
       t.addEventListener("click", ()=> setTab(t.dataset.tab));
@@ -3736,15 +3647,6 @@
     bootstrapLocalWorkOrdersIndex_();
 
     renderAll();
-
-    try {
-      if (explicitUrlLoad) {
-        await maybeLoadWorkOrderFromUrl_();
-      }
-    } catch (error) {
-      console.error(error);
-      setLoadMsg(error?.message || "Could not auto-load work order.", true);
-    }
   }
 
   init();

@@ -821,7 +821,7 @@
                         <input id="discountValue" class="field mono" inputmode="decimal"
                                placeholder="e.g. 25 or 10" style="max-width:180px;" />
 
-                        <span style="font-weight:800; color:var(--muted);" id="discountHint"></span>
+                        <span style="font-weight:800; color:var(--muted);" id="discountHint">Codes: WELCOME10, SAVE25, RUSHFREE, INLINE, KATHYINLINE</span>
                       </div>
                     </div>
                   </td>
@@ -872,7 +872,7 @@
                   <div style="font-size:12px; font-weight:700; color:var(--muted);">edit percent</div>
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
-                  <input class="field mono" id="taxRate" type="number" step="0.001" value="9.375" />
+                  <input class="field mono" id="taxRate" type="number" step="0.001" value="9.75" />
                   <div class="value" id="taxAmount">$0.00</div>
                 </div>
               </div>
@@ -1643,10 +1643,6 @@
         if ($("paymentDate")) $("paymentDate").value = todayIso_();
         renderPayments_();
         recalcTotals();
-        try {
-          localStorage.removeItem(DRAFT_KEY);
-          localStorage.setItem("invoiceDraftCleared", "1");
-        } catch {}
       }
 
       const GARMENT_SIZES = ["XS", "S", "M", "L", "XL", "2X", "3X", "4X"];
@@ -2012,8 +2008,6 @@
         recalcTotals();
       }
 
-      const DRAFT_KEY = "invoiceDraftBackup_v2";
-
       function getItemsFromTable() {
         const rows = Array.from(document.querySelectorAll("#itemsTbody tr"));
         return rows.map((tr) => {
@@ -2067,7 +2061,7 @@
         applyCustomerFieldsToForm_(d, d?.payload);
         if ($("notes")) $("notes").value = d.notes || "";
         if ($("terms")) $("terms").value = d.terms || "";
-        if ($("taxRate")) $("taxRate").value = (d.tax_rate ?? 9.375);
+        if ($("taxRate")) $("taxRate").value = (d.tax_rate ?? 9.75);
 
         const unpacked = unpackStoredItemsAndPayments_(d.items_json);
         renderItems(unpacked.items);
@@ -2082,23 +2076,6 @@
         renderPayments_();
         recalcTotals();
       }
-
-      function saveDraftToLocalStorage() {
-        try {
-          const draft = getInvoiceDraftObject();
-          localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-        } catch (e) {
-          console.warn("Could not save draft locally:", e);
-        }
-      }
-
-      function loadDraftFromLocalStorage() {
-        const raw = localStorage.getItem(DRAFT_KEY);
-        if (!raw) return null;
-        try { return JSON.parse(raw); } catch { return null; }
-      }
-
-      window.loadDraftFromObject = applyDraftObject;
 
       async function saveDraftToSupabase() {
         try { await requireInvoiceAuth_(); } catch { return; }
@@ -2680,8 +2657,6 @@
         window.INVOICE_PAYMENTS = loadedPayments;
         if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
         renderPayments_();
-
-        saveDraftToLocalStorage();
         setLoadMsg(`Invoice ${data.invoice_no} loaded. Edit it and click "Save Draft".`);
         return data;
       }
@@ -2748,25 +2723,32 @@
           invoice_date: invoice.invoice_date,
           notes: invoice.notes
         };
-        // Debug logging before request
         console.log("[INVOICE][SHEET SYNC] Webhook URL:", url);
         console.log("[INVOICE][SHEET SYNC] Invoice number:", invoice.invoice_no);
         console.log("[INVOICE][SHEET SYNC] Subtotal:", invoice.subtotal, "Tax:", invoice.tax, "Total:", invoice.total);
         console.log("[INVOICE][SHEET SYNC] Payload object:", payloadObj);
-        const jsonPayload = JSON.stringify(payloadObj);
-        console.log("[INVOICE][SHEET SYNC] JSON payload:", jsonPayload);
-        try {
+
+        async function postInvoiceSync_(actionName) {
+          const requestPayload = { ...payloadObj, action: actionName };
+          const body = new URLSearchParams();
+          Object.entries(requestPayload).forEach(([key, value]) => {
+            body.append(key, value == null ? "" : String(value));
+          });
+          body.set("payload_json", JSON.stringify(requestPayload));
+
+          console.log("[INVOICE][SHEET SYNC] Action:", actionName);
+          console.log("[INVOICE][SHEET SYNC] Form payload:", Object.fromEntries(body.entries()));
+
           const res = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: jsonPayload,
+            body,
             cache: "no-store"
           });
           const rawText = await res.text();
-          // Response logging
           console.log("[INVOICE][SHEET SYNC] HTTP status:", res.status);
           console.log("[INVOICE][SHEET SYNC] response.ok:", res.ok);
           console.log("[INVOICE][SHEET SYNC] Raw response text:", rawText);
+
           let parsed = null;
           let parseError = null;
           if (rawText && rawText.trim().length > 0) {
@@ -2780,29 +2762,45 @@
           } else {
             console.warn("[INVOICE][SHEET SYNC] Empty response body");
           }
-          // Error handling
-          if (!res.ok) {
-            const errMsg = `Google Sheets sync failed: webhook returned ${res.status} - ${rawText}`;
+
+          return { actionName, res, rawText, parsed, parseError };
+        }
+
+        try {
+          let result = await postInvoiceSync_(payloadObj.action);
+
+          if (
+            result.parsed &&
+            (result.parsed.ok === false || result.parsed.success === false || result.parsed.error) &&
+            /unknown action/i.test(String(result.parsed.error || result.parsed.message || "")) &&
+            result.actionName === "update_invoice"
+          ) {
+            console.warn("[INVOICE][SHEET SYNC] Retrying with legacy action name: sync");
+            result = await postInvoiceSync_("sync");
+          }
+
+          if (!result.res.ok) {
+            const errMsg = `Google Sheets sync failed: webhook returned ${result.res.status} - ${result.rawText}`;
             setLoadMsg(errMsg, true);
             throw new Error(errMsg);
           }
-          if (parseError) {
-            const errMsg = `Google Sheets sync failed: response was not valid JSON - ${rawText}`;
+          if (result.parseError) {
+            const errMsg = `Google Sheets sync failed: response was not valid JSON - ${result.rawText}`;
             setLoadMsg(errMsg, true);
             throw new Error(errMsg);
           }
-          if (!parsed || parsed.ok === false || parsed.success === false || parsed.error) {
+          if (!result.parsed || result.parsed.ok === false || result.parsed.success === false || result.parsed.error) {
             let errMsg = "Google Sheets sync failed: ";
-            if (parsed && (parsed.error || parsed.message)) {
-              errMsg += parsed.error || parsed.message;
-              if (/row not found/i.test(parsed.error || parsed.message) && invoice.invoice_no) {
+            if (result.parsed && (result.parsed.error || result.parsed.message)) {
+              errMsg += result.parsed.error || result.parsed.message;
+              if (/row not found/i.test(result.parsed.error || result.parsed.message) && invoice.invoice_no) {
                 errMsg += ` (row not found for invoice ${invoice.invoice_no})`;
               }
-              if (/missing.*total/i.test(parsed.error || parsed.message)) {
+              if (/missing.*total/i.test(result.parsed.error || result.parsed.message)) {
                 errMsg += " (missing total field)";
               }
-            } else if (typeof rawText === "string") {
-              errMsg += rawText;
+            } else if (typeof result.rawText === "string") {
+              errMsg += result.rawText;
             } else {
               errMsg += "Unknown error";
             }
@@ -2811,7 +2809,11 @@
           }
           setLoadMsg("Invoice saved + synced to sheet.");
         } catch (err) {
-          setLoadMsg("Google Sheets sync failed: " + (err?.message || err), true);
+          const message = err?.message || String(err || "Unknown error");
+          const friendlyMessage = /failed to fetch/i.test(message)
+            ? "Google Sheets sync failed: network request was blocked or the Apps Script web app is unavailable."
+            : (message.startsWith("Google Sheets sync failed:") ? message : "Google Sheets sync failed: " + message);
+          setLoadMsg(friendlyMessage, true);
           console.error("[INVOICE][SHEET SYNC] Thrown error:", err);
           if (err && err.stack) console.error("[INVOICE][SHEET SYNC] Stack:", err.stack);
         }
@@ -2879,8 +2881,6 @@
           window.INVOICE_PAYMENTS = [];
           if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
           renderPayments_();
-
-          saveDraftToLocalStorage();
           setLoadMsg(`Invoice created: ${data.invoice_no} (edit it, then click "Save Draft").`);
           syncSheetNow();
         } catch (err) {
@@ -3040,7 +3040,6 @@
 
         $("btnSaveDraft")?.addEventListener("click", async () => {
           try {
-            saveDraftToLocalStorage();
             await saveDraftToSupabase();
           } catch (e) {
             console.error(e);
@@ -3117,23 +3116,6 @@
           }
         });
 
-        const existingDraft = loadDraftFromLocalStorage();
-        const clearedFlag = (() => {
-          try { return localStorage.getItem("invoiceDraftCleared"); } catch { return null; }
-        })();
-
-        if (
-          !clearedFlag &&
-          existingDraft &&
-          !($("invNo")?.value || "").trim() &&
-          document.querySelectorAll("#itemsTbody tr").length === 0
-        ) {
-          applyDraftObject(existingDraft);
-          setLoadMsg("Recovered draft from this browser.");
-        }
-
-        setInterval(saveDraftToLocalStorage, 2000);
-        window.addEventListener("beforeunload", saveDraftToLocalStorage);
       });
     })();
   </script>
