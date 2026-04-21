@@ -1216,6 +1216,7 @@
 
     const INLINE_SCREEN_SETUP_FEE_NEW = 20;
     const INLINE_SCREEN_SETUP_FEE_REORDER = 15;
+    const INLINE_FILM_FEE = 10;
 
     const SCREEN_SETUP_FEE_NEW = 25;
     const SCREEN_SETUP_FEE_REORDER = 20;
@@ -1314,12 +1315,12 @@
     }
 
     function buildQuoteInvoiceItems_({
-      garmentsObj, setupFee, setupRate, filmFee, filmCount,
+      garmentsObj, setupFee, setupRate, filmFee, filmRate, filmCount,
       printingOnlyTotal, discountAmount, discountCode, discountLine,
       rushRate, rushFee, garmentsSubtotal
     }){
       console.log("=== BUILD QUOTE INVOICE ITEMS CALLED ===");
-      console.log("Input params:", { garmentsObj, setupFee, setupRate, filmFee, filmCount, printingOnlyTotal, discountAmount, discountCode, discountLine, rushRate, rushFee, garmentsSubtotal });
+      console.log("Input params:", { garmentsObj, setupFee, setupRate, filmFee, filmRate, filmCount, printingOnlyTotal, discountAmount, discountCode, discountLine, rushRate, rushFee, garmentsSubtotal });
       
       const items = [];
       const garments = garmentsObj && Array.isArray(garmentsObj.lines) ? garmentsObj.lines : [];
@@ -1349,7 +1350,7 @@
         items.push({ type: "Services", product: `Setup fee (${money(setupRate)} per screen)`, unit_price: setupFee, qty: 1, taxable: true });
       }
       if (filmFee > 0) {
-        items.push({ type: "Services", product: `Film fee (${filmCount} film${filmCount !== 1 ? "s" : ""} @ ${money(FILM_FEE)})`, unit_price: filmFee, qty: 1, taxable: true });
+        items.push({ type: "Services", product: `Film fee (${filmCount} film${filmCount !== 1 ? "s" : ""} @ ${money(filmRate)})`, unit_price: filmFee, qty: 1, taxable: true });
       }
       if (rushRate > 0 && rushFee > 0) {
         items.push({ type: "Services", product: `Rush (+${Math.round(rushRate * 100)}%)`, unit_price: rushFee, qty: 1, taxable: true });
@@ -1380,7 +1381,7 @@
     }
 
     function renderSummary({
-      qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,filmCount,
+      qty,isDark,tierQty,totalScreens,setupFee,setupRate,filmFee,filmRate,filmCount,
       perGarmentTotalAllLocations,printingOnlyTotal,discountLine,
       rushRate,rushFee,pricingLabel,total,garmentsSubtotal
     }){
@@ -1390,7 +1391,7 @@
         <div class="line"><div class="k">Garments</div><div class="v">${isDark ? "Dark" : "Light"}</div></div>
         <div class="line"><div class="k">Total screens</div><div class="v">${totalScreens}</div></div>
         <div class="line"><div class="k">Setup fee</div><div class="v">${money(setupFee)} <span class="muted">(${money(setupRate)} per screen)</span></div></div>
-        <div class="line"><div class="k">Film fee</div><div class="v">${money(filmFee)} <span class="muted">(${filmCount} film${filmCount!==1?"s": ""} @ ${money(FILM_FEE)})</span></div></div>
+        <div class="line"><div class="k">Film fee</div><div class="v">${money(filmFee)} <span class="muted">(${filmCount} film${filmCount!==1?"s": ""} @ ${money(filmRate)})</span></div></div>
         <div class="line"><div class="k">Per garment print total (all locations)</div><div class="v">${money(perGarmentTotalAllLocations)}</div></div>
         <div class="line"><div class="k">Garments print cost</div><div class="v">${money(printingOnlyTotal)}</div></div>
         ${(garmentsSubtotal && garmentsSubtotal > 0) ? `<div class="line"><div class="k">Garments subtotal</div><div class="v">${money(garmentsSubtotal)}</div></div>` : ""}
@@ -1479,6 +1480,7 @@
       let setupFeeTotal = 0;
       let filmFeeTotal = 0;
       let filmCountTotal = 0;
+      const filmRate = isInline ? INLINE_FILM_FEE : FILM_FEE;
 
       const breakdownLines = [];
 
@@ -1549,7 +1551,7 @@
 
         const filmsForLoc = (artwork_status === "new") ? screensForLoc : 0;
         filmCountTotal += filmsForLoc;
-        filmFeeTotal += filmsForLoc * FILM_FEE;
+        filmFeeTotal += filmsForLoc * filmRate;
 
         const labelInk = inkNotes ? `: ${inkNotes}` : "";
         const dfText = dfCountUsed === 0 ? "" : (dfCountUsed === 1 ? ` + Base ${money(dfBase)}` : ` + Base ${money(dfBase)} × ${dfCountUsed}`);
@@ -1650,6 +1652,7 @@
         setupFee,
         setupRate: setupRateDisplay,
         filmFee,
+        filmRate,
         filmCount,
         perGarmentTotalAllLocations,
         printingOnlyTotal,
@@ -1669,6 +1672,7 @@
         setupFee,
         setupRate: setupRateDisplay,
         filmFee,
+        filmRate,
         filmCount,
         perGarmentTotalAllLocations,
         printingOnlyTotal,
@@ -1689,6 +1693,7 @@
         setupFee,
         setupRate: setupRateDisplay,
         filmFee,
+        filmRate,
         filmCount,
         printingOnlyTotal,
         discountAmount,
