@@ -877,6 +877,14 @@
                 </div>
               </div>
 
+              <div class="trow">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <label for="ccFeeEnabled">CC fee 3.5%</label>
+                  <input type="checkbox" id="ccFeeEnabled" />
+                </div>
+                <div class="value" id="ccFeeAmount">$0.00</div>
+              </div>
+
               <div class="trow total">
                 <div>Total</div>
                 <div class="value" id="total">$0.00</div>
@@ -1490,7 +1498,7 @@
 
       function unpackStoredItemsAndPayments_(storedItems) {
         if (Array.isArray(storedItems)) {
-          return { items: storedItems, payments: [] };
+          return { items: storedItems, payments: [], ccFeeEnabled: false };
         }
         if (storedItems && typeof storedItems === "object") {
           const items = Array.isArray(storedItems.items)
@@ -1499,16 +1507,17 @@
           const payments = normalizePayments_(
             storedItems.payments || storedItems.payments_json || storedItems?.meta?.payments || []
           );
-          return { items, payments };
+          const ccFeeEnabled = storedItems.cc_fee_enabled === true || storedItems?.meta?.cc_fee_enabled === true;
+          return { items, payments, ccFeeEnabled };
         }
-        return { items: [], payments: [] };
+        return { items: [], payments: [], ccFeeEnabled: false };
       }
 
-      function buildStoredItemsPayload_(items, payments) {
+      function buildStoredItemsPayload_(items, payments, ccFeeEnabled = false) {
         const safeItems = Array.isArray(items) ? items : [];
         const safePayments = normalizePayments_(payments);
-        if (!safePayments.length) return safeItems;
-        return { items: safeItems, meta: { payments: safePayments } };
+        if (!safePayments.length && !ccFeeEnabled) return safeItems;
+        return { items: safeItems, meta: { payments: safePayments, cc_fee_enabled: !!ccFeeEnabled } };
       }
 
       function toNum(v) {
@@ -1613,13 +1622,17 @@
 
         const taxRate = toNum($("taxRate")?.value) / 100;
         const tax = taxableSubtotal * (Number.isFinite(taxRate) ? taxRate : 0);
-        const total = subtotal + tax;
+        const baseTotal = subtotal + tax;
+        const ccFeeEnabled = $("ccFeeEnabled")?.checked === true;
+        const ccFee = ccFeeEnabled ? (baseTotal * 0.035) : 0;
+        const total = baseTotal + ccFee;
         const paid = sumPayments_(window.INVOICE_PAYMENTS);
         const balance = total - paid;
 
         if ($("amountPaid")) $("amountPaid").value = paid.toFixed(2);
         if ($("subtotal")) $("subtotal").textContent = moneyUSD(subtotal);
         if ($("taxAmount")) $("taxAmount").textContent = moneyUSD(tax);
+        if ($("ccFeeAmount")) $("ccFeeAmount").textContent = moneyUSD(ccFee);
         if ($("total")) $("total").textContent = moneyUSD(total);
         if ($("balance")) $("balance").textContent = moneyUSD(balance);
       }
@@ -1641,6 +1654,7 @@
         window.INVOICE_PAYMENTS = [];
         if ($("paymentAmount")) $("paymentAmount").value = "";
         if ($("paymentDate")) $("paymentDate").value = todayIso_();
+        if ($("ccFeeEnabled")) $("ccFeeEnabled").checked = false;
         renderPayments_();
         recalcTotals();
       }
@@ -2047,6 +2061,7 @@
           notes: ($("notes")?.value || "").trim(),
           terms: ($("terms")?.value || "").trim(),
           tax_rate: toNum($("taxRate")?.value),
+          cc_fee_enabled: $("ccFeeEnabled")?.checked === true,
           amount_paid: sumPayments_(payments),
           payments,
           items_json: getItemsFromTable()
@@ -2065,6 +2080,7 @@
 
         const unpacked = unpackStoredItemsAndPayments_(d.items_json);
         renderItems(unpacked.items);
+        if ($("ccFeeEnabled")) $("ccFeeEnabled").checked = !!(d.cc_fee_enabled || unpacked.ccFeeEnabled);
 
         let payments = normalizePayments_(d.payments);
         if (!payments.length) payments = unpacked.payments;
@@ -2107,7 +2123,7 @@
           client_phone: draft.client_phone || null,
           payment_link: window.CURRENT_PAYMENT_LINK || null,
           notes: draft.notes || null,
-          items_json: buildStoredItemsPayload_(draft.items_json, draft.payments),
+          items_json: buildStoredItemsPayload_(draft.items_json, draft.payments, draft.cc_fee_enabled),
           total: total,
           subtotal: subtotal,
           tax: tax,
@@ -2651,6 +2667,7 @@
 
         const unpacked = unpackStoredItemsAndPayments_(data.items_json);
         renderItems(unpacked.items);
+        if ($("ccFeeEnabled")) $("ccFeeEnabled").checked = !!unpacked.ccFeeEnabled;
 
         let loadedPayments = normalizePayments_(data.payments || data.payments_json);
         if (!loadedPayments.length) loadedPayments = unpacked.payments;
@@ -3016,6 +3033,8 @@
         ["bizName","bizAddr","bizCity","bizPhone","bizEmail"].forEach((id) => {
           $(id)?.addEventListener("input", syncBizInfoDisplay);
         });
+
+        $("ccFeeEnabled")?.addEventListener("change", recalcTotals);
 
         $("clientContact")?.addEventListener("input", () => {
           setClientContactUI_($("clientContact")?.value || "");
