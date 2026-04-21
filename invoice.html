@@ -513,6 +513,7 @@
         page-break-inside: avoid !important;
         break-inside: avoid !important;
       }
+      .printOnly{display:inline !important;}
       *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
 
@@ -529,6 +530,7 @@
       text-decoration: underline;
       align-self: flex-start;
     }
+    .printOnly{display:none !important;}
 
     .sizeModalBackdrop{
       position: fixed; inset: 0;
@@ -1661,6 +1663,8 @@
 
       const GARMENT_SIZES = ["XS", "S", "M", "L", "XL", "2X", "3X", "4X"];
       let sizeModalSaveHandler_ = null;
+      let currentEditRow_ = null;
+      let editDraftSizes_ = {};
 
       function sanitizeSizeQty_(v) {
         const n = parseInt(String(v ?? "").replace(/[^\d]/g, ""), 10);
@@ -1764,6 +1768,196 @@
         });
       }
 
+      function syncEditItemSizesSummary_() {
+        const summary = $("editItemSizesSummary");
+        if (!summary) return;
+        const txt = buildSizeText_(editDraftSizes_);
+        summary.textContent = txt || "No sizes selected";
+      }
+
+      function syncEditItemModalVisibility_() {
+        const type = $("editItemType")?.value || "Product";
+        const typeHasGarments = type === "Product" || type === "Services";
+        const productKind = $("editItemProductKind")?.value || "non_garment";
+        const garment = typeHasGarments && productKind === "garment";
+        const qtyEl = $("editItemQty");
+
+        if ($("editItemProductKindWrap")) $("editItemProductKindWrap").style.display = typeHasGarments ? "" : "none";
+        if ($("editItemColorWrap")) $("editItemColorWrap").style.display = garment ? "" : "none";
+        if ($("editItemSizesWrap")) $("editItemSizesWrap").style.display = garment ? "" : "none";
+
+        syncEditItemSizesSummary_();
+
+        if (!qtyEl) return;
+        if (garment) {
+          qtyEl.disabled = true;
+          qtyEl.value = String(sumSizeQty_(editDraftSizes_));
+        } else if (type === "Discount") {
+          qtyEl.disabled = true;
+          qtyEl.value = "1";
+        } else {
+          qtyEl.disabled = false;
+          if (!qtyEl.value || toNum(qtyEl.value) <= 0) qtyEl.value = "1";
+        }
+      }
+
+      function closeEditItemModal_() {
+        const backdrop = $("editItemModalBackdrop");
+        if (backdrop) backdrop.style.display = "none";
+        currentEditRow_ = null;
+        editDraftSizes_ = {};
+      }
+
+      function fillEditItemModalFromRow_(tr) {
+        const sizes = parseSizesDataset_(tr.dataset.sizes);
+        const inferredKind = tr.dataset.productKind || (sumSizeQty_(sizes) > 0 ? "garment" : "non_garment");
+
+        if ($("editItemType")) $("editItemType").value = tr.dataset.type || "Services";
+        if ($("editItemProduct")) $("editItemProduct").value = tr.dataset.product || "";
+        if ($("editItemColor")) $("editItemColor").value = tr.dataset.color || "";
+        if ($("editItemPrice")) $("editItemPrice").value = asNum(tr.dataset.unitPrice || 0).toFixed(2);
+        if ($("editItemQty")) $("editItemQty").value = String(Math.max(1, asNum(tr.dataset.qty || 1)));
+        if ($("editItemTaxable")) $("editItemTaxable").checked = tr.dataset.taxable === "1";
+        if ($("editItemProductKind")) $("editItemProductKind").value = inferredKind;
+
+        editDraftSizes_ = sizes;
+        syncEditItemModalVisibility_();
+      }
+
+      function openEditItemModal_(tr) {
+        const backdrop = $("editItemModalBackdrop");
+        if (!backdrop || !tr) return;
+        currentEditRow_ = tr;
+        fillEditItemModalFromRow_(tr);
+        backdrop.style.display = "flex";
+        $("editItemProduct")?.focus();
+      }
+
+      function updateRenderedLineDisplay_(tr) {
+        const t = String(tr.dataset.type || "Services");
+        const p = String(tr.dataset.product || "");
+        const c = String(tr.dataset.color || "");
+        const u = asNum(tr.dataset.unitPrice || 0);
+        const amount = asNum(tr.dataset.amount || 0);
+        const q = Math.max(1, asNum(tr.dataset.qty || 1));
+        const taxable = tr.dataset.taxable === "1";
+        const sizes = parseSizesDataset_(tr.dataset.sizes);
+        const sizeText = buildSizeText_(sizes);
+
+        tr.innerHTML = `
+          <td class="rowTypeCell">${esc(t)}</td>
+          <td>
+            <div class="descStack">
+              <div class="descMain rowProductText">${esc(p || "")}${c ? " — " + esc(c) : ""}</div>
+              ${sizeText ? `<div class="descMeta rowSizeText">Sizes: ${esc(sizeText)}</div>` : ``}
+            </div>
+          </td>
+          <td class="t-right rowUnitPrice">${moneyUSD(u)}</td>
+          <td class="t-right rowQty">${q}</td>
+          <td class="t-right rowAmount">${moneyUSD(amount)}</td>
+          <td class="t-right">
+            <input type="checkbox" class="rowTax noPrint" ${taxable ? "checked" : ""} aria-label="Taxable" />
+            <span class="printOnly rowTaxText">${taxable ? "Yes" : "No"}</span>
+          </td>
+          <td class="t-right">
+            <div class="noPrint" style="display:flex; gap:8px; justify-content:flex-end;">
+              <button type="button" class="btn ghost small editRowBtn">Edit</button>
+              <button type="button" class="iconbtn removeRowBtn" aria-label="Remove">✕</button>
+            </div>
+          </td>
+        `;
+      }
+
+      function bindRenderedLineEvents_(tr) {
+        tr.querySelector(".rowTax")?.addEventListener("change", (e) => {
+          tr.dataset.taxable = e.target.checked ? "1" : "0";
+          const taxText = tr.querySelector(".rowTaxText");
+          if (taxText) taxText.textContent = e.target.checked ? "Yes" : "No";
+          recalcTotals();
+        });
+
+        tr.querySelector(".editRowBtn")?.addEventListener("click", () => {
+          openEditItemModal_(tr);
+        });
+
+        tr.querySelector(".removeRowBtn")?.addEventListener("click", () => {
+          tr.remove();
+          recalcTotals();
+        });
+      }
+
+      function saveEditItemModal_() {
+        if (!currentEditRow_) return;
+
+        const type = $("editItemType")?.value || "Product";
+        const typeHasGarments = type === "Product" || type === "Services";
+        const productKind = $("editItemProductKind")?.value || "non_garment";
+        const garment = typeHasGarments && productKind === "garment";
+        const product = String($("editItemProduct")?.value || "").trim();
+        const color = garment ? String($("editItemColor")?.value || "").trim() : "";
+        const unitPrice = toNum($("editItemPrice")?.value || 0);
+        const taxable = $("editItemTaxable")?.checked === true;
+        const sizes = garment ? normalizeSizesMap_(editDraftSizes_) : {};
+        const sizeQty = sumSizeQty_(sizes);
+
+        if (typeHasGarments && !product) {
+          alert("Enter a description or product.");
+          return;
+        }
+
+        if (garment && sizeQty <= 0) {
+          alert("Set at least one garment size quantity.");
+          return;
+        }
+
+        let qty = garment ? sizeQty : Math.max(1, toNum($("editItemQty")?.value || 1));
+        if (type === "Discount") qty = 1;
+
+        let amount = unitPrice * qty;
+        if (type === "Discount" && amount > 0) amount = -amount;
+
+        currentEditRow_.dataset.type = type;
+        currentEditRow_.dataset.product = product;
+        currentEditRow_.dataset.color = color;
+        currentEditRow_.dataset.unitPrice = String(unitPrice);
+        currentEditRow_.dataset.qty = String(qty);
+        currentEditRow_.dataset.amount = String(amount);
+        currentEditRow_.dataset.taxable = taxable ? "1" : "0";
+        currentEditRow_.dataset.sizes = JSON.stringify(sizes);
+        currentEditRow_.dataset.productKind = garment ? "garment" : "non_garment";
+
+        updateRenderedLineDisplay_(currentEditRow_);
+        bindRenderedLineEvents_(currentEditRow_);
+        closeEditItemModal_();
+        recalcTotals();
+      }
+
+      function wireEditItemModal_() {
+        const backdrop = $("editItemModalBackdrop");
+        if (!backdrop || backdrop.dataset.wired === "1") return;
+        backdrop.dataset.wired = "1";
+
+        $("editItemCloseBtn")?.addEventListener("click", closeEditItemModal_);
+        $("editItemCancelBtn")?.addEventListener("click", closeEditItemModal_);
+        backdrop.addEventListener("click", (e) => {
+          if (e.target === backdrop) closeEditItemModal_();
+        });
+
+        $("editItemType")?.addEventListener("change", syncEditItemModalVisibility_);
+        $("editItemProductKind")?.addEventListener("change", syncEditItemModalVisibility_);
+        $("editItemEditSizesBtn")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          const type = $("editItemType")?.value || "Product";
+          if (type !== "Product" && type !== "Services") return;
+          if ($("editItemProductKind")?.value !== "garment") return;
+          openSizeModal_(editDraftSizes_, (savedSizes) => {
+            editDraftSizes_ = normalizeSizesMap_(savedSizes);
+            syncEditItemModalVisibility_();
+          });
+        });
+        $("editItemSaveBtn")?.addEventListener("click", saveEditItemModal_);
+      }
+
       function addRenderedLine({ type, product, desc, color, sizes, sizeText, unit_price, qty, taxable }) {
         const body = $("itemsTbody");
         if (!body) return;
@@ -1796,62 +1990,10 @@
         tr.dataset.unitPrice = String(u);
         tr.dataset.qty = String(q);
         tr.dataset.sizes = JSON.stringify(effectiveSizes);
+        tr.dataset.productKind = hasSizes ? "garment" : "non_garment";
 
-        tr.innerHTML = `
-          <td>${esc(t)}</td>
-          <td>
-            <div class="descStack">
-              <div class="descMain">${esc(p || "")}${c ? " — " + esc(c) : ""}</div>
-              ${st ? `<div class="descMeta rowSizeText">Sizes: ${esc(st)}</div>` : ``}
-              ${hasSizes ? `<button type="button" class="linkBtn editSizesBtn">[ Edit Sizes ]</button>` : ``}
-            </div>
-          </td>
-          <td class="t-right">${moneyUSD(u)}</td>
-          <td class="t-right rowQty">${q}</td>
-          <td class="t-right rowAmount">${moneyUSD(amount)}</td>
-          <td class="t-right">
-            <input type="checkbox" class="rowTax" ${isTaxable ? "checked" : ""} aria-label="Taxable" />
-          </td>
-          <td class="t-right"><button type="button" class="iconbtn" aria-label="Remove">✕</button></td>
-        `;
-
-        tr.querySelector(".rowTax")?.addEventListener("change", (e) => {
-          tr.dataset.taxable = e.target.checked ? "1" : "0";
-          recalcTotals();
-        });
-
-        tr.querySelector(".editSizesBtn")?.addEventListener("click", () => {
-          const current = parseSizesDataset_(tr.dataset.sizes);
-          openSizeModal_(current, (savedSizes) => {
-            const cleaned = normalizeSizesMap_(savedSizes);
-            const newQty = Math.max(1, sumSizeQty_(cleaned));
-            const unit = asNum(tr.dataset.unitPrice || 0);
-
-            let newAmount = unit * newQty;
-            if ((tr.dataset.type || "") === "Discount" && newAmount > 0) newAmount = -newAmount;
-
-            tr.dataset.sizes = JSON.stringify(cleaned);
-            tr.dataset.qty = String(newQty);
-            tr.dataset.amount = String(newAmount);
-
-            const nextSizeText = buildSizeText_(cleaned);
-            const sizeTextEl = tr.querySelector(".rowSizeText");
-            if (sizeTextEl) sizeTextEl.textContent = nextSizeText ? `Sizes: ${nextSizeText}` : "";
-
-            const qtyEl = tr.querySelector(".rowQty");
-            if (qtyEl) qtyEl.textContent = String(newQty);
-
-            const amtEl = tr.querySelector(".rowAmount");
-            if (amtEl) amtEl.textContent = moneyUSD(newAmount);
-
-            recalcTotals();
-          });
-        });
-
-        tr.querySelector(".iconbtn")?.addEventListener("click", () => {
-          tr.remove();
-          recalcTotals();
-        });
+        updateRenderedLineDisplay_(tr);
+        bindRenderedLineEvents_(tr);
 
         body.appendChild(tr);
         recalcTotals();
@@ -2955,6 +3097,7 @@
       document.addEventListener("DOMContentLoaded", () => {
         setCreateEnabled(false);
         wireSizeModal_();
+        wireEditItemModal_();
         wireEntryRow();
 
         detectRecoveryMode_().then((inRecovery) => {
@@ -3137,6 +3280,77 @@
       });
     })();
   </script>
+
+  <div class="sizeModalBackdrop" id="editItemModalBackdrop" style="
+    position:fixed; inset:0; background:rgba(0,0,0,.35);
+    display:none; align-items:center; justify-content:center; z-index:9998;">
+    <div class="sizeModal" style="
+      width:min(640px, calc(100vw - 40px));
+      background:#fff; border:1px solid var(--border); border-radius:18px;
+      box-shadow: var(--shadow); padding:14px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <h4 style="margin:0; font-family:'DM Sans', Inter, sans-serif; color:var(--primary-2);">Edit Item</h4>
+        <button type="button" class="iconbtn" id="editItemCloseBtn" aria-label="Close">✕</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+        <div>
+          <label class="label" for="editItemType">Type</label>
+          <select id="editItemType" class="field">
+            <option value="Product">Product</option>
+            <option value="Services">Services</option>
+            <option value="Discount">Discount</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div id="editItemProductKindWrap">
+          <label class="label" for="editItemProductKind">Product kind</label>
+          <select id="editItemProductKind" class="field">
+            <option value="non_garment">Non-garment (banner, etc.)</option>
+            <option value="garment">Garment (sizes)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label class="label" for="editItemProduct">Description / Product</label>
+        <input id="editItemProduct" class="field" />
+      </div>
+
+      <div id="editItemColorWrap" style="margin-top:12px;">
+        <label class="label" for="editItemColor">Color</label>
+        <input id="editItemColor" class="field" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+        <div>
+          <label class="label" for="editItemPrice">Unit Price</label>
+          <input id="editItemPrice" class="field mono" inputmode="decimal" />
+        </div>
+        <div>
+          <label class="label" for="editItemQty">Quantity</label>
+          <input id="editItemQty" class="field mono" inputmode="numeric" />
+        </div>
+      </div>
+
+      <div style="margin-top:12px; display:flex; align-items:center; gap:10px;">
+        <input type="checkbox" id="editItemTaxable" />
+        <label for="editItemTaxable" style="font-weight:800; color:var(--primary-2);">Taxable</label>
+      </div>
+
+      <div id="editItemSizesWrap" style="margin-top:12px; display:none;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn ghost small" id="editItemEditSizesBtn">Edit Sizes</button>
+          <span id="editItemSizesSummary" style="font-weight:800; color:var(--muted);"></span>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+        <button type="button" class="btn ghost" id="editItemCancelBtn">Cancel</button>
+        <button type="button" class="btn primary" id="editItemSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
 
   <div class="sizeModalBackdrop" id="sizeModalBackdrop" style="
     position:fixed; inset:0; background:rgba(0,0,0,.35);
