@@ -368,6 +368,10 @@
               <div style="font-size:22px;font-weight:900" id="summaryItems">1</div>
             </div>
             <div class="itemCard">
+              <div class="help">Total garments</div>
+              <div style="font-size:22px;font-weight:900" id="summaryGarments">0</div>
+            </div>
+            <div class="itemCard">
               <div class="help">Due date</div>
               <div><b>Due:</b> <span id="summaryDueDate">-</span></div>
             </div>
@@ -532,6 +536,9 @@
   };
   const newSizeBreakdown = (sizes = DEFAULT_SIZES) => (Array.isArray(sizes) ? sizes : DEFAULT_SIZES).map(s => ({ size:String(s||""), enabled:false, qty:0 }));
   const sizeTotal = (rows) => Array.isArray(rows) ? rows.reduce((sum,r)=>sum + (r.enabled ? Number(r.qty||0) : 0), 0) : 0;
+  const garmentTotalQty_ = (items = wo?.items || []) => Array.isArray(items)
+    ? items.reduce((sum, item) => sum + (isGarment(item?.serviceType) ? Number(item?.quantity || 0) : 0), 0)
+    : 0;
   const SHOP_SENDER = {
     name: "My Shirt Company",
     email: "myshirtcustomerservice@gmail.com",
@@ -2743,6 +2750,7 @@
     $("summaryApprovedDate").textContent = wo.approval.approved ? `Approved on ${wo.approval.approvedDate||""}` : "Not approved yet";
 
     $("summaryItems").textContent = String(wo.items.length);
+  $("summaryGarments").textContent = String(garmentTotalQty_(wo.items));
     $("summaryDueDate").textContent = wo.dueDate || "-";
 
     const vendorMode = isVendorWorkOrder_(wo);
@@ -3091,6 +3099,7 @@
   function buildPrintView(){
     const status = wo.approval.approved ? "Approved" : "Draft";
     const vendorMode = isVendorWorkOrder_(wo);
+    const garmentTotal = garmentTotalQty_(wo.items);
     const vendorMethodDisplay = wo.vendorMethod || wo.vendorType || "-";
     const vendorNotesDisplay = wo.vendorNotes || wo.internalVendorNotes || "-";
     const getVendorItemNotesDisplay_ = (item) => {
@@ -3174,6 +3183,7 @@
           <div>
             <div style="font-size:24px;font-weight:900">${vendorMode ? "Vendor Work Order" : "Work Order"}</div>
             <div style="color:#555">${esc(wo.woNumber)}</div>
+            <div style="margin-top:4px;font-size:13px;color:#333"><b>Total Garments:</b> ${garmentTotal}</div>
           </div>
           <div style="font-size:13px;color:#333">
             <div><b>Created:</b> ${esc(wo.createdDate)}</div>
