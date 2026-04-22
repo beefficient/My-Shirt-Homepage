@@ -485,13 +485,54 @@
 
     @media print{
       header, .actionbar { display:none !important; }
+      .page-title{ display:none !important; }
       .noPrint{ display:none !important; }
       #contactSearch, #contactResults, #btnAddNewCustomer { display:none !important; }
       .noPrint, .noPrint *{ display:none !important; visibility:hidden !important; }
       .entry-row{ display:none !important; }
       body{ background:#fff; }
       .hero{ padding: 0; }
-      .sheet{ border:none; box-shadow:none; }
+      .sheet{ display:none !important; border:none; box-shadow:none; }
+      .sizeModalBackdrop{ display:none !important; }
+      #printInvoice{ display:block !important; }
+      .printInvoice{
+        display:block !important;
+        padding:0;
+        margin:0;
+        font-size:12px;
+        line-height:1.32;
+      }
+      .printInvoice *{ box-shadow:none !important; border-radius:0 !important; }
+      .printInvoiceInner{ width:100%; max-width:none; margin:0; }
+      .printHeader{
+        display:grid;
+        grid-template-columns:1.3fr .9fr;
+        gap:18px;
+        align-items:start;
+        padding-bottom:10px;
+        border-bottom:1px solid #bfc8d2;
+      }
+      .printBizName{ font-size:20px; font-weight:800; line-height:1.15; margin-bottom:6px; }
+      .printMetaTitle{ font-size:28px; line-height:1; font-weight:900; letter-spacing:.08em; text-align:right; margin-bottom:8px; }
+      .printInfoGrid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:12px; }
+      .printInfoBox{ border:1px solid #cfd7e2; padding:10px 12px; }
+      .printSectionLabel{ font-size:10px; letter-spacing:.08em; text-transform:uppercase; font-weight:800; color:#49545f; margin-bottom:5px; }
+      .printItems{ width:100%; border-collapse:collapse; margin-top:12px; }
+      .printItems th,
+      .printItems td{ border-bottom:1px solid #d7dde5; padding:6px 8px; vertical-align:top; }
+      .printItems th{ background:transparent; color:#222; font-size:10px; text-transform:uppercase; letter-spacing:.08em; font-weight:800; }
+      .printItems th.num,
+      .printItems td.num{ text-align:right; white-space:nowrap; }
+      .printItemMain{ font-weight:700; color:#111; }
+      .printItemMeta{ margin-top:2px; font-size:10px; color:#5a6470; }
+      .printBottom{ display:grid; grid-template-columns:minmax(0, 1.2fr) minmax(260px, .8fr); gap:16px; margin-top:12px; align-items:start; }
+      .printNotesWrap{ min-width:0; }
+      .printNotesBlock + .printNotesBlock{ margin-top:10px; }
+      .printNotesBody{ white-space:pre-wrap; word-break:break-word; }
+      .printTotals{ border:1px solid #cfd7e2; padding:10px 12px; }
+      .printTotalRow{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:4px 0; }
+      .printBalanceDue{ margin-top:8px; padding-top:8px; border-top:1px solid #aeb8c5; font-size:15px; font-weight:900; }
+      .printMuted{ color:#5a6470; }
       .bottomgrid{
         display:flex !important;
         flex-direction:column !important;
@@ -514,6 +555,7 @@
         break-inside: avoid !important;
       }
       .printOnly{display:inline !important;}
+      @page { size: Letter; margin: 10mm; }
       *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
 
@@ -531,6 +573,12 @@
       align-self: flex-start;
     }
     .printOnly{display:none !important;}
+    .printInvoice{
+      display:none;
+      background:#fff;
+      color:#111;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
 
     .sizeModalBackdrop{
       position: fixed; inset: 0;
@@ -2182,6 +2230,151 @@
         });
       }
 
+      function buildPrintInvoice() {
+        const host = $("printInvoice");
+        if (!host) return;
+
+        const businessName = String($("bizName")?.value || "").trim();
+        const businessAddr = String($("bizAddr")?.value || "").trim();
+        const businessCity = String($("bizCity")?.value || "").trim();
+        const businessPhone = String($("bizPhone")?.value || "").trim();
+        const businessEmail = String($("bizEmail")?.value || "").trim();
+
+        const invoiceNo = String($("invNo")?.value || "").trim();
+        const invoiceDate = String($("invDate")?.value || "").trim();
+        const quoteNo = String(window.CURRENT_QUOTE?.quote_no || $("quoteNoInput")?.value || "").trim();
+
+        const clientName = String($("clientName")?.value || "").trim();
+        const clientEmail = String($("clientEmail")?.value || "").trim();
+        const clientPhone = String($("clientPhone")?.value || "").trim();
+        const clientAddr = String($("clientAddr")?.value || "").trim();
+        const clientContact = String($("clientContact")?.value || "").trim();
+        const notes = String($("notes")?.value || "").trim();
+        const terms = String($("terms")?.value || "").trim();
+
+        const subtotalText = String($("subtotal")?.textContent || "").trim();
+        const taxText = String($("taxAmount")?.textContent || "").trim();
+        const ccFeeText = String($("ccFeeAmount")?.textContent || "").trim();
+        const totalText = String($("total")?.textContent || "").trim();
+        const balanceText = String($("balance")?.textContent || "").trim();
+        const amountPaidValue = toNum($("amountPaid")?.value || 0);
+        const amountPaidText = moneyUSD(amountPaidValue);
+        const taxRateValue = toNum($("taxRate")?.value || 0);
+        const ccFeeEnabled = $("ccFeeEnabled")?.checked === true;
+        const ccFeeValue = toNum(ccFeeText);
+        const balanceValue = toNum(balanceText);
+
+        let paymentStatus = "Unpaid";
+        if (balanceValue <= 0 && toNum(totalText) > 0) paymentStatus = "Paid in full";
+        else if (amountPaidValue > 0) paymentStatus = "Partial payment";
+
+        const billToLines = [clientName, clientEmail, clientPhone, clientAddr].filter(Boolean);
+        const businessLines = [businessAddr, businessCity, businessPhone, businessEmail].filter(Boolean);
+        const infoLines = [
+          clientContact ? `Contact: ${clientContact}` : "",
+          `Status: ${paymentStatus}`,
+          amountPaidValue > 0 ? `Paid: ${amountPaidText}` : "",
+          balanceValue > 0 ? "Due upon receipt" : ""
+        ].filter(Boolean);
+
+        const rowElements = Array.from(document.querySelectorAll("#itemsTbody tr"));
+        const itemRows = rowElements.map((tr) => {
+          const item = {
+            type: String(tr.dataset.type || "Services"),
+            product: String(tr.dataset.product || "").trim(),
+            color: String(tr.dataset.color || "").trim(),
+            unit_price: asNum(tr.dataset.unitPrice || 0),
+            qty: Math.max(1, asNum(tr.dataset.qty || 1)),
+            amount: asNum(tr.dataset.amount || 0),
+            sizes: parseSizesDataset_(tr.dataset.sizes)
+          };
+          const desc = item.product;
+          const metaParts = [];
+          if (item.color) metaParts.push(`Color: ${item.color}`);
+          const sizeText = buildSizeText_(item.sizes || {});
+          if (sizeText) metaParts.push(`Sizes: ${sizeText}`);
+          const meta = metaParts.join(" • ");
+          const amount = moneyUSD(item.amount);
+
+          return `
+            <tr>
+              <td>
+                <div class="printItemMain">${esc(desc)}</div>
+                ${meta ? `<div class="printItemMeta">${esc(meta)}</div>` : ""}
+              </td>
+              <td class="num">${esc(String(item.qty))}</td>
+              <td class="num">${esc(moneyUSD(item.unit_price))}</td>
+              <td class="num">${esc(amount)}</td>
+            </tr>
+          `;
+        }).join("");
+
+        const notesHtml = [
+          notes ? `<div class="printNotesBlock"><div class="printSectionLabel">Notes</div><div class="printNotesBody">${esc(notes)}</div></div>` : "",
+          terms ? `<div class="printNotesBlock"><div class="printSectionLabel">Terms</div><div class="printNotesBody">${esc(terms)}</div></div>` : ""
+        ].filter(Boolean).join("");
+
+        host.innerHTML = `
+          <div class="printInvoiceInner">
+            <div class="printHeader">
+              <div>
+                ${businessName ? `<div class="printBizName">${esc(businessName)}</div>` : ""}
+                ${businessLines.map((line) => `<div>${esc(line)}</div>`).join("")}
+              </div>
+              <div>
+                <div class="printMetaTitle">INVOICE</div>
+                ${invoiceNo ? `<div><strong>Invoice #:</strong> ${esc(invoiceNo)}</div>` : ""}
+                ${invoiceDate ? `<div><strong>Invoice Date:</strong> ${esc(invoiceDate)}</div>` : ""}
+                ${quoteNo ? `<div><strong>Quote #:</strong> ${esc(quoteNo)}</div>` : ""}
+              </div>
+            </div>
+
+            <div class="printInfoGrid">
+              <div class="printInfoBox">
+                <div class="printSectionLabel">Bill To</div>
+                ${billToLines.map((line) => `<div>${esc(line)}</div>`).join("")}
+              </div>
+              <div class="printInfoBox">
+                <div class="printSectionLabel">Contact / Invoice Info</div>
+                ${infoLines.map((line) => `<div>${esc(line)}</div>`).join("")}
+              </div>
+            </div>
+
+            <table class="printItems" aria-label="Printed invoice items">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th class="num">Qty</th>
+                  <th class="num">Unit Price</th>
+                  <th class="num">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemRows || `<tr><td colspan="4" class="printMuted">No items added.</td></tr>`}
+              </tbody>
+            </table>
+
+            <div class="printBottom" style="grid-template-columns:${notesHtml ? "minmax(0, 1.2fr) minmax(260px, .8fr)" : "1fr"};">
+              ${notesHtml ? `<div class="printNotesWrap">${notesHtml}</div>` : ""}
+              <div class="printTotals">
+                <div class="printTotalRow"><span>Subtotal</span><strong>${esc(subtotalText)}</strong></div>
+                <div class="printTotalRow"><span>Tax (${esc(String(taxRateValue))}%)</span><strong>${esc(taxText)}</strong></div>
+                ${ccFeeEnabled && ccFeeValue > 0 ? `<div class="printTotalRow"><span>CC Fee 3.5%</span><strong>${esc(ccFeeText)}</strong></div>` : ""}
+                <div class="printTotalRow"><span>Amount Paid</span><strong>${esc(amountPaidText)}</strong></div>
+                <div class="printTotalRow"><span>Total</span><strong>${esc(totalText)}</strong></div>
+                <div class="printTotalRow printBalanceDue"><span>Balance Due</span><strong>${esc(balanceText)}</strong></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function triggerPrint_() {
+        recalcTotals();
+        buildPrintInvoice();
+        window.print();
+      }
+
       function getInvoiceDraftObject() {
         const normalizedCustomer = normalizeCustomerFields_({
           client_name: $("clientName")?.value,
@@ -3248,10 +3441,12 @@
           }
         });
 
-        $("btnPrint")?.addEventListener("click", () => window.print());
-        $("btnPdf")?.addEventListener("click", () => window.print());
+        $("btnPrint")?.addEventListener("click", triggerPrint_);
+        $("btnPdf")?.addEventListener("click", triggerPrint_);
 
         window.addEventListener("beforeprint", () => {
+          recalcTotals();
+          buildPrintInvoice();
           const el = $("loadMsg");
           if (el) {
             el._prevDisplay = el.style.display;
@@ -3280,6 +3475,8 @@
       });
     })();
   </script>
+
+  <section id="printInvoice" class="printInvoice" aria-hidden="true"></section>
 
   <div class="sizeModalBackdrop" id="editItemModalBackdrop" style="
     position:fixed; inset:0; background:rgba(0,0,0,.35);
