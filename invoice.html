@@ -563,6 +563,8 @@
     .descMain { font-weight:700; }
     .descMeta { font-size:12px; color: var(--muted); font-weight:700; }
     .rowProductText, .rowSizeText, .sizeSummaryText { font-size:14px; }
+    .rowSizeText { white-space:nowrap; }
+    .rowSizeToken { white-space:nowrap; }
     .sizeSummaryText { font-weight:800; color:var(--muted); }
     .linkBtn {
       background: transparent;
@@ -1743,6 +1745,15 @@
           .join(", ");
       }
 
+      function buildSizeMarkup_(sizes) {
+        const cleaned = normalizeSizesMap_(sizes);
+        const parts = GARMENT_SIZES
+          .filter((sz) => cleaned[sz] > 0)
+          .map((sz) => `<span class="rowSizeToken">${esc(sz)}-${cleaned[sz]}</span>`);
+        if (!parts.length) return "";
+        return `<div class="descMeta rowSizeText"><span class="rowSizeLabel">Sizes:</span> ${parts.join('<span>,</span> ')}</div>`;
+      }
+
       function parseSizesDataset_(value) {
         if (!value) return {};
         try {
@@ -1899,7 +1910,7 @@
           <td>
             <div class="descStack">
               <div class="descMain rowProductText">${esc(p || "")}${c ? " — " + esc(c) : ""}</div>
-              ${sizeText ? `<div class="descMeta rowSizeText">Sizes: ${esc(sizeText)}</div>` : ``}
+              ${sizeText ? buildSizeMarkup_(sizes) : ``}
             </div>
           </td>
           <td class="t-right rowUnitPrice">${moneyUSD(u)}</td>
