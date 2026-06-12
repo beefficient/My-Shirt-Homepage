@@ -562,6 +562,8 @@
     .descStack { display:flex; flex-direction:column; gap:4px; }
     .descMain { font-weight:700; }
     .descMeta { font-size:12px; color: var(--muted); font-weight:700; }
+    .rowProductText, .rowSizeText, .sizeSummaryText { font-size:14px; }
+    .sizeSummaryText { font-weight:800; color:var(--muted); }
     .linkBtn {
       background: transparent;
       border: 0;
@@ -844,7 +846,7 @@
 
                     <div id="sizesWrap" style="margin-top:10px; display:none;">
                       <button type="button" class="btn ghost small" id="btnEntryEditSizes">Edit Sizes</button>
-                      <span id="sizesSummary" style="margin-left:10px; font-weight:800; color:var(--muted);"></span>
+                      <span id="sizesSummary" class="sizeSummaryText" style="margin-left:10px;"></span>
                     </div>
                   </td>
 
@@ -1709,7 +1711,7 @@
         recalcTotals();
       }
 
-      const GARMENT_SIZES = ["XS", "S", "M", "L", "XL", "2X", "3X", "4X"];
+      const GARMENT_SIZES = ["2T", "3T", "4T", "XS", "S", "M", "L", "XL", "2X", "3X", "4X", "5X"];
       let sizeModalSaveHandler_ = null;
       let currentEditRow_ = null;
       let editDraftSizes_ = {};
@@ -3233,6 +3235,7 @@
           window.INVOICE_PAYMENTS = [];
           if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
           renderPayments_();
+          setCreateEnabled(true);
           setLoadMsg(`Invoice created: ${data.invoice_no} (edit it, then click "Save Draft").`);
         } catch (err) {
           console.error(err);
@@ -3538,7 +3541,7 @@
       <div id="editItemSizesWrap" style="margin-top:12px; display:none;">
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
           <button type="button" class="btn ghost small" id="editItemEditSizesBtn">Edit Sizes</button>
-          <span id="editItemSizesSummary" style="font-weight:800; color:var(--muted);"></span>
+          <span id="editItemSizesSummary" class="sizeSummaryText"></span>
         </div>
       </div>
 
