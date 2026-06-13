@@ -695,6 +695,8 @@
             <button class="btn ghost" type="button" id="btnPdf">PDF</button>
             <button class="btn primary" type="button" id="btnSend">Send</button>
             <button class="btn primary" type="button" id="btnSaveDraft">Save Draft</button>
+            <button class="btn ghost" type="button" id="btnDuplicateInvoice">Duplicate Invoice</button>
+            <button class="btn danger" id="btnDeleteInvoice" type="button" style="display:none; background:#8b1e1e;color:#fff;">Delete Invoice</button>
             <button class="btn danger" id="btnClearAll" type="button" style="background:#c62828;color:#fff;">Clear All</button>
           </div>
         </div>
@@ -940,6 +942,11 @@
               </div>
 
               <div class="trow total">
+                <div>Total Products</div>
+                <div class="value" id="totalProducts">0</div>
+              </div>
+
+              <div class="trow total">
                 <div>Total</div>
                 <div class="value" id="total">$0.00</div>
               </div>
@@ -995,6 +1002,9 @@
 
       const EMAIL_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwCH648WscPI-obyqhOPSq0jiqwXzzWI2v9ZBv1UCejr5X6L5Y3FLHROOA_0x43aMN8/exec";
       const EMAIL_WEBAPP_SECRET = "inv_sync_2026_03_01__L0ndonbrides!2vR9pX7aL1nY4zW";
+
+      const NEW_CUSTOMERS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzeCDuKCpxYfS_Eefrn4Skf6G0XasekzgsJxn1cVZhu2wbrokqc9zIwApr4MWcNDALI/exec";
+      const CONTACTS_SECRET = "msp-invoice-contacts-2026-m@g0wie!!!";
 
       const SUPABASE_URL = "https://tvtyjmeedapbsaopeebh.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHlqbWVlZGFwYnNhb3BlZWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzQ3MzUsImV4cCI6MjA4NzIxMDczNX0.VKNQc9G18OgJndoN3eiv5wcLWaAmqOcQ9qA4ve2tNsQ";
@@ -1359,6 +1369,7 @@
         const RANGE_A1 = "contacts!A1:J5000";
 
         const COL = {
+          company: "Company Name",
           first: "First Name",
           last: "Last Name",
           contact: "Contact Name",
@@ -1367,6 +1378,8 @@
           email2: "Email 2",
           address: "Address"
         };
+
+        const COMPANY_HEADERS = [COL.company, "Company", "Business Name", "Business"];
 
         const $ = (id) => document.getElementById(id);
 
@@ -1380,22 +1393,61 @@
           return [c[COL.first], c[COL.last]].filter(Boolean).join(" ").trim();
         }
 
+        function firstNonEmptyField_(obj, keys) {
+          for (const key of keys) {
+            const value = String(obj?.[key] || "").trim();
+            if (value) return value;
+          }
+          return "";
+        }
+
+        function companyName(c) {
+          return firstNonEmptyField_(c, COMPANY_HEADERS);
+        }
+
+        function contactPersonName(c) {
+          return String(c?.[COL.contact] || "").trim() || fullName(c);
+        }
+
+        function primaryContactLabel(c) {
+          return companyName(c) || contactPersonName(c) || "Unnamed";
+        }
+
+        function secondaryContactLabel(c) {
+          const company = companyName(c);
+          const person = contactPersonName(c);
+          if (company && person && person !== company) return person;
+          return "";
+        }
+
+        function contactSortKey(c) {
+          return [companyName(c), String(c?.[COL.first] || "").trim(), String(c?.[COL.last] || "").trim(), String(c?.[COL.contact] || "").trim()]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+        }
+
+        function sortContacts(list) {
+          return [...(list || [])].sort((a, b) => contactSortKey(a).localeCompare(contactSortKey(b), undefined, { sensitivity: "base" }));
+        }
+
         function hideResults(resultsEl){
           resultsEl.style.display = "none";
           resultsEl.innerHTML = "";
         }
 
         function pickContact(c){
-          $("clientName").value  = fullName(c);
+          const clientDisplay = companyName(c) || contactPersonName(c);
+          $("clientName").value  = clientDisplay;
           $("clientEmail").value = ((c[COL.email1] || "").trim() || (c[COL.email2] || "").trim());
           $("clientAddr").value  = (c[COL.address] || "").trim();
           $("clientPhone").value = (c[COL.phone] || "").trim();
 
           const wrap = $("clientContactWrap");
           const contactEl = $("clientContact");
-          const contactName = (c[COL.contact] || "").trim();
+          const contactName = companyName(c) ? contactPersonName(c) : String(c[COL.contact] || "").trim();
           if (wrap && contactEl) {
-            if (contactName) { wrap.style.display = "block"; contactEl.value = contactName; }
+            if (contactName && contactName !== clientDisplay) { wrap.style.display = "block"; contactEl.value = contactName; }
             else { wrap.style.display = "none"; contactEl.value = ""; }
           }
         }
@@ -1413,17 +1465,29 @@
           if (values.length < 2) return [];
 
           const headers = values[0].map(h => String(h || "").trim());
-          return values.slice(1).map(row => {
+          return sortContacts(values.slice(1).map(row => {
             const obj = {};
             headers.forEach((h, i) => obj[h] = String(row[i] ?? "").trim());
             return obj;
-          });
+          }));
         }
 
         document.addEventListener("DOMContentLoaded", async () => {
           const searchEl  = $("contactSearch");
           const resultsEl = $("contactResults");
-          if (!searchEl || !resultsEl) return;
+          const addCustomerBtn = $("btnAddNewCustomer");
+          const modalEl = $("newCustomerModal");
+          const modalCompanyEl = $("ncCompany");
+          const modalFirstEl = $("ncFirst");
+          const modalLastEl = $("ncLast");
+          const modalContactEl = $("ncContact");
+          const modalPhoneEl = $("ncPhone");
+          const modalEmail1El = $("ncEmail1");
+          const modalEmail2El = $("ncEmail2");
+          const modalAddressEl = $("ncAddress");
+          const modalCancelBtn = $("ncCancel");
+          const modalSaveBtn = $("ncSave");
+          if (!searchEl || !resultsEl || !addCustomerBtn || !modalEl) return;
 
           let CONTACTS = [];
           let CONTACTS_ERROR = "";
@@ -1439,8 +1503,8 @@
           function showResults(list){
             resultsEl.innerHTML = "";
             list.slice(0, 12).forEach(c => {
-              const top = fullName(c) || "Unnamed";
-              const sub = [c[COL.email1] || c[COL.email2] || "", c[COL.phone] || ""].filter(Boolean).join(" • ");
+              const top = primaryContactLabel(c);
+              const sub = [secondaryContactLabel(c), c[COL.email1] || c[COL.email2] || "", c[COL.phone] || ""].filter(Boolean).join(" • ");
 
               const btn = document.createElement("button");
               btn.type = "button";
@@ -1468,11 +1532,94 @@
             const query = q.trim().toLowerCase();
             if (!query) return false;
             const hay = [
+              ...COMPANY_HEADERS.map((key) => c[key]),
               c[COL.first], c[COL.last], c[COL.contact],
               c[COL.email1], c[COL.email2], c[COL.phone], c[COL.address]
             ].join(" ").toLowerCase();
             return hay.includes(query);
           }
+
+            function openNewCustomerModal() {
+              if (modalCompanyEl) modalCompanyEl.value = String($("clientName")?.value || "").trim();
+              if (modalFirstEl) modalFirstEl.value = "";
+              if (modalLastEl) modalLastEl.value = "";
+              if (modalContactEl) modalContactEl.value = String($("clientContact")?.value || "").trim();
+              if (modalPhoneEl) modalPhoneEl.value = String($("clientPhone")?.value || "").trim();
+              if (modalEmail1El) modalEmail1El.value = String($("clientEmail")?.value || "").trim();
+              if (modalEmail2El) modalEmail2El.value = "";
+              if (modalAddressEl) modalAddressEl.value = String($("clientAddr")?.value || "").trim();
+              modalEl.style.display = "flex";
+              modalCompanyEl?.focus();
+            }
+
+            function closeNewCustomerModal() {
+              modalEl.style.display = "none";
+            }
+
+            function buildNewContactRecord_(draft) {
+              return {
+                [COL.company]: draft.company,
+                [COL.first]: draft.first,
+                [COL.last]: draft.last,
+                [COL.contact]: draft.contact,
+                [COL.phone]: draft.phone,
+                [COL.email1]: draft.email1,
+                [COL.email2]: draft.email2,
+                [COL.address]: draft.address
+              };
+            }
+
+            async function saveNewCustomer_(draft) {
+              if (!NEW_CUSTOMERS_WEBAPP_URL) throw new Error("New customer web app is not configured.");
+
+              const basePayload = {
+                secret: CONTACTS_SECRET,
+                company_name: draft.company,
+                company: draft.company,
+                business_name: draft.company,
+                first_name: draft.first,
+                last_name: draft.last,
+                contact_name: draft.contact,
+                phone: draft.phone,
+                email1: draft.email1,
+                email_1: draft.email1,
+                email2: draft.email2,
+                email_2: draft.email2,
+                address: draft.address
+              };
+
+              const actions = ["add_contact", "save_contact", "create_contact", "add_customer", "save_customer", "create_customer", ""];
+              let lastError = null;
+
+              for (const action of actions) {
+                const payload = action ? { ...basePayload, action } : { ...basePayload };
+                const body = new URLSearchParams();
+                Object.entries(payload).forEach(([key, value]) => body.append(key, value == null ? "" : String(value)));
+                body.set("payload_json", JSON.stringify(payload));
+
+                const res = await fetch(NEW_CUSTOMERS_WEBAPP_URL, {
+                  method: "POST",
+                  body,
+                  cache: "no-store"
+                });
+                const rawText = await res.text();
+
+                let data = null;
+                try {
+                  data = rawText ? JSON.parse(rawText) : null;
+                } catch {
+                  data = null;
+                }
+
+                if (res.ok && data && (data.ok === true || data.success === true)) return data;
+
+                const message = String(data?.error || data?.message || rawText || `HTTP ${res.status}`).trim();
+                lastError = message || `HTTP ${res.status}`;
+                if (/unknown action/i.test(lastError)) continue;
+              }
+
+              throw new Error(lastError || "Could not save new contact.");
+            }
 
           let t = null;
           searchEl.addEventListener("input", () => {
@@ -1482,14 +1629,61 @@
               if (!q) return hideResults(resultsEl);
               if (CONTACTS_ERROR) return showMessage("Contacts not available (check API key + sheet sharing).");
 
-              const list = CONTACTS.filter(c => matches(c, q));
+                const list = sortContacts(CONTACTS.filter(c => matches(c, q)));
               if (!list.length) return showMessage(`No matches for "${q}"`);
               showResults(list);
             }, 70);
           });
 
+            addCustomerBtn.addEventListener("click", openNewCustomerModal);
+            modalCancelBtn?.addEventListener("click", closeNewCustomerModal);
+            modalEl.addEventListener("click", (e) => {
+              if (e.target === modalEl) closeNewCustomerModal();
+            });
+            modalSaveBtn?.addEventListener("click", async () => {
+              const draft = {
+                company: String(modalCompanyEl?.value || "").trim(),
+                first: String(modalFirstEl?.value || "").trim(),
+                last: String(modalLastEl?.value || "").trim(),
+                contact: String(modalContactEl?.value || "").trim(),
+                phone: String(modalPhoneEl?.value || "").trim(),
+                email1: String(modalEmail1El?.value || "").trim(),
+                email2: String(modalEmail2El?.value || "").trim(),
+                address: String(modalAddressEl?.value || "").trim()
+              };
+
+              if (!draft.company && !draft.first && !draft.last && !draft.contact) {
+                alert("Enter a company name or at least one contact name field.");
+                return;
+              }
+
+              const personName = [draft.first, draft.last].filter(Boolean).join(" ").trim();
+              if (!draft.contact && draft.company && personName) draft.contact = personName;
+
+              const originalLabel = modalSaveBtn.textContent;
+              modalSaveBtn.disabled = true;
+              modalSaveBtn.textContent = "Saving...";
+              try {
+                await saveNewCustomer_(draft);
+                const newContact = buildNewContactRecord_(draft);
+                CONTACTS = sortContacts([...CONTACTS, newContact]);
+                CONTACTS_ERROR = "";
+                pickContact(newContact);
+                searchEl.value = primaryContactLabel(newContact);
+                hideResults(resultsEl);
+                closeNewCustomerModal();
+                setLoadMsg(`Customer saved: ${primaryContactLabel(newContact)}`);
+              } catch (err) {
+                console.error(err);
+                setLoadMsg(err?.message || "Could not save new customer.", true);
+              } finally {
+                modalSaveBtn.disabled = false;
+                modalSaveBtn.textContent = originalLabel;
+              }
+            });
+
           window.addEventListener("click", (e) => {
-            const within = resultsEl.contains(e.target) || searchEl.contains(e.target);
+              const within = resultsEl.contains(e.target) || searchEl.contains(e.target) || addCustomerBtn.contains(e.target) || modalEl.contains(e.target);
             if (!within) hideResults(resultsEl);
           });
         });
@@ -1552,7 +1746,7 @@
 
       function unpackStoredItemsAndPayments_(storedItems) {
         if (Array.isArray(storedItems)) {
-          return { items: storedItems, payments: [], ccFeeEnabled: false };
+          return { items: storedItems, payments: [], ccFeeEnabled: false, customer: {}, terms: "" };
         }
         if (storedItems && typeof storedItems === "object") {
           const items = Array.isArray(storedItems.items)
@@ -1562,16 +1756,57 @@
             storedItems.payments || storedItems.payments_json || storedItems?.meta?.payments || []
           );
           const ccFeeEnabled = storedItems.cc_fee_enabled === true || storedItems?.meta?.cc_fee_enabled === true;
-          return { items, payments, ccFeeEnabled };
+          const customer = storedItems.customer && typeof storedItems.customer === "object"
+            ? storedItems.customer
+            : (storedItems?.meta?.customer && typeof storedItems.meta.customer === "object" ? storedItems.meta.customer : {});
+          const terms = pickFirstNonEmpty_(storedItems.terms, storedItems?.meta?.terms, customer?.terms);
+          return { items, payments, ccFeeEnabled, customer, terms };
         }
-        return { items: [], payments: [], ccFeeEnabled: false };
+        return { items: [], payments: [], ccFeeEnabled: false, customer: {}, terms: "" };
       }
 
-      function buildStoredItemsPayload_(items, payments, ccFeeEnabled = false) {
+      function buildInvoiceStorageMeta_(draft) {
+        const src = draft && typeof draft === "object" ? draft : {};
+        const customer = {};
+        const address = String(src.client_addr || "").trim();
+        const contactName = String(src.client_contact || "").trim();
+        const terms = String(src.terms || "").trim();
+
+        if (address) customer.address = address;
+        if (contactName) customer.contact_name = contactName;
+
+        const meta = {};
+        if (Object.keys(customer).length) meta.customer = customer;
+        if (terms) meta.terms = terms;
+        return meta;
+      }
+
+      function mergeStoredInvoicePayload_(payload, storedItems) {
+        const base = payload && typeof payload === "object" ? { ...payload } : {};
+        const unpacked = unpackStoredItemsAndPayments_(storedItems);
+
+        if (unpacked.customer && Object.keys(unpacked.customer).length) {
+          const currentCustomer = base.customer && typeof base.customer === "object" ? base.customer : {};
+          base.customer = { ...currentCustomer, ...unpacked.customer };
+        }
+        if (unpacked.terms && !base.terms) base.terms = unpacked.terms;
+
+        return base;
+      }
+
+      function buildStoredItemsPayload_(items, payments, ccFeeEnabled = false, invoiceMeta = null) {
         const safeItems = Array.isArray(items) ? items : [];
         const safePayments = normalizePayments_(payments);
-        if (!safePayments.length && !ccFeeEnabled) return safeItems;
-        return { items: safeItems, meta: { payments: safePayments, cc_fee_enabled: !!ccFeeEnabled } };
+        const extraMeta = invoiceMeta && typeof invoiceMeta === "object" ? invoiceMeta : {};
+        const meta = {};
+
+        if (safePayments.length) meta.payments = safePayments;
+        if (ccFeeEnabled) meta.cc_fee_enabled = !!ccFeeEnabled;
+        if (extraMeta.customer && Object.keys(extraMeta.customer).length) meta.customer = { ...extraMeta.customer };
+        if (extraMeta.terms) meta.terms = extraMeta.terms;
+
+        if (!Object.keys(meta).length) return safeItems;
+        return { items: safeItems, meta };
       }
 
       function toNum(v) {
@@ -1665,10 +1900,12 @@
         if (!body) return;
 
         const rows = Array.from(body.querySelectorAll("tr"));
+        let totalProducts = 0;
         let subtotal = 0;
         let taxableSubtotal = 0;
 
         rows.forEach((tr) => {
+          totalProducts += Math.max(0, toNum(tr.dataset.qty));
           const amt = toNum(tr.dataset.amount);
           subtotal += amt;
           if (tr.dataset.taxable === "1") taxableSubtotal += amt;
@@ -1684,6 +1921,7 @@
         const balance = total - paid;
 
         if ($("amountPaid")) $("amountPaid").value = paid.toFixed(2);
+  if ($("totalProducts")) $("totalProducts").textContent = String(totalProducts);
         if ($("subtotal")) $("subtotal").textContent = moneyUSD(subtotal);
         if ($("taxAmount")) $("taxAmount").textContent = moneyUSD(tax);
         if ($("ccFeeAmount")) $("ccFeeAmount").textContent = moneyUSD(ccFee);
@@ -1711,6 +1949,15 @@
         if ($("ccFeeEnabled")) $("ccFeeEnabled").checked = false;
         renderPayments_();
         recalcTotals();
+        refreshDeleteInvoiceButton_();
+      }
+
+      function refreshDeleteInvoiceButton_() {
+        const btn = $("btnDeleteInvoice");
+        if (!btn) return;
+        const hasSavedInvoice = !!window.CURRENT_INVOICE_ID;
+        btn.style.display = hasSavedInvoice ? "inline-flex" : "none";
+        btn.disabled = !hasSavedInvoice;
       }
 
       const GARMENT_SIZES = ["2T", "3T", "4T", "XS", "S", "M", "L", "XL", "2X", "3X", "4X", "5X"];
@@ -2266,6 +2513,7 @@
         const terms = String($("terms")?.value || "").trim();
 
         const subtotalText = String($("subtotal")?.textContent || "").trim();
+        const totalProductsText = String($("totalProducts")?.textContent || "0").trim();
         const taxText = String($("taxAmount")?.textContent || "").trim();
         const ccFeeText = String($("ccFeeAmount")?.textContent || "").trim();
         const totalText = String($("total")?.textContent || "").trim();
@@ -2370,6 +2618,7 @@
             <div class="printBottom" style="grid-template-columns:${notesHtml ? "minmax(0, 1.2fr) minmax(260px, .8fr)" : "1fr"};">
               ${notesHtml ? `<div class="printNotesWrap">${notesHtml}</div>` : ""}
               <div class="printTotals">
+                <div class="printTotalRow"><span>Total Products</span><strong>${esc(totalProductsText)}</strong></div>
                 <div class="printTotalRow"><span>Subtotal</span><strong>${esc(subtotalText)}</strong></div>
                 <div class="printTotalRow"><span>Tax (${esc(String(taxRateValue))}%)</span><strong>${esc(taxText)}</strong></div>
                 ${ccFeeEnabled && ccFeeValue > 0 ? `<div class="printTotalRow"><span>CC Fee 3.5%</span><strong>${esc(ccFeeText)}</strong></div>` : ""}
@@ -2416,17 +2665,42 @@
         };
       }
 
+      function calculateDraftAmounts_(draft) {
+        let subtotal = 0;
+        let taxableSubtotal = 0;
+        (draft?.items_json || []).forEach((item) => {
+          const amt = Number(item.unit_price) * Math.max(1, Number(item.qty));
+          subtotal += amt;
+          if (item.taxable) taxableSubtotal += amt;
+        });
+        const tax = subtotal > 0 ? (Number(draft?.tax_rate) / 100) * taxableSubtotal : 0;
+        const total = subtotal + tax;
+        return { subtotal, tax, total };
+      }
+
+      function currentInvoiceDeleteSummary_() {
+        recalcTotals();
+        return {
+          invoiceId: window.CURRENT_INVOICE_ID || null,
+          invoiceNo: String($("invNo")?.value || "").trim(),
+          clientName: String($("clientName")?.value || "").trim(),
+          totalText: String($("total")?.textContent || "").trim()
+        };
+      }
+
       function applyDraftObject(d) {
         if (!d) return;
 
+        const unpacked = unpackStoredItemsAndPayments_(d.items_json);
+        const mergedPayload = mergeStoredInvoicePayload_(d?.payload, d?.items_json);
+
         if ($("invNo")) $("invNo").value = d.invoice_no || "";
-        if ($("invDate")) $("invDate").value = d.invoice_date || "";
-        applyCustomerFieldsToForm_(d, d?.payload);
+        if ($("invDate")) $("invDate").value = (d.invoice_date || "").slice(0, 10) || "";
+        applyCustomerFieldsToForm_(d, mergedPayload);
         if ($("notes")) $("notes").value = d.notes || "";
-        if ($("terms")) $("terms").value = d.terms || "";
+        if ($("terms")) $("terms").value = d.terms || unpacked.terms || "";
         if ($("taxRate")) $("taxRate").value = (d.tax_rate ?? 9.75);
 
-        const unpacked = unpackStoredItemsAndPayments_(d.items_json);
         renderItems(unpacked.items);
         if ($("ccFeeEnabled")) $("ccFeeEnabled").checked = !!(d.cc_fee_enabled || unpacked.ccFeeEnabled);
 
@@ -2439,6 +2713,7 @@
         if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
         renderPayments_();
         recalcTotals();
+        refreshDeleteInvoiceButton_();
       }
 
       async function saveDraftToSupabase() {
@@ -2453,14 +2728,7 @@
         }
 
         // 2. Calculate total and log it
-        let subtotal = 0, taxableSubtotal = 0;
-        (draft.items_json || []).forEach((item) => {
-          const amt = Number(item.unit_price) * Math.max(1, Number(item.qty));
-          subtotal += amt;
-          if (item.taxable) taxableSubtotal += amt;
-        });
-        const tax = subtotal > 0 ? (Number(draft.tax_rate) / 100) * taxableSubtotal : 0;
-        const total = subtotal + tax;
+        const { subtotal, tax, total } = calculateDraftAmounts_(draft);
         console.log("[INVOICE] Recalculated total:", { subtotal, tax, total });
 
         // 3. Build payload with updated total
@@ -2471,7 +2739,7 @@
           client_phone: draft.client_phone || null,
           payment_link: window.CURRENT_PAYMENT_LINK || null,
           notes: draft.notes || null,
-          items_json: buildStoredItemsPayload_(draft.items_json, draft.payments, draft.cc_fee_enabled),
+          items_json: buildStoredItemsPayload_(draft.items_json, draft.payments, draft.cc_fee_enabled, buildInvoiceStorageMeta_(draft)),
           total: total,
           subtotal: subtotal,
           tax: tax,
@@ -2525,8 +2793,10 @@
           window.CURRENT_INVOICE_ID = data.id;
           window.CURRENT_PAYMENT_LINK = data.payment_link || null;
           if ($("invNo")) $("invNo").value = data.invoice_no || "";
+          refreshDeleteInvoiceButton_();
           setLoadMsg(`Draft saved as ${data.invoice_no}`);
         } else {
+          refreshDeleteInvoiceButton_();
           setLoadMsg("Draft saved.");
         }
 
@@ -2542,6 +2812,116 @@
           invoice_date: draft.invoice_date,
           notes: draft.notes
         });
+      }
+
+      async function duplicateInvoiceDraft_() {
+        try { await requireInvoiceAuth_(); } catch { return; }
+
+        recalcTotals();
+        const draft = getInvoiceDraftObject();
+        if (!draft.items_json.length) {
+          alert("No line items yet. Add at least one item before duplicating.");
+          return;
+        }
+
+        const { subtotal, tax, total } = calculateDraftAmounts_(draft);
+        const clonePayload = {
+          invoice_date: draft.invoice_date || todayIso_(),
+          client_name: draft.client_name || null,
+          client_email: draft.client_email || null,
+          client_phone: draft.client_phone || null,
+          payment_link: null,
+          notes: draft.notes || null,
+          items_json: buildStoredItemsPayload_(draft.items_json, [], draft.cc_fee_enabled, buildInvoiceStorageMeta_(draft)),
+          total,
+          subtotal,
+          tax,
+          status: "draft"
+        };
+
+        setLoadMsg("Duplicating invoice...");
+        const { data, error } = await window.sb
+          .from("invoices")
+          .insert(clonePayload)
+          .select("*")
+          .single();
+
+        if (error) throw error;
+
+        window.CURRENT_INVOICE_ID = data.id || null;
+        window.CURRENT_PAYMENT_LINK = data.payment_link || null;
+        window.INVOICE_PAYMENTS = [];
+        if ($("invNo")) $("invNo").value = data.invoice_no || "";
+        if ($("invDate")) $("invDate").value = (data.invoice_date || draft.invoice_date || todayIso_());
+        renderPayments_();
+        recalcTotals();
+        refreshDeleteInvoiceButton_();
+        setLoadMsg(`Invoice duplicated as ${data.invoice_no}. Review it and click "Save Draft" after any edits.`);
+      }
+
+      async function deleteCurrentInvoice_() {
+        try { await requireInvoiceAuth_(); } catch { return; }
+
+        const btn = $("btnDeleteInvoice");
+        const summary = currentInvoiceDeleteSummary_();
+        if (!summary.invoiceId) {
+          setLoadMsg("This invoice has not been saved yet, so it cannot be deleted.", true);
+          refreshDeleteInvoiceButton_();
+          return;
+        }
+
+        const confirmed = window.confirm(
+          "Are you sure you want to delete this invoice?\n\n" +
+          `Invoice #: ${summary.invoiceNo || "(not set)"}\n` +
+          `Customer: ${summary.clientName || "(not set)"}\n` +
+          `Total: ${summary.totalText || "$0.00"}\n\n` +
+          "This cannot be undone."
+        );
+        if (!confirmed) return;
+
+        if (btn) btn.disabled = true;
+
+        try {
+          const { data: liveInvoice, error: fetchErr } = await window.sb
+            .from("invoices")
+            .select("id, invoice_no, client_name")
+            .eq("id", summary.invoiceId)
+            .limit(1)
+            .maybeSingle();
+
+          if (fetchErr) throw fetchErr;
+
+          const liveInvoiceNo = String(liveInvoice?.invoice_no || "").trim();
+          const liveClientName = String(liveInvoice?.client_name || "").trim();
+          const invoiceMatches = !!liveInvoice && String(liveInvoice.id || "") === String(summary.invoiceId || "");
+          const invoiceNoMatches = normalizeInvoiceNo(liveInvoiceNo) === normalizeInvoiceNo(summary.invoiceNo);
+          const clientNameMatches = liveClientName === summary.clientName;
+
+          if (!invoiceMatches || !invoiceNoMatches || !clientNameMatches) {
+            setLoadMsg("Invoice mismatch detected. Delete canceled to protect your records. Please reload the invoice and try again.", true);
+            if (btn) btn.disabled = false;
+            return;
+          }
+
+          const { error: deleteErr } = await window.sb
+            .from("invoices")
+            .delete()
+            .eq("id", summary.invoiceId);
+
+          if (deleteErr) throw deleteErr;
+
+          if ($("invoiceNoInput")?.value?.trim() && normalizeInvoiceNo($("invoiceNoInput").value) === normalizeInvoiceNo(summary.invoiceNo)) {
+            $("invoiceNoInput").value = "";
+          }
+
+          setLoadMsg("Invoice deleted successfully.");
+          clearItems();
+          if (btn) btn.disabled = true;
+        } catch (err) {
+          console.error(err);
+          setLoadMsg(err?.message || "Could not delete invoice.", true);
+          if (btn) btn.disabled = false;
+        }
       }
 
       function stripHtml_(value) {
@@ -3000,28 +3380,10 @@
         window.CURRENT_INVOICE_ID = data.id || null;
         window.CURRENT_PAYMENT_LINK = data.payment_link || null;
 
-        if ($("invNo")) $("invNo").value = data.invoice_no || "";
-        if ($("invDate")) $("invDate").value = (data.invoice_date || "").slice(0, 10) || "";
-        if ($("clientName")) $("clientName").value = data.client_name || "";
-        if ($("clientEmail")) $("clientEmail").value = data.client_email || "";
-        if ($("clientPhone")) $("clientPhone").value = data.client_phone || "";
-        if ($("clientAddr")) $("clientAddr").value = data.client_addr || "";
-        setClientContactUI_("");
-
-        if ($("notes")) $("notes").value = data.notes || "";
-        if ($("terms")) $("terms").value = data.terms || "";
+        applyDraftObject(data);
 
         syncBizInfoDisplay();
 
-        const unpacked = unpackStoredItemsAndPayments_(data.items_json);
-        renderItems(unpacked.items);
-        if ($("ccFeeEnabled")) $("ccFeeEnabled").checked = !!unpacked.ccFeeEnabled;
-
-        let loadedPayments = normalizePayments_(data.payments || data.payments_json);
-        if (!loadedPayments.length) loadedPayments = unpacked.payments;
-        window.INVOICE_PAYMENTS = loadedPayments;
-        if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
-        renderPayments_();
         setLoadMsg(`Invoice ${data.invoice_no} loaded. Edit it and click "Save Draft".`);
         return data;
       }
@@ -3048,6 +3410,7 @@
           window.CURRENT_QUOTE = quote;
           window.CURRENT_QUOTE_ID = quote.id || null;
           window.CURRENT_INVOICE_ID = null;
+          refreshDeleteInvoiceButton_();
           if ($("invNo")) $("invNo").value = "";
 
           applyCustomerFieldsToForm_(quote, quote?.payload);
@@ -3227,7 +3590,11 @@
             client_email: customer.client_email || null,
             client_phone: customer.client_phone || null,
             payment_link: null,
-            items_json: items,
+            items_json: buildStoredItemsPayload_(items, [], false, buildInvoiceStorageMeta_({
+              client_addr: customer.client_addr,
+              client_contact: customer.client_contact,
+              terms: q.terms || ""
+            })),
             notes: q.notes || null
           };
 
@@ -3246,6 +3613,7 @@
           window.INVOICE_PAYMENTS = [];
           if ($("paymentDate") && !$("paymentDate").value) $("paymentDate").value = todayIso_();
           renderPayments_();
+          refreshDeleteInvoiceButton_();
           setCreateEnabled(true);
           setLoadMsg(`Invoice created: ${data.invoice_no} (edit it, then click "Save Draft").`);
         } catch (err) {
@@ -3405,6 +3773,7 @@
 
         renderPayments_();
         syncBizInfoDisplay();
+        refreshDeleteInvoiceButton_();
 
         $("btnSaveDraft")?.addEventListener("click", async () => {
           try {
@@ -3413,6 +3782,19 @@
             console.error(e);
             setLoadMsg(e?.message || "Save failed.", true);
           }
+        });
+
+        $("btnDuplicateInvoice")?.addEventListener("click", async () => {
+          try {
+            await duplicateInvoiceDraft_();
+          } catch (e) {
+            console.error(e);
+            setLoadMsg(e?.message || "Could not duplicate invoice.", true);
+          }
+        });
+
+        $("btnDeleteInvoice")?.addEventListener("click", async () => {
+          await deleteCurrentInvoice_();
         });
 
         $("btnLoadQuote")?.addEventListener("click", (e) => {
@@ -3491,6 +3873,60 @@
   </script>
 
   <section id="printInvoice" class="printInvoice" aria-hidden="true"></section>
+
+  <div id="newCustomerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+    <div style="width:min(560px, calc(100% - 40px)); background:#fff; border:1px solid #d7e7f7; border-radius:16px; padding:16px; box-shadow:0 10px 24px rgba(10,35,45,.12);">
+      <h3 style="margin:0 0 12px; color:#0b3f5b;">Add New Customer</h3>
+
+      <div style="margin-top:10px;">
+        <label class="label" for="ncCompany">Company Name</label>
+        <input id="ncCompany" class="field" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+        <div>
+          <label class="label" for="ncFirst">First Name</label>
+          <input id="ncFirst" class="field" />
+        </div>
+        <div>
+          <label class="label" for="ncLast">Last Name</label>
+          <input id="ncLast" class="field" />
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <label class="label" for="ncContact">Contact Name</label>
+        <input id="ncContact" class="field" />
+      </div>
+
+      <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div>
+          <label class="label" for="ncPhone">Phone</label>
+          <input id="ncPhone" class="field" />
+        </div>
+        <div>
+          <label class="label" for="ncEmail1">Email</label>
+          <input id="ncEmail1" class="field" />
+        </div>
+      </div>
+
+      <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div>
+          <label class="label" for="ncEmail2">Email 2</label>
+          <input id="ncEmail2" class="field" />
+        </div>
+        <div>
+          <label class="label" for="ncAddress">Address</label>
+          <input id="ncAddress" class="field" />
+        </div>
+      </div>
+
+      <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:10px;">
+        <button id="ncCancel" type="button" class="btn ghost">Cancel</button>
+        <button id="ncSave" type="button" class="btn primary">Save Customer</button>
+      </div>
+    </div>
+  </div>
 
   <div class="sizeModalBackdrop" id="editItemModalBackdrop" style="
     position:fixed; inset:0; background:rgba(0,0,0,.35);

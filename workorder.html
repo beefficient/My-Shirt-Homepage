@@ -70,26 +70,203 @@
     .modalBody img{max-width:100%;height:auto;display:block}
     .modalFooter{padding:14px;border-top:1px solid rgba(0,0,0,.08);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 
-    .previewGrid{
+    .wo-print-preview,
+    .workorder-print-output{
+      font-size:14px;
+      line-height:1.5;
+      color:#173028;
+    }
+    .wo-print-preview .wo-print-shell,
+    .workorder-print-output .wo-print-shell{
       display:grid;
-      grid-template-columns: 1.25fr .75fr;
-      gap:12px;
+      gap:14px;
+    }
+    .wo-print-preview .wo-print-card,
+    .workorder-print-output .wo-print-card{
+      border:1.5px solid #b8c9bc;
+      border-radius:16px;
+      background:#fff;
+      padding:16px 18px;
+      page-break-inside:avoid;
+      break-inside:avoid;
+      box-shadow:0 4px 14px rgba(10,35,45,.04);
+    }
+    .wo-print-preview .wo-print-header,
+    .workorder-print-output .wo-print-header{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:18px;
       align-items:start;
     }
-    @media (max-width: 820px){
-      .previewGrid{ grid-template-columns:1fr; }
+    .wo-print-preview .wo-print-title,
+    .workorder-print-output .wo-print-title{
+      font-size:28px;
+      line-height:1.05;
+      font-weight:900;
+      letter-spacing:-.02em;
     }
-    .previewImages{
+    .wo-print-preview .wo-print-id,
+    .workorder-print-output .wo-print-id{
+      text-align:right;
+      font-size:18px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .wo-print-preview .wo-print-meta,
+    .workorder-print-output .wo-print-meta{
       display:grid;
-      gap:10px;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px 18px;
+      margin-top:10px;
     }
-    .previewImages img{
-      width:100%;
-      max-height:240px;
-      object-fit:contain;
-      border:1px solid #bbb;
-      border-radius:10px;
+    .wo-print-preview .wo-print-section-title,
+    .workorder-print-output .wo-print-section-title,
+    .wo-print-preview .wo-item-title,
+    .workorder-print-output .wo-item-title,
+    .wo-print-preview .wo-art-title,
+    .workorder-print-output .wo-art-title{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#456057;
+    }
+    .wo-print-preview .wo-print-two-col,
+    .workorder-print-output .wo-print-two-col{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+    .wo-print-preview .wo-print-lines,
+    .workorder-print-output .wo-print-lines{
+      display:grid;
+      gap:4px;
+      margin-top:8px;
+    }
+    .wo-print-preview .wo-item-head,
+    .workorder-print-output .wo-item-head{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:12px;
+      align-items:start;
+      margin-bottom:10px;
+    }
+    .wo-print-preview .wo-item-name,
+    .workorder-print-output .wo-item-name{
+      font-size:20px;
+      font-weight:900;
+      letter-spacing:-.01em;
+      color:#173028;
+    }
+    .wo-print-preview .wo-item-qty,
+    .workorder-print-output .wo-item-qty{
+      font-size:16px;
+      font-weight:900;
+      white-space:nowrap;
+      color:#173028;
+    }
+    .wo-print-preview .wo-item-grid,
+    .workorder-print-output .wo-item-grid{
+      display:grid;
+      gap:8px;
+    }
+    .wo-print-preview .wo-item-details,
+    .workorder-print-output .wo-item-details{
+      display:grid;
+      gap:6px;
+      margin-top:10px;
+      font-size:15px;
+    }
+    .wo-print-preview .wo-item-art-grid,
+    .workorder-print-output .wo-item-art-grid{
+      display:grid;
+      gap:12px;
+      margin-top:14px;
+      page-break-inside:avoid;
+      break-inside:avoid;
+    }
+    .wo-print-preview .wo-item-art-grid.one-artwork,
+    .workorder-print-output .wo-item-art-grid.one-artwork{
+        grid-template-columns:minmax(0,calc((100% - 12px) / 2));
+        justify-content:center;
+    }
+    .wo-print-preview .wo-item-art-grid.two-artwork,
+    .workorder-print-output .wo-item-art-grid.two-artwork{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+    .wo-print-preview .wo-item-art-grid.multi-artwork,
+    .workorder-print-output .wo-item-art-grid.multi-artwork{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+    .wo-print-preview .wo-art-box,
+    .workorder-print-output .wo-art-box{
+      border:1.5px solid #c9d7cd;
+      border-radius:14px;
+      min-height:320px;
+      padding:12px;
+      display:grid;
+      grid-template-rows:auto 1fr;
+      gap:10px;
+      background:#fdfefd;
+    }
+    .wo-print-preview .wo-art-frame,
+    .workorder-print-output .wo-art-frame{
+      min-height:250px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid #d9e3dc;
+      border-radius:12px;
       background:#fff;
+      overflow:hidden;
+      padding:14px;
+    }
+    .wo-print-preview .wo-art-frame img,
+    .workorder-print-output .wo-art-frame img{
+      width:100%;
+      max-height:320px;
+      height:320px;
+      object-fit:contain;
+      object-position:center;
+      display:block;
+      background:#fff;
+    }
+    .wo-print-preview .wo-no-artwork,
+    .workorder-print-output .wo-no-artwork{
+      margin-top:14px;
+      font-size:13px;
+      font-weight:700;
+      color:#6b7f76;
+    }
+    .wo-print-preview .wo-art-placeholder,
+    .workorder-print-output .wo-art-placeholder{
+      color:#6b7f76;
+      font-weight:700;
+      text-align:center;
+    }
+    .wo-print-preview .wo-item-sep,
+    .workorder-print-output .wo-item-sep{
+      border:0;
+      border-top:1px solid #d9e3dc;
+      margin:14px 0;
+    }
+    @media (max-width: 820px){
+      .wo-print-preview .wo-print-header,
+      .workorder-print-output .wo-print-header,
+      .wo-print-preview .wo-item-head,
+      .workorder-print-output .wo-item-head,
+      .wo-print-preview .wo-print-two-col,
+      .workorder-print-output .wo-print-two-col,
+      .wo-print-preview .wo-item-art-grid,
+      .workorder-print-output .wo-item-art-grid,
+      .wo-print-preview .wo-print-meta,
+      .workorder-print-output .wo-print-meta{
+        grid-template-columns:1fr;
+      }
+      .wo-print-preview .wo-print-id,
+      .workorder-print-output .wo-print-id{
+        text-align:left;
+      }
     }
 
     .reqMark{color:var(--danger);font-weight:900;margin-left:4px}
@@ -98,43 +275,25 @@
     @media print{
       .noPrint{display:none !important}
       body{background:#fff; font-size:12.5px; line-height:1.35}
-      .printOnly{font-size:12.5px; line-height:1.35}
       @page { margin: 0.35in; }
       .printOnly{display:block !important}
-      .printCard{
-        border:1px solid #bbb;
-        border-radius:8px;
-        padding:8px;
-        margin:0 0 8px 0;
-        page-break-inside: avoid;
-        break-inside: avoid;
+      .workorder-print-output{
+        font-size:12.5px;
+        line-height:1.35;
       }
-      .printCard img{
-        max-height:140px !important;
-        width:auto !important;
-        max-width:100% !important;
-        object-fit:contain !important;
+      .workorder-print-output .wo-print-card,
+      .workorder-print-output .wo-art-box,
+      .workorder-print-output .wo-art-frame{
+        box-shadow:none;
       }
-      .printItemGrid{
-        display:grid;
-        grid-template-columns: 1.25fr .75fr;
-        gap:10px;
-        align-items:start;
+      .workorder-print-output .wo-print-card,
+      .workorder-print-output .wo-art-box{
+        page-break-inside:avoid;
+        break-inside:avoid;
       }
-      .printItemImages{
-        display:grid;
-        gap:8px;
-        justify-items:end;
+      .workorder-print-output .wo-art-frame img{
+        height:240px;
       }
-      .printItemImages img{
-        width:100% !important;
-        max-height:160px !important;
-        object-fit:contain !important;
-        border:1px solid #bbb;
-        border-radius:8px;
-        background:#fff;
-      }
-      .printSection, .printRow, .printCard { page-break-inside: avoid; break-inside: avoid; }
       a{color:inherit;text-decoration:none}
     }
     .printOnly{display:none}
@@ -2981,113 +3140,185 @@
     renderAll();
   }
 
-  async function openPreview(){
-    validateAllRequired({ includeApproval: false });
-
-    const groupsMap = new Map();
-    for(const item of wo.items){
-      const key = artworkKeyForItem(item);
-      if(!groupsMap.has(key)) groupsMap.set(key, []);
-      groupsMap.get(key).push(item);
+  function formatPrintableSizeValue_(item){
+    if (isGarment(item?.serviceType)) {
+      const rows = Array.isArray(item?.sizeBreakdown) ? item.sizeBreakdown : [];
+      const enabled = rows.filter(r => r.enabled && Number(r.qty || 0) > 0);
+      return enabled.length
+        ? enabled.map(r => `${esc(r.size)}-${Number(r.qty || 0)}`).join(", ")
+        : "-";
     }
-    const groups = Array.from(groupsMap.values());
+    return esc(item?.itemSize || "-");
+  }
 
+  function printableArtworkLabels_(item, panelCount){
+    const raw = String(item?.location || "").trim();
+    const parts = raw
+      ? raw.split(/\s*\/\s*|\s*,\s*|\s*&\s*|\s+and\s+/i).map(s => String(s || "").trim()).filter(Boolean)
+      : [];
+    const labels = [];
+    for (let i = 0; i < panelCount; i++) {
+      labels.push(parts[i] ? parts[i].toUpperCase() + " ARTWORK" : `ARTWORK ${i + 1}`);
+    }
+    return labels;
+  }
+
+  function renderPrintableArtworkPanels_(item, images){
+    const imgs = Array.isArray(images)
+      ? images.filter((img) => img && String(img.dataUrl || img.src || img.url || img.imageUrl || img.previewUrl || "").trim())
+      : [];
+    if (!imgs.length) return "";
+
+    const labels = printableArtworkLabels_(item, imgs.length);
+    return imgs.map((img, idx) => {
+      const src = String(img.dataUrl || img.src || img.url || img.imageUrl || img.previewUrl || "").trim();
+      if (!src) return "";
+      return `
+        <div class="wo-art-box">
+          <div class="wo-art-title">${esc(labels[idx] || `ARTWORK ${idx + 1}`)}</div>
+          <div class="wo-art-frame">
+            <img src="${src}" alt="${esc(img.name || labels[idx] || `Artwork ${idx + 1}`)}">
+          </div>
+        </div>
+      `;
+    }).filter(Boolean).join("");
+  }
+
+  function renderPrintableItemCard_(item, idx, options = {}){
+    const vendorMode = !!options.vendorMode;
+    const vendorMethodDisplay = options.vendorMethodDisplay || "-";
+    const vendorNotesDisplay = options.vendorNotesDisplay || "-";
+    const getVendorItemNotesDisplay_ = (entry) => {
+      const itemNotes = String(entry?.artNotes || "").trim();
+      const woNotes = String(vendorNotesDisplay || "").trim();
+      const methodNorm = String(vendorMethodDisplay || "").trim().toLowerCase();
+      if (itemNotes && itemNotes.toLowerCase() !== methodNorm) return itemNotes;
+      if (woNotes && woNotes !== "-") return woNotes;
+      return itemNotes || "-";
+    };
+
+    const ids = Array.isArray(item?.artworkIds) ? item.artworkIds : [];
+    const imgs = ids.map(id => wo.artworks.find(a => a.id === id)).filter(Boolean);
+    const artworkMarkup = renderPrintableArtworkPanels_(item, imgs);
+    const artworkCount = (artworkMarkup.match(/class="wo-art-box"/g) || []).length;
+    const artworkGridClass = artworkCount <= 1 ? "one-artwork" : (artworkCount === 2 ? "two-artwork" : "multi-artwork");
+    const notesText = vendorMode ? getVendorItemNotesDisplay_(item) : String(item?.artNotes || "").trim();
+    const colorLabel = isGarment(item?.serviceType) ? "Shirt Color" : "Material / Color";
+
+    return `
+      <section class="wo-print-card wo-print-item-card">
+        <div class="wo-item-head">
+          <div>
+            <div class="wo-item-title">Item ${idx + 1} - ${esc(item?.serviceType || "Item")}</div>
+            <div class="wo-item-name">${esc(item?.product || "(missing description)")}</div>
+          </div>
+          <div class="wo-item-qty">QTY: ${Number(item?.quantity || 0)}</div>
+        </div>
+
+        <div class="wo-item-grid">
+          <div class="wo-item-details">
+            <div><strong>Product:</strong> ${esc(item?.product || "-")}</div>
+            ${item?.variantColor?.trim() ? `<div><strong>${esc(colorLabel)}:</strong> ${esc(item.variantColor)}</div>` : ``}
+            <div><strong>${esc(sizeFieldLabel(item?.serviceType))}:</strong> ${formatPrintableSizeValue_(item)}</div>
+            <div><strong>${esc(locationLabel(item?.serviceType))}:</strong> ${esc(item?.location || "-")}</div>
+            <div><strong>${esc(colorsLabel(item?.serviceType))}:</strong> ${esc(item?.inkColors || "-")}</div>
+            ${vendorMode ? `<div><strong>Method:</strong> ${esc(vendorMethodDisplay || "-")}</div>` : ``}
+            ${notesText ? `<div><strong>Notes:</strong> <span style="white-space:pre-wrap">${esc(notesText)}</span></div>` : ``}
+          </div>
+        </div>
+        ${artworkCount
+          ? `<div class="wo-item-art-grid ${artworkGridClass}">${artworkMarkup}</div>`
+          : `<div class="wo-no-artwork">No artwork uploaded</div>`
+        }
+      </section>
+    `;
+  }
+
+  function renderPrintableWorkOrderMarkup_(wrapperClass){
+    const status = wo.approval.approved ? "Approved" : "Draft";
     const vendorMode = isVendorWorkOrder_(wo);
+    const garmentTotal = garmentTotalQty_(wo.items);
     const vendorMethodDisplay = wo.vendorMethod || wo.vendorType || "-";
-    const vendorNotesDisplay = wo.vendorNotes || wo.internalVendorNotes || "";
-    const html = `
-      <div class="muted"><b>${vendorMode ? "Vendor Work Order" : "Work Order"}:</b> ${esc(wo.woNumber)}</div>
-      ${vendorMode
-        ? `
-          <div style="margin-top:6px"><b>Vendor:</b> ${esc(wo.vendorName || "(missing)")}</div>
-          <div><b>Contact:</b> ${esc(wo.vendorContact || "-")}</div>
-          <div><b>Email:</b> ${esc(wo.vendorEmail || "-")}</div>
-          <div><b>Phone:</b> ${esc(wo.vendorPhone || "-")}</div>
-          <div><b>Method:</b> ${esc(vendorMethodDisplay)}</div>
-          <div><b>Parent:</b> ${esc(wo.parentWorkOrderNo || "-")}</div>
-          <div><b>Sender:</b> ${esc(SHOP_SENDER.name)}</div>
-          ${SHOP_SENDER.email ? `<div><b>Sender Email:</b> ${esc(SHOP_SENDER.email)}</div>` : ``}
-          ${SHOP_SENDER.phone ? `<div><b>Sender Phone:</b> ${esc(SHOP_SENDER.phone)}</div>` : ``}
-          <div><b>Due Date:</b> ${esc(wo.dueDate || "-")}</div>
-        `
-        : `
-          <div style="margin-top:6px"><b>Customer:</b> ${esc(wo.customerName || "(missing)")}</div>
-          <div><b>Due Date:</b> ${esc(wo.dueDate || "-")}</div>
-        `
-      }
-      <hr>
-      <div style="display:grid;gap:10px">
-        ${groups.map((itemsInGroup, gIdx) => {
-          const ids = Array.isArray(itemsInGroup[0].artworkIds) ? itemsInGroup[0].artworkIds : [];
-          const imgs = ids.map(id => wo.artworks.find(a => a.id === id)).filter(Boolean);
+    const vendorNotesDisplay = wo.vendorNotes || wo.internalVendorNotes || "-";
+    const itemsMarkup = wo.items.map((item, idx) => renderPrintableItemCard_(item, idx, {
+      vendorMode,
+      vendorMethodDisplay,
+      vendorNotesDisplay
+    })).join("");
 
-          return `
-            <div class="itemCard">
-              <div style="font-weight:900;margin-bottom:8px">
-                Group ${gIdx+1}
-                ${itemsInGroup.length > 1 ? `<span class="muted" style="font-weight:700">· ${itemsInGroup.length} items</span>` : ``}
+    return `
+      <div class="${wrapperClass}">
+        <div class="wo-print-shell">
+          <section class="wo-print-card">
+            <div class="wo-print-header">
+              <div>
+                <div class="wo-print-title">${vendorMode ? "Vendor Work Order" : "Work Order"}</div>
               </div>
+              <div class="wo-print-id">${esc(wo.woNumber || "-")}</div>
+            </div>
+            <div class="wo-print-meta">
+              <div><strong>${vendorMode ? "Vendor" : "Customer"}:</strong> ${esc(vendorMode ? (wo.vendorName || "-") : (wo.customerName || "-"))}</div>
+              <div><strong>Status:</strong> ${esc(status)}</div>
+              <div><strong>Total Garments:</strong> ${garmentTotal}</div>
+              <div><strong>Due:</strong> ${esc(wo.dueDate || "-")}</div>
+            </div>
+          </section>
 
-              <div class="previewGrid">
-                <div style="display:grid;gap:10px">
-                  ${itemsInGroup.map((i, idx) => `
-                    <div>
-                      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
-                        <div style="font-weight:900">${esc(i.serviceType)}${itemsInGroup.length>1 ? ` <span class="muted" style="font-weight:700">· Item ${idx+1}</span>` : ``}</div>
-                        <div class="muted"><b>Qty</b> ${Number(i.quantity||0)}</div>
-                      </div>
-
-                      <div style="margin-top:6px">${esc(i.product || "(missing description)")}</div>
-
-                      ${isGarment(i.serviceType) && i.variantColor?.trim()
-                        ? `<div style="margin-top:6px"><b>Shirt Color:</b> ${esc(i.variantColor)}</div>`
-                        : ``
-                      }
-
-                      <div style="margin-top:6px">
-                        <div>
-                          <b>${esc(sizeFieldLabel(i.serviceType))}:</b>
-                          ${
-                            isGarment(i.serviceType)
-                              ? (i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).length
-                                  ? i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).map(r=>`${esc(r.size)}-${Number(r.qty||0)}`).join(", ")
-                                  : "-"
-                                )
-                              : (esc(i.itemSize||"-"))
-                          }
-                        </div>
-                        <div style="margin-top:4px">
-                          <b>Location:</b> ${esc(i.location||"-")} &nbsp; · &nbsp;
-                          <b>Colors:</b> ${esc(i.inkColors||"-")}
-                        </div>
-                      </div>
-
-                      ${i.artNotes?.trim()
-                        ? `<div style="margin-top:6px"><b>Notes:</b> <span style="white-space:pre-wrap">${esc(i.artNotes)}</span></div>`
-                        : ``
-                      }
-                    </div>
-                  `).join('<hr style="border:none;border-top:1px solid rgba(0,0,0,.08);margin:6px 0">')}
-                </div>
-
-                <div class="previewImages">
-                  ${
-                    imgs.length
-                      ? imgs.map(im => `<img src="${im.dataUrl}" alt="">`).join("")
-                      : ``
-                  }
-                </div>
+          <section class="wo-print-two-col">
+            <div class="wo-print-card">
+              <div class="wo-print-section-title">${vendorMode ? "Vendor / Sender" : "Customer"}</div>
+              <div class="wo-print-lines">
+                ${vendorMode
+                  ? `
+                    <div>${esc(wo.vendorName || "-")}</div>
+                    <div>${esc(wo.vendorContact || "-")}</div>
+                    <div>${esc(wo.vendorEmail || "-")}</div>
+                    <div>${esc(wo.vendorPhone || "-")}</div>
+                    <div>${esc(vendorMethodDisplay)}</div>
+                    <div>${esc(SHOP_SENDER.name)}</div>
+                    ${SHOP_SENDER.email ? `<div>${esc(SHOP_SENDER.email)}</div>` : ``}
+                    ${SHOP_SENDER.phone ? `<div>${esc(SHOP_SENDER.phone)}</div>` : ``}
+                  `
+                  : `
+                    <div>${esc(wo.customerName || "-")}</div>
+                    <div>${esc(wo.company || "")}</div>
+                    <div>${esc(wo.email || "")}</div>
+                    <div>${esc(wo.phone || "")}</div>
+                  `
+                }
               </div>
             </div>
-          `;
-        }).join("")}
+
+            <div class="wo-print-card">
+              <div class="wo-print-section-title">${vendorMode ? "Address / Delivery" : "Address / Delivery"}</div>
+              <div class="wo-print-lines">
+                <div style="white-space:pre-wrap">${esc(wo.billingAddress || "__________________________")}</div>
+                <div style="white-space:pre-wrap">${esc(wo.shippingAddress || "__________________________")}</div>
+                ${vendorMode ? `<div><strong>Parent:</strong> ${esc(wo.parentWorkOrderNo || "-")}</div>` : ``}
+                <div><strong>Created:</strong> ${esc(wo.createdDate || "-")}</div>
+              </div>
+            </div>
+          </section>
+
+          ${itemsMarkup}
+
+          ${vendorMode && String(vendorNotesDisplay || "").trim() && vendorNotesDisplay !== "-"
+            ? `
+              <section class="wo-print-card">
+                <div class="wo-print-section-title">Vendor Notes</div>
+                <div style="margin-top:8px;white-space:pre-wrap">${esc(vendorNotesDisplay)}</div>
+              </section>
+            `
+            : ``
+          }
+        </div>
       </div>
-      ${vendorMode && vendorNotesDisplay.trim()
-        ? `<hr><div><b>Vendor Notes:</b><div style="white-space:pre-wrap;margin-top:6px">${esc(vendorNotesDisplay)}</div></div>`
-        : ``
-      }
     `;
-    $("modalBody").innerHTML = html;
+  }
+
+  async function openPreview(){
+    validateAllRequired({ includeApproval: false });
+    $("modalBody").innerHTML = renderPrintableWorkOrderMarkup_("wo-print-preview");
     await waitForImages($("modalBody"));
     $("modalBackdrop").classList.remove("hidden");
   }
@@ -3097,140 +3328,7 @@
   }
 
   function buildPrintView(){
-    const status = wo.approval.approved ? "Approved" : "Draft";
-    const vendorMode = isVendorWorkOrder_(wo);
-    const garmentTotal = garmentTotalQty_(wo.items);
-    const vendorMethodDisplay = wo.vendorMethod || wo.vendorType || "-";
-    const vendorNotesDisplay = wo.vendorNotes || wo.internalVendorNotes || "-";
-    const getVendorItemNotesDisplay_ = (item) => {
-      const itemNotes = String(item?.artNotes || "").trim();
-      const woNotes = String(vendorNotesDisplay || "").trim();
-      const methodNorm = String(vendorMethodDisplay || "").trim().toLowerCase();
-
-      if (itemNotes && itemNotes.toLowerCase() !== methodNorm) return itemNotes;
-      if (woNotes && woNotes !== "-") return woNotes;
-      return itemNotes || "-";
-    };
-
-    const groupsMap = new Map();
-    for(const item of wo.items){
-      const key = artworkKeyForItem(item);
-      if(!groupsMap.has(key)) groupsMap.set(key, []);
-      groupsMap.get(key).push(item);
-    }
-    const groups = Array.from(groupsMap.values());
-
-    const items = groups.map((itemsInGroup) => {
-      const ids = Array.isArray(itemsInGroup[0].artworkIds) ? itemsInGroup[0].artworkIds : [];
-      const imgs = ids.map(id => wo.artworks.find(a => a.id === id)).filter(Boolean);
-      const printImgs = imgs.slice(0, 2);
-
-      return `
-        <div class="printCard">
-          <div class="printItemGrid">
-            <div>
-              ${itemsInGroup.map((i, idx) => `
-                <div ${idx > 0 ? 'style="margin-top:8px;padding-top:8px;border-top:1px solid #ddd"' : ''}>
-                  <div style="font-weight:900">${esc(i.serviceType)} <span style="font-weight:600">· Qty ${Number(i.quantity||0)}</span></div>
-                  <div style="margin-top:2px"><b>Product Description:</b> ${esc(i.product||"-")}</div>
-
-                  ${isGarment(i.serviceType) && i.variantColor?.trim()
-                    ? `<div style="margin-top:2px"><b>Shirt:</b> ${esc(i.variantColor)}</div>`
-                    : ``
-                  }
-
-                  <div style="margin-top:2px">
-                    <b>${esc(sizeFieldLabel(i.serviceType))}:</b>
-                    ${
-                      isGarment(i.serviceType)
-                        ? (i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).length
-                            ? i.sizeBreakdown.filter(r=>r.enabled && Number(r.qty||0)>0).map(r=>`${esc(r.size)}-${Number(r.qty||0)}`).join(", ")
-                            : "-"
-                          )
-                        : (esc(i.itemSize||"-"))
-                    }
-                    <br>
-                    <b>Location:</b> ${esc(i.location||"-")} &nbsp; · &nbsp;
-                    <b>Colors:</b> ${esc(i.inkColors||"-")}
-                  </div>
-
-                  ${vendorMode
-                    ? `
-                      <div style="margin-top:4px"><b>Method:</b> ${esc(vendorMethodDisplay || "-")}</div>
-                      <div style="margin-top:2px"><b>Notes:</b> <span style="white-space:pre-wrap">${esc(getVendorItemNotesDisplay_(i))}</span></div>
-                    `
-                    : (i.artNotes ? `<div style="margin-top:4px"><b>Notes:</b> <span style="white-space:pre-wrap">${esc(i.artNotes)}</span></div>` : ``)
-                  }
-                </div>
-              `).join("")}
-            </div>
-
-            <div class="printItemImages">
-              ${
-                printImgs.length
-                  ? printImgs.map(im => `<img src="${im.dataUrl}" alt="">`).join("")
-                  : ``
-              }
-            </div>
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    $("printView").innerHTML = `
-      <div style="padding:18px">
-        <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap">
-          <div>
-            <div style="font-size:24px;font-weight:900">${vendorMode ? "Vendor Work Order" : "Work Order"}</div>
-            <div style="color:#555">${esc(wo.woNumber)}</div>
-            <div style="margin-top:4px;font-size:13px;color:#333"><b>Total Garments:</b> ${garmentTotal}</div>
-          </div>
-          <div style="font-size:13px;color:#333">
-            <div><b>Created:</b> ${esc(wo.createdDate)}</div>
-            <div><b>Due:</b> ${esc(wo.dueDate || "-")}</div>
-            <div><b>Status:</b> ${esc(status)}</div>
-            ${vendorMode ? `<div><b>Parent:</b> ${esc(wo.parentWorkOrderNo || "-")}</div>` : ``}
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-          <div class="printCard">
-            ${vendorMode
-              ? `
-                <div style="font-weight:900">Vendor</div>
-                <div>${esc(wo.vendorName || "-")}</div>
-                <div>${esc(wo.vendorContact || "-")}</div>
-                <div>${esc(wo.vendorEmail || "-")}</div>
-                <div>${esc(wo.vendorPhone || "-")}</div>
-                <div>${esc(vendorMethodDisplay)}</div>
-                <div style="margin-top:8px;font-weight:900">Sender</div>
-                <div>${esc(SHOP_SENDER.name)}</div>
-                ${SHOP_SENDER.email ? `<div>${esc(SHOP_SENDER.email)}</div>` : ``}
-                ${SHOP_SENDER.phone ? `<div>${esc(SHOP_SENDER.phone)}</div>` : ``}
-              `
-              : `
-                <div style="font-weight:900">Customer</div>
-                <div>${esc(wo.customerName)}</div>
-                <div>${esc(wo.company)}</div>
-                <div>${esc(wo.email)}</div>
-                <div>${esc(wo.phone)}</div>
-              `
-            }
-          </div>
-          <div class="printCard">
-            <div style="font-weight:900">${vendorMode ? "Delivery / Routing" : "Addresses / Delivery"}</div>
-            <div style="white-space:pre-wrap">${esc(wo.billingAddress||"")}</div>
-            <div style="margin-top:8px;white-space:pre-wrap">${esc(wo.shippingAddress||"")}</div>
-          </div>
-        </div>
-
-        <div style="margin-top:12px">
-          <div style="font-weight:900;margin-bottom:6px">Items</div>
-          ${items}
-        </div>
-
-      </div>
-    `;
+    $("printView").innerHTML = renderPrintableWorkOrderMarkup_("workorder-print-output");
   }
 
   function bindTopInputs(){
