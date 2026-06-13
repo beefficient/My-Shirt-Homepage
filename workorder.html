@@ -69,6 +69,8 @@
     .modalBody{padding:14px;max-height:75vh;overflow:auto}
     .modalBody img{max-width:100%;height:auto;display:block}
     .modalFooter{padding:14px;border-top:1px solid rgba(0,0,0,.08);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+    .printPreviewFrame{max-width:900px;margin:0 auto;background:#fff}
+    .printPreviewFrame .modalBody{padding:14px;max-height:none;overflow:visible}
 
     .wo-print-preview,
     .workorder-print-output{
@@ -125,8 +127,9 @@
     .workorder-print-output .wo-item-title,
     .wo-print-preview .wo-art-title,
     .workorder-print-output .wo-art-title{
-      font-size:12px;
-      font-weight:900;
+      font-size:13.5px;
+      font-weight:800;
+      line-height:1.2;
       letter-spacing:.08em;
       text-transform:uppercase;
       color:#456057;
@@ -154,14 +157,16 @@
     .wo-print-preview .wo-item-name,
     .workorder-print-output .wo-item-name{
       font-size:20px;
-      font-weight:900;
+      line-height:1.2;
+      font-weight:800;
       letter-spacing:-.01em;
       color:#173028;
     }
     .wo-print-preview .wo-item-qty,
     .workorder-print-output .wo-item-qty{
-      font-size:16px;
-      font-weight:900;
+      font-size:20px;
+      line-height:1.2;
+      font-weight:800;
       white-space:nowrap;
       color:#173028;
     }
@@ -172,10 +177,46 @@
     }
     .wo-print-preview .wo-item-details,
     .workorder-print-output .wo-item-details{
-      display:grid;
-      gap:6px;
-      margin-top:10px;
-      font-size:15px;
+      width:100%;
+      max-width:none;
+      margin:14px 0 12px;
+      font-size:18px;
+      line-height:1.45;
+    }
+    .wo-print-preview .wo-print-detail-row,
+    .workorder-print-output .wo-print-detail-row{
+      font-size:18px;
+      line-height:1.45;
+      margin-bottom:8px;
+      white-space:normal;
+    }
+    .wo-print-preview .wo-print-detail-row:last-child,
+    .workorder-print-output .wo-print-detail-row:last-child{
+      margin-bottom:0;
+    }
+    .wo-print-preview .wo-print-detail-row strong,
+    .workorder-print-output .wo-print-detail-row strong{
+      font-size:18px;
+      font-weight:800;
+    }
+    .wo-print-preview .wo-print-item-title,
+    .workorder-print-output .wo-print-item-title{
+      font-size:22px;
+      line-height:1.2;
+      font-weight:800;
+    }
+    .wo-print-preview .wo-print-item-qty,
+    .workorder-print-output .wo-print-item-qty{
+      font-size:22px;
+      line-height:1.2;
+      font-weight:800;
+    }
+    .wo-print-preview .wo-print-item-type,
+    .workorder-print-output .wo-print-item-type{
+      font-size:14px;
+      line-height:1.2;
+      font-weight:800;
+      letter-spacing:.08em;
     }
     .wo-print-preview .wo-item-art-grid,
     .workorder-print-output .wo-item-art-grid{
@@ -274,25 +315,28 @@
 
     @media print{
       .noPrint{display:none !important}
-      body{background:#fff; font-size:12.5px; line-height:1.35}
+      body{background:#fff}
       @page { margin: 0.35in; }
       .printOnly{display:block !important}
-      .workorder-print-output{
-        font-size:12.5px;
-        line-height:1.35;
+      #printView{
+        display:block !important;
       }
-      .workorder-print-output .wo-print-card,
-      .workorder-print-output .wo-art-box,
-      .workorder-print-output .wo-art-frame{
-        box-shadow:none;
+      #printView .printPreviewFrame{
+        max-width:900px;
+        margin:0 auto;
+        background:#fff;
       }
+      #printView .modalBody{
+        padding:14px;
+        max-height:none;
+        overflow:visible;
+      }
+      .wo-print-preview .wo-print-card,
+      .wo-print-preview .wo-art-box,
       .workorder-print-output .wo-print-card,
       .workorder-print-output .wo-art-box{
         page-break-inside:avoid;
         break-inside:avoid;
-      }
-      .workorder-print-output .wo-art-frame img{
-        height:240px;
       }
       a{color:inherit;text-decoration:none}
     }
@@ -3209,21 +3253,21 @@
       <section class="wo-print-card wo-print-item-card">
         <div class="wo-item-head">
           <div>
-            <div class="wo-item-title">Item ${idx + 1} - ${esc(item?.serviceType || "Item")}</div>
-            <div class="wo-item-name">${esc(item?.product || "(missing description)")}</div>
+            <div class="wo-item-title wo-print-item-type">Item ${idx + 1} - ${esc(item?.serviceType || "Item")}</div>
+            <div class="wo-item-name wo-print-item-title">${esc(item?.product || "(missing description)")}</div>
           </div>
-          <div class="wo-item-qty">QTY: ${Number(item?.quantity || 0)}</div>
+          <div class="wo-item-qty wo-print-item-qty">QTY: ${Number(item?.quantity || 0)}</div>
         </div>
 
         <div class="wo-item-grid">
-          <div class="wo-item-details">
-            <div><strong>Product:</strong> ${esc(item?.product || "-")}</div>
-            ${item?.variantColor?.trim() ? `<div><strong>${esc(colorLabel)}:</strong> ${esc(item.variantColor)}</div>` : ``}
-            <div><strong>${esc(sizeFieldLabel(item?.serviceType))}:</strong> ${formatPrintableSizeValue_(item)}</div>
-            <div><strong>${esc(locationLabel(item?.serviceType))}:</strong> ${esc(item?.location || "-")}</div>
-            <div><strong>${esc(colorsLabel(item?.serviceType))}:</strong> ${esc(item?.inkColors || "-")}</div>
-            ${vendorMode ? `<div><strong>Method:</strong> ${esc(vendorMethodDisplay || "-")}</div>` : ``}
-            ${notesText ? `<div><strong>Notes:</strong> <span style="white-space:pre-wrap">${esc(notesText)}</span></div>` : ``}
+          <div class="wo-item-details wo-print-item-details">
+            <div class="wo-print-detail-row"><strong>Product:</strong> ${esc(item?.product || "-")}</div>
+            ${item?.variantColor?.trim() ? `<div class="wo-print-detail-row"><strong>${esc(colorLabel)}:</strong> ${esc(item.variantColor)}</div>` : ``}
+            <div class="wo-print-detail-row"><strong>${esc(sizeFieldLabel(item?.serviceType))}:</strong> ${formatPrintableSizeValue_(item)}</div>
+            <div class="wo-print-detail-row"><strong>${esc(locationLabel(item?.serviceType))}:</strong> ${esc(item?.location || "-")}</div>
+            <div class="wo-print-detail-row"><strong>${esc(colorsLabel(item?.serviceType))}:</strong> ${esc(item?.inkColors || "-")}</div>
+            ${vendorMode ? `<div class="wo-print-detail-row"><strong>Method:</strong> ${esc(vendorMethodDisplay || "-")}</div>` : ``}
+            ${notesText ? `<div class="wo-print-detail-row"><strong>Notes:</strong> <span style="white-space:pre-wrap">${esc(notesText)}</span></div>` : ``}
           </div>
         </div>
         ${artworkCount
@@ -3328,7 +3372,12 @@
   }
 
   function buildPrintView(){
-    $("printView").innerHTML = renderPrintableWorkOrderMarkup_("workorder-print-output");
+    const existingPreview = $("modalBody")?.querySelector(".wo-print-preview");
+    if (existingPreview) {
+      $("printView").innerHTML = `<div class="printPreviewFrame"><div class="modalBody">${existingPreview.outerHTML}</div></div>`;
+      return;
+    }
+    $("printView").innerHTML = `<div class="printPreviewFrame"><div class="modalBody">${renderPrintableWorkOrderMarkup_("wo-print-preview")}</div></div>`;
   }
 
   function bindTopInputs(){
