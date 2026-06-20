@@ -91,6 +91,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .login-error{background:#fef0ee;border:1px solid #f0c0bb;border-radius:7px;padding:8px 12px;color:var(--error);font-size:13px;margin-bottom:14px;display:none}
 .login-error.show{display:block}
 .login-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:10px}
+.login-sync-note{margin-bottom:16px}
 
 /* ── SHIRT OPTION BUILDER ── */
 .shirt-options-list{display:flex;flex-direction:column;gap:12px;margin-top:8px}
@@ -491,6 +492,10 @@ footer a{color:var(--yellow);text-decoration:none}
     <button class="login-tab active" id="ltab-leader" onclick="switchLoginTab('leader')">Group Leader</button>
     <button class="login-tab" id="ltab-admin" onclick="switchLoginTab('admin')">Shop Admin</button>
     <button class="login-tab" id="ltab-member" onclick="switchLoginTab('member')">Order Link</button>
+  </div>
+
+  <div class="notice notice-info login-sync-note" id="login-sync-note">
+    <span>&#128241;</span><span>Leader accounts and changed admin passwords are saved on this device only. To use them on another phone or computer, connect a backend. Members should use the shared order link.</span>
   </div>
 
   <!-- Leader login / signup -->
@@ -1143,6 +1148,7 @@ function switchLoginTab(tab){
   document.getElementById('login-leader-form').style.display=tab==='leader'?'block':'none';
   document.getElementById('login-admin-form').style.display=tab==='admin'?'block':'none';
   document.getElementById('login-member-form').style.display=tab==='member'?'block':'none';
+  document.getElementById('login-sync-note').style.display=tab==='member'?'none':'flex';
   document.getElementById('login-err')?.classList.remove('show');
   document.getElementById('leader-login-err')?.classList.remove('show');
 }
@@ -1178,7 +1184,7 @@ function doLeaderLogin(){
   const email=document.getElementById('leader-email').value.trim();
   const pass=document.getElementById('leader-pass').value;
   const acct=getAccountByEmail(email);
-  if(!acct||acct.pass!==hashPass(pass)){leaderErr('Incorrect email or password.');return;}
+  if(!acct||acct.pass!==hashPass(pass)){leaderErr('Incorrect email or password. Accounts created on another device will not appear here.');return;}
   enterAsLeader(acct);
 }
 
@@ -1218,6 +1224,7 @@ function doAdminLogin(){
     addLog('Admin logged in');
     return;
   }
+  document.getElementById('login-err').textContent='Incorrect password. Changed passwords stay on the device where they were set.';
   document.getElementById('login-err').classList.add('show');
 }
 
