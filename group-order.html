@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Shirt Printing — Group Orders</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --navy:#1B2A4A;--bg:#E8EDF5;--white:#FFFFFF;--border:#D0D8E8;
+  --text:#1B2A4A;--muted:#6B7A99;--yellow:#F5C842;--yellow-lt:#FEF6D0;
+  --baby-bg:#FFF0F5;--baby-bd:#F8C8DA;--baby-tx:#8A2D4A;
+  --todd-bg:#F0F5FF;--todd-bd:#B8CAF5;--todd-tx:#1A3A8A;
+  --youth-bg:#F0FFF5;--youth-bd:#A8E0C0;--youth-tx:#1A6A3A;
+  --success:#1A6A3A;--error:#C0392B;--radius:10px;
+  --shadow:0 2px 12px rgba(27,42,74,0.08);
+}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh}
+
+/* ── NAV ── */
+.nav{background:var(--navy);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.18)}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}
+.nav-brand-name{color:#fff;font-size:14px;font-weight:700;display:block;line-height:1.2}
+.nav-brand-sub{color:rgba(255,255,255,0.5);font-size:11px;display:block}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nav-link{color:rgba(255,255,255,0.65);text-decoration:none;font-size:13px;font-weight:500;padding:6px 12px;border-radius:6px;transition:background .15s,color .15s;cursor:pointer;border:none;background:none}
+.nav-link:hover{background:rgba(255,255,255,0.12);color:#fff}
+.nav-link.active{background:rgba(255,255,255,0.12);color:var(--yellow)}
+.nav-badge{background:var(--yellow);color:var(--navy);font-size:10px;font-weight:800;padding:2px 6px;border-radius:8px;margin-left:3px}
+.hamburger{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer}
+@media(max-width:600px){.nav-links{display:none}.nav-links.open{display:flex;flex-direction:column;position:absolute;top:58px;left:0;right:0;background:var(--navy);padding:12px;gap:4px;z-index:99}.hamburger{display:block}}
+
+/* ── PAGES ── */
+.page{display:none}.page.active{display:block}
+
+/* ── CONTAINERS ── */
+.container{max-width:800px;margin:0 auto;padding:28px 20px}
+.container-wide{max-width:1100px;margin:0 auto;padding:28px 20px}
+
+/* ── TYPE ── */
+h1{font-size:24px;font-weight:700;color:var(--navy)}
+h2{font-size:19px;font-weight:700;color:var(--navy)}
+h3{font-size:15px;font-weight:700;color:var(--navy)}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.muted{color:var(--muted);font-size:13px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:22px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:opacity .15s,transform .1s;text-decoration:none;letter-spacing:.2px;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{opacity:.88}
+.btn-yellow{background:var(--yellow);color:var(--navy)}.btn-yellow:hover{opacity:.88}
+.btn-outline{background:transparent;color:var(--navy);border:1.5px solid var(--border)}.btn-outline:hover{background:var(--white)}
+.btn-danger{background:transparent;color:var(--error);border:1.5px solid #f0c0bb}.btn-danger:hover{background:#fef0ee}
+.btn-ghost{background:transparent;color:var(--muted);border:none;padding:6px 10px}.btn-ghost:hover{color:var(--navy)}
+.btn-sm{padding:5px 13px;font-size:12px}
+.btn-full{width:100%;justify-content:center}
+
+/* ── CARDS ── */
+.card{background:var(--white);border-radius:var(--radius);border:.5px solid var(--border);box-shadow:var(--shadow)}
+.card-body{padding:20px}
+.card-header{padding:14px 20px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* ── FORM ── */
+.form-group{margin-bottom:16px}
+label{display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+input[type="text"],input[type="date"],input[type="password"],textarea,select{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--white);font-family:inherit;transition:border-color .15s,box-shadow .15s;outline:none;-webkit-appearance:none;appearance:none}
+input:focus,textarea:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,42,74,0.10)}
+textarea{resize:vertical;min-height:64px}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7A99' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.input-error{border-color:var(--error)!important}
+.field-error{color:var(--error);font-size:12px;margin-top:4px;display:none}
+.field-error.show{display:block}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}}
+
+/* ── LOGIN SCREEN ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--navy)}
+.login-box{background:var(--white);border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px;justify-content:center}
+.login-logo-text{font-size:15px;font-weight:700;color:var(--navy);line-height:1.2}
+.login-logo-sub{font-size:11px;color:var(--muted)}
+.login-tabs{display:flex;background:var(--bg);border-radius:8px;padding:3px;margin-bottom:20px;gap:2px}
+.login-tab{flex:1;padding:7px;text-align:center;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .15s}
+.login-tab.active{background:var(--white);color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,0.10)}
+.login-error{background:#fef0ee;border:1px solid #f0c0bb;border-radius:7px;padding:8px 12px;color:var(--error);font-size:13px;margin-bottom:14px;display:none}
+.login-error.show{display:block}
+.login-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:10px}
+
+/* ── SHIRT OPTION BUILDER ── */
+.shirt-options-list{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.shirt-option-builder{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative}
+.remove-option-btn{position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;line-height:1}
+.remove-option-btn:hover{color:var(--error)}
+.style-grid{display:flex;gap:5px;flex-wrap:wrap}
+.style-btn{padding:5px 11px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;color:var(--text)}
+.style-btn.sel{background:var(--navy);color:var(--yellow);border-color:var(--navy)}
+.color-builder{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.color-row-item{display:flex;align-items:center;gap:4px}
+.color-input-swatch{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);cursor:pointer;overflow:hidden;position:relative;flex-shrink:0}
+.color-input-swatch input[type="color"]{position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);opacity:0;cursor:pointer;padding:0;border:none}
+.color-name-input{width:88px;padding:4px 7px;font-size:12px;border-radius:6px;border:1px solid var(--border)}
+.color-remove-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
+.color-remove-btn:hover{color:var(--error)}
+.deco-tags{display:flex;gap:5px;flex-wrap:wrap}
+.deco-tag{padding:4px 10px;border-radius:6px;border:1.5px solid var(--border);background:var(--white);font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .12s;user-select:none}
+.deco-tag:hover{border-color:var(--navy);color:var(--navy)}
+.deco-tag.sel{background:var(--navy);color:var(--yellow);border-color:var(--navy)}
+/* ── DECORATION CHOICE ROWS (member, clear labeled) ── */
+.deco-choice{display:flex;align-items:center;gap:10px;width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;background:var(--white);cursor:pointer;transition:all .12s;margin-bottom:7px;text-align:left}
+.deco-choice:hover{border-color:var(--navy);background:var(--bg)}
+.deco-choice.sel{border-color:var(--navy);background:var(--bg);box-shadow:0 0 0 2px rgba(27,42,74,0.12)}
+.deco-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.deco-choice.sel .deco-radio{border-color:var(--navy)}
+.deco-choice.sel .deco-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--navy)}
+.deco-choice-label{flex:1;font-size:13px;font-weight:600;color:var(--text);line-height:1.3}
+.deco-choice-price{font-size:13px;font-weight:800;color:var(--success);white-space:nowrap}
+.deco-choice-icon{font-size:18px;flex-shrink:0}
+.deco-included{display:flex;align-items:center;gap:10px;width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:9px;background:var(--bg);margin-bottom:7px}
+.deco-included .deco-choice-label{flex:1;font-size:13px;font-weight:600;color:var(--text)}
+.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--white);position:relative}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--navy);background:var(--bg)}
+.upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-preview{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.thumb-wrap{position:relative;display:inline-block}
+.upload-thumb{width:68px;height:68px;border-radius:7px;object-fit:cover;border:1px solid var(--border)}
+.thumb-remove{position:absolute;top:-5px;right:-5px;width:17px;height:17px;border-radius:50%;background:var(--error);color:#fff;border:none;font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* ── SHIRT OPTION CARDS (member) ── */
+.shirt-options-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.shirt-option-card{border:2px solid var(--border);border-radius:var(--radius);background:var(--white);cursor:pointer;transition:border-color .15s,box-shadow .15s;overflow:hidden}
+.shirt-option-card:hover{border-color:var(--navy)}
+.shirt-option-card.selected{border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,42,74,0.14)}
+.shirt-option-card.selected .option-check{display:flex}
+.option-img-wrap{width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden}
+.option-img-wrap img{width:100%;height:100%;object-fit:contain;padding:6px}
+.option-img-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:11px;gap:5px}
+.option-check{display:none;position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;background:var(--navy);color:var(--yellow);align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.option-info{padding:9px 10px}
+.option-name{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.option-detail{font-size:10px;color:var(--muted);line-height:1.4}
+.option-colors-row{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap}
+.color-swatch{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(0,0,0,0.12);cursor:pointer;transition:transform .1s;flex-shrink:0}
+.color-swatch:hover{transform:scale(1.2)}
+.color-swatch.sel-color{outline:2.5px solid var(--navy);outline-offset:2px}
+.color-swatch-lg{width:26px;height:26px}
+
+/* ── SIZE SELECTOR ── */
+.size-cat-label{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin:10px 0 5px;display:flex;align-items:center;gap:5px}
+.size-cat-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-baby{background:#E84393}.dot-toddler{background:#5B8AF5}.dot-youth{background:#4CC97A}.dot-adult{background:var(--navy)}
+.size-grid{display:flex;flex-wrap:wrap;gap:5px}
+.size-btn{padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--white);font-size:12px;font-weight:600;color:var(--text);cursor:pointer;transition:all .12s;user-select:none;min-width:44px;text-align:center}
+.size-btn:hover{border-color:var(--navy);background:var(--bg)}
+.size-btn.selected{background:var(--navy);color:var(--yellow);border-color:var(--navy)}
+.size-btn.baby{color:var(--baby-tx);border-color:var(--baby-bd);background:var(--baby-bg)}
+.size-btn.baby.selected{background:var(--baby-tx);color:#fff;border-color:var(--baby-tx)}
+.size-btn.toddler{color:var(--todd-tx);border-color:var(--todd-bd);background:var(--todd-bg)}
+.size-btn.toddler.selected{background:var(--todd-tx);color:#fff;border-color:var(--todd-tx)}
+.size-btn.youth{color:var(--youth-tx);border-color:var(--youth-bd);background:var(--youth-bg)}
+.size-btn.youth.selected{background:var(--youth-tx);color:#fff;border-color:var(--youth-tx)}
+
+/* ── CART / MULTI-SHIRT ── */
+.cart-items{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.cart-item{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px;position:relative}
+.cart-item-icon{font-size:28px;flex-shrink:0;line-height:1}
+.cart-item-info{flex:1;min-width:0}
+.cart-item-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.cart-item-detail{font-size:12px;color:var(--muted);line-height:1.4}
+.cart-item-remove{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0}
+.cart-item-remove:hover{color:var(--error)}
+.cart-item-qty{display:flex;align-items:center;gap:8px;margin-top:6px}
+.cq-btn{width:26px;height:26px;border-radius:50%;background:var(--navy);color:var(--yellow);border:none;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;line-height:1}
+.cq-btn:disabled{opacity:.3;cursor:not-allowed}
+.cq-num{font-size:15px;font-weight:700;min-width:20px;text-align:center}
+.cart-total-row{background:var(--navy);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.cart-total-label{font-size:12px;color:rgba(255,255,255,.65);font-weight:600}
+.cart-total-value{font-size:16px;font-weight:800;color:var(--yellow)}
+
+/* ── ADD SHIRT BUTTON ── */
+.add-shirt-btn{width:100%;padding:12px;border:2px dashed var(--border);border-radius:9px;background:transparent;color:var(--navy);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.add-shirt-btn:hover{border-color:var(--navy);background:var(--bg)}
+
+/* ── ADD SHIRT PANEL ── */
+.add-shirt-panel{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;display:none}
+.add-shirt-panel.open{display:block}
+.panel-section{margin-bottom:14px}
+.panel-section:last-child{margin-bottom:0}
+
+/* ── CHIPS ── */
+.chip{display:inline-block;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:600;border:.5px solid var(--border);background:var(--bg);color:var(--text)}
+.chip.baby{background:var(--baby-bg);border-color:var(--baby-bd);color:var(--baby-tx)}
+.chip.toddler{background:var(--todd-bg);border-color:var(--todd-bd);color:var(--todd-tx)}
+.chip.youth{background:var(--youth-bg);border-color:var(--youth-bd);color:var(--youth-tx)}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700}
+.badge-open{background:var(--yellow-lt);color:#8A6E00;border:.5px solid #E8D88A}
+.badge-closed{background:#EFEFEF;color:#888;border:.5px solid #DDD}
+
+/* ── PROGRESS ── */
+.progress-bar{background:var(--border);border-radius:4px;height:4px;overflow:hidden}
+.progress-fill{background:var(--navy);border-radius:4px;height:4px}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+@media(max-width:700px){.stats-grid{grid-template-columns:1fr 1fr}}
+.stat-card{background:var(--white);border-radius:var(--radius);border:.5px solid var(--border);padding:13px 15px}
+.stat-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.stat-value{font-size:24px;font-weight:700;color:var(--navy);line-height:1}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:.5px solid var(--border)}
+table{width:100%;border-collapse:collapse;background:var(--white)}
+thead{background:var(--bg)}
+th{padding:9px 13px;text-align:left;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);border-bottom:.5px solid var(--border);white-space:nowrap}
+td{padding:9px 13px;font-size:13px;border-bottom:.5px solid #EDF0F7;color:var(--text);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#F8F9FC}
+
+/* ── SIZE BREAKDOWN ── */
+.size-breakdown{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.sb-row{display:flex;align-items:flex-start;gap:5px;flex-wrap:wrap}
+.sb-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);min-width:52px;padding-top:3px}
+.sb-chips{display:flex;gap:4px;flex-wrap:wrap}
+
+/* ── SHARE BOX ── */
+.share-box{background:var(--bg);border:1px dashed var(--border);border-radius:var(--radius);padding:13px 15px}
+.share-url-row{display:flex;gap:7px;margin-top:7px;align-items:center;flex-wrap:wrap}
+.share-url-input{flex:1;min-width:160px;background:var(--white);border:1px solid var(--border);border-radius:7px;padding:7px 11px;font-size:11px;color:var(--muted);font-family:'Courier New',monospace;cursor:text;outline:none}
+.share-url-input:focus{border-color:var(--navy)}
+.copy-btn{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+.copy-btn:hover{opacity:.85}.copy-btn.copied{background:var(--success)}
+
+/* ── ORDER HERO ── */
+.order-hero{background:var(--navy);border-radius:var(--radius);padding:18px;margin-bottom:22px}
+.order-hero-tag{display:inline-block;background:var(--yellow);color:var(--navy);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:2px 9px;border-radius:10px;margin-bottom:8px}
+.order-hero h2{color:#fff;font-size:18px;margin-bottom:5px}
+.order-hero-meta{color:rgba(255,255,255,.5);font-size:12px;display:flex;gap:16px;flex-wrap:wrap}
+
+/* ── SUCCESS ── */
+.success-screen{display:none;text-align:center;padding:36px 20px}
+.success-screen.show{display:block}
+.success-icon{width:60px;height:60px;border-radius:50%;background:var(--yellow-lt);border:2px solid var(--yellow);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:26px}
+.order-form-content.hide{display:none!important}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.48);z-index:200;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:14px;padding:26px;width:100%;max-width:640px;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,0.22)}
+.modal h2{margin-bottom:18px}
+.modal-close{float:right;background:none;border:none;font-size:24px;color:var(--muted);cursor:pointer;margin-top:-5px;line-height:1}
+
+/* ── NOTICE ── */
+.notice{border-radius:8px;padding:9px 13px;font-size:13px;display:flex;gap:8px;align-items:flex-start}
+.notice-warn{background:var(--yellow-lt);border:.5px solid #E8D88A;color:#8A6E00}
+.notice-success{background:var(--youth-bg);border:.5px solid var(--youth-bd);color:var(--success)}
+.notice-info{background:var(--todd-bg);border:.5px solid var(--todd-bd);color:var(--todd-tx)}
+
+/* ── TOTAL BAR ── */
+.total-bar{background:var(--navy);border-radius:0 0 var(--radius) var(--radius);padding:11px 15px;display:flex;justify-content:space-between;align-items:center}
+.total-bar-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.6)}
+.total-bar-value{font-size:17px;font-weight:700;color:var(--yellow)}
+
+/* ── SECTION HEADER ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+
+/* ── SELECTION SUMMARY ── */
+.selection-summary{background:var(--yellow-lt);border:1px solid #E8D88A;border-radius:8px;padding:9px 13px;margin-top:10px;font-size:13px;color:#6B5200;display:none}
+.selection-summary.show{display:block}
+
+/* ── LOG ── */
+.activity-log{display:flex;flex-direction:column;gap:0}
+.log-item{padding:10px 14px;border-bottom:.5px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.log-item:last-child{border-bottom:none}
+.log-dot{width:8px;height:8px;border-radius:50%;background:var(--navy);flex-shrink:0;margin-top:5px}
+.log-dot.new{background:var(--yellow)}
+.log-time{font-size:11px;color:var(--muted);white-space:nowrap;margin-top:1px}
+
+/* ── ADMIN ORDER ROW ── */
+.order-row{margin-bottom:14px}
+.order-card{background:var(--white);border-radius:var(--radius);border:.5px solid var(--border);box-shadow:var(--shadow)}
+.order-card-header{padding:14px 18px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.order-card-body{padding:0 18px 16px}
+.order-card-footer{border-top:.5px solid var(--border)}
+
+/* ── DATA INFO BOX ── */
+.data-info{background:var(--navy);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;color:rgba(255,255,255,.8);font-size:13px;line-height:1.6}
+.data-info strong{color:var(--yellow)}
+.data-info a{color:var(--yellow)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;padding:9px 18px;border-radius:22px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:transform .3s;z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── FOOTER ── */
+footer{background:var(--navy);color:rgba(255,255,255,.45);text-align:center;padding:16px;font-size:12px;margin-top:40px}
+footer a{color:var(--yellow);text-decoration:none}
+
+/* ── UNIFORM / TEAM ── */
+.uniform-toggle-row{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--todd-bg);border:1px solid var(--todd-bd);border-radius:9px;margin-bottom:10px}
+.uni-switch{position:relative;width:42px;height:24px;flex-shrink:0;cursor:pointer}
+.uni-switch input{opacity:0;width:0;height:0;position:absolute}
+.uni-slider{position:absolute;inset:0;background:#c5cee0;border-radius:24px;transition:.2s}
+.uni-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.uni-switch input:checked + .uni-slider{background:var(--navy)}
+.uni-switch input:checked + .uni-slider::before{transform:translateX(18px)}
+.uni-config{display:none;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:9px;margin-bottom:10px}
+.uni-config.open{display:block}
+.preset-btns{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.preset-btn{padding:5px 11px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);font-size:11px;font-weight:600;cursor:pointer;color:var(--text)}
+.preset-btn:hover{border-color:var(--navy)}
+.preset-btn.sel{background:var(--navy);color:var(--yellow);border-color:var(--navy)}
+.placement-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+@media(max-width:480px){.placement-grid{grid-template-columns:1fr}}
+.placement-toggle{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;transition:all .12s;font-size:12px;font-weight:600}
+.placement-toggle:hover{border-color:var(--navy)}
+.placement-toggle.on{border-color:var(--navy);background:var(--bg)}
+.placement-check{width:18px;height:18px;border-radius:5px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;background:var(--white)}
+.placement-toggle.on .placement-check{background:var(--navy);border-color:var(--navy)}
+.placement-req{margin-left:auto;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--white);border:1px solid var(--border);color:var(--muted);cursor:pointer}
+.placement-req.required{background:var(--yellow-lt);border-color:#E8D88A;color:#8A6E00}
+.uni-priceline{display:flex;align-items:center;gap:8px;margin-top:10px}
+.uni-badge{display:inline-flex;align-items:center;gap:4px;background:var(--navy);color:var(--yellow);font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:10px}
+
+/* ── MEMBER JERSEY PREVIEW ── */
+.jersey-preview{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:8px}
+.jersey-svg-wrap{flex-shrink:0}
+.jersey-fields{flex:1;min-width:200px}
+.jersey-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.req-star{color:var(--error)}
+.opt-tag{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)}
+
+/* ── PRICING ── */
+.price-tag{font-size:13px;font-weight:800;color:var(--success)}
+.price-tag-lg{font-size:18px;font-weight:800;color:var(--yellow)}
+.price-input-wrap{position:relative;display:inline-block}
+.price-input-wrap::before{content:'$';position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;font-weight:600;pointer-events:none}
+.price-input{padding-left:24px!important;width:110px!important}
+.price-grid{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:6px}
+.deco-price-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.deco-price-row .deco-name{flex:1;font-size:12px;color:var(--text);min-width:120px}
+.cart-item-price{font-size:13px;font-weight:800;color:var(--success);white-space:nowrap}
+.price-line{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:2px 0}
+.price-line.total{font-size:14px;font-weight:800;color:var(--navy);border-top:1px solid var(--border);margin-top:5px;padding-top:7px}
+.deadline-info{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:4px}
+
+/* ── DIVIDER ── */
+.divider{border:none;border-top:.5px solid var(--border);margin:18px 0}
+
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:44px 20px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN PAGE ══════════════ -->
+<div id="page-login" class="page active" style="min-height:100vh;background:var(--navy);">
+<div class="login-wrap">
+<div class="login-box">
+  <div class="login-logo">
+    <svg width="40" height="40" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="46" r="11" fill="#F5C842"/>
+      <circle cx="40" cy="46" r="7.5" fill="#1B2A4A"/>
+      <circle cx="40" cy="46" r="3.5" fill="#F5C842"/>
+      <line x1="40" y1="46" x2="14" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="40" y2="12" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="66" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="68" y2="54" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="16" y2="62" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <rect x="2" y="12" width="22" height="16" rx="2.5" fill="#E84393" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-22 13 20)"/>
+      <rect x="28" y="2" width="22" height="17" rx="2.5" fill="#F5C842" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(4 39 10)"/>
+      <rect x="56" y="10" width="22" height="17" rx="2.5" fill="#5BB8F5" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(22 67 18)"/>
+      <rect x="60" y="44" width="18" height="14" rx="2.5" fill="#E8542A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(32 69 51)"/>
+      <rect x="6" y="54" width="18" height="14" rx="2.5" fill="#4CC97A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-28 15 61)"/>
+    </svg>
+    <div>
+      <div class="login-logo-text">My Shirt Printing</div>
+      <div class="login-logo-sub">Group Order Portal</div>
+    </div>
+  </div>
+
+  <div class="login-tabs">
+    <button class="login-tab active" id="ltab-leader" onclick="switchLoginTab('leader')">Group Leader</button>
+    <button class="login-tab" id="ltab-admin" onclick="switchLoginTab('admin')">Shop Admin</button>
+    <button class="login-tab" id="ltab-member" onclick="switchLoginTab('member')">Order Link</button>
+  </div>
+
+  <!-- Leader login / signup -->
+  <div id="login-leader-form">
+    <div class="login-error" id="leader-login-err"></div>
+
+    <!-- toggle between sign in & register -->
+    <div id="leader-signin-view">
+      <div class="form-group">
+        <label for="leader-email">Email</label>
+        <input type="text" id="leader-email" placeholder="you@email.com" autocomplete="username" onkeydown="if(event.key==='Enter')doLeaderLogin()">
+      </div>
+      <div class="form-group">
+        <label for="leader-pass">Password</label>
+        <input type="password" id="leader-pass" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLeaderLogin()">
+      </div>
+      <button class="btn btn-yellow btn-full" onclick="doLeaderLogin()">Sign in</button>
+      <div class="login-hint">New here? <a href="#" onclick="showLeaderView('signup');return false;" style="color:var(--navy);font-weight:700;">Create a leader account</a></div>
+    </div>
+
+    <div id="leader-signup-view" style="display:none;">
+      <div class="form-group">
+        <label for="signup-name">Your name</label>
+        <input type="text" id="signup-name" placeholder="e.g. Coach Maria">
+      </div>
+      <div class="form-group">
+        <label for="signup-email">Email</label>
+        <input type="text" id="signup-email" placeholder="you@email.com" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label for="signup-pass">Create password</label>
+        <input type="password" id="signup-pass" placeholder="At least 6 characters" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label for="signup-pass2">Confirm password</label>
+        <input type="password" id="signup-pass2" placeholder="Repeat password" autocomplete="new-password">
+      </div>
+      <button class="btn btn-yellow btn-full" onclick="doLeaderSignup()">Create account &amp; sign in</button>
+      <div class="login-hint">Already have an account? <a href="#" onclick="showLeaderView('signin');return false;" style="color:var(--navy);font-weight:700;">Sign in</a></div>
+    </div>
+  </div>
+
+  <!-- Admin login -->
+  <div id="login-admin-form" style="display:none;">
+    <div class="login-error" id="login-err">Incorrect password. Try again.</div>
+    <div class="form-group">
+      <label for="login-pass">Shop admin password</label>
+      <input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    </div>
+    <button class="btn btn-yellow btn-full" onclick="doAdminLogin()">Sign in as Admin</button>
+  </div>
+
+  <!-- Member / link entry -->
+  <div id="login-member-form" style="display:none;">
+    <div class="notice notice-info" style="margin-bottom:14px;">
+      <span>&#128279;</span><span>Your group leader should have sent you a link. Paste it here, or just open it directly in your browser.</span>
+    </div>
+    <div class="form-group">
+      <label for="link-input">Paste your order link</label>
+      <input type="text" id="link-input" placeholder="https://myshirtsantaclara.com/?order=...">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="openMemberLink()">Open Order Form</button>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ══════════════ MAIN APP SHELL ══════════════ -->
+<div id="app-shell" style="display:none;">
+
+<nav class="nav">
+  <div class="nav-brand" onclick="goHome()">
+    <svg width="34" height="34" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="46" r="11" fill="#F5C842"/><circle cx="40" cy="46" r="7.5" fill="#1B2A4A"/><circle cx="40" cy="46" r="3.5" fill="#F5C842"/>
+      <line x1="40" y1="46" x2="14" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="40" y2="12" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="66" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="68" y2="54" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="16" y2="62" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <rect x="2" y="12" width="22" height="16" rx="2.5" fill="#E84393" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-22 13 20)"/>
+      <rect x="28" y="2" width="22" height="17" rx="2.5" fill="#F5C842" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(4 39 10)"/>
+      <rect x="56" y="10" width="22" height="17" rx="2.5" fill="#5BB8F5" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(22 67 18)"/>
+      <rect x="60" y="44" width="18" height="14" rx="2.5" fill="#E8542A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(32 69 51)"/>
+      <rect x="6" y="54" width="18" height="14" rx="2.5" fill="#4CC97A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-28 15 61)"/>
+    </svg>
+    <div>
+      <span class="nav-brand-name">My Shirt Printing</span>
+      <span class="nav-brand-sub" id="nav-role-label">Group Order Portal</span>
+    </div>
+  </div>
+  <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+  <div class="nav-links" id="nav-links">
+    <button class="nav-link active" id="nav-dashboard" onclick="showAdminPage('dashboard')">Dashboard</button>
+    <button class="nav-link" id="nav-orders" onclick="showAdminPage('orders')">Orders</button>
+    <button class="nav-link" id="nav-log" onclick="showAdminPage('log')">Activity Log</button>
+    <button class="nav-link" id="nav-settings" onclick="showAdminPage('settings')">Settings</button>
+    <button class="nav-link" onclick="doLogout()" style="color:rgba(255,255,255,0.4);">Sign out</button>
+  </div>
+</nav>
+
+<!-- ══════ ADMIN DASHBOARD ══════ -->
+<div class="page" id="page-dashboard">
+<div class="container-wide">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;">
+    <div><div class="eyebrow">Overview</div><h1>Dashboard</h1></div>
+    <button class="btn btn-yellow" onclick="openCreateModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Group Order
+    </button>
+  </div>
+
+  <div class="data-info">
+    &#128196; <strong>Data storage:</strong> Orders are saved in your browser's <strong>localStorage</strong> right now — fast and zero setup, but device-specific.
+    To sync across devices, connect a backend: <strong>Supabase</strong>, <strong>Firebase</strong>, or <strong>Airtable</strong> are all great free options.
+    <a href="https://supabase.com" target="_blank">supabase.com</a> &bull; <a href="https://firebase.google.com" target="_blank">firebase.google.com</a>
+  </div>
+
+  <div class="stats-grid" id="stats-grid"></div>
+
+  <div class="section-header"><h2>Open Orders</h2><button class="btn btn-outline btn-sm" onclick="showAdminPage('orders')">View all</button></div>
+  <div id="dashboard-orders"></div>
+</div>
+</div>
+
+<!-- ══════ ORDERS PAGE ══════ -->
+<div class="page" id="page-orders">
+<div class="container-wide">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;">
+    <div><div class="eyebrow">Manage</div><h1>All Orders</h1></div>
+    <button class="btn btn-yellow" onclick="openCreateModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Group Order
+    </button>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
+    <button class="btn btn-primary btn-sm" id="filter-all" onclick="setFilter('all')">All</button>
+    <button class="btn btn-outline btn-sm" id="filter-open" onclick="setFilter('open')">Open</button>
+    <button class="btn btn-outline btn-sm" id="filter-closed" onclick="setFilter('closed')">Closed</button>
+  </div>
+  <div id="all-orders-list"></div>
+  <div class="empty-state" id="empty-state" style="display:none;">
+    <div style="font-size:38px;margin-bottom:10px;">&#128203;</div>
+    <h3 style="margin-bottom:5px;">No orders yet</h3>
+    <p class="muted" style="margin-bottom:14px;">Create your first group order to get started.</p>
+    <button class="btn btn-yellow" onclick="openCreateModal()">Create First Order</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════ ACTIVITY LOG ══════ -->
+<div class="page" id="page-log">
+<div class="container">
+  <div style="margin-bottom:22px;"><div class="eyebrow">History</div><h1>Activity Log</h1></div>
+  <div class="card">
+    <div id="activity-log-list"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════ SETTINGS ══════ -->
+<div class="page" id="page-settings">
+<div class="container" style="max-width:520px;">
+  <div style="margin-bottom:22px;"><div class="eyebrow">Admin</div><h1>Settings</h1></div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header"><h3>Change Admin Password</h3></div>
+    <div class="card-body">
+      <div class="form-group">
+        <label for="cur-pass">Current password</label>
+        <input type="password" id="cur-pass" placeholder="Current password">
+      </div>
+      <div class="form-group">
+        <label for="new-pass">New password</label>
+        <input type="password" id="new-pass" placeholder="At least 6 characters">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label for="conf-pass">Confirm new password</label>
+        <input type="password" id="conf-pass" placeholder="Repeat new password">
+      </div>
+      <div class="field-error" id="pass-err" style="margin-top:8px;"></div>
+      <button class="btn btn-primary" style="margin-top:14px;" onclick="changePassword()">Update Password</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header"><h3>Leader Accounts</h3></div>
+    <div class="card-body">
+      <p class="muted" style="margin-bottom:12px;">People who registered their own leader accounts to create and manage their own group orders. You can see all their orders from your dashboard.</p>
+      <div id="leader-accounts-list"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Data &amp; Storage</h3></div>
+    <div class="card-body">
+      <p class="muted" style="margin-bottom:12px;">All data is stored in <strong>localStorage</strong> on this device. Export a backup anytime.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" onclick="exportAllData()">&#8595; Export all data (JSON)</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAllData()">&#128465; Clear all data</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- end app-shell -->
+
+<!-- ══════ MEMBER ORDER PAGE (no login needed) ══════ -->
+<div id="page-order" class="page" style="background:var(--bg);min-height:100vh;">
+  <!-- simple nav for member -->
+  <div style="background:var(--navy);padding:0 20px;height:52px;display:flex;align-items:center;gap:10px;">
+    <svg width="28" height="28" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="46" r="11" fill="#F5C842"/><circle cx="40" cy="46" r="7.5" fill="#1B2A4A"/><circle cx="40" cy="46" r="3.5" fill="#F5C842"/>
+      <line x1="40" y1="46" x2="14" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="40" y2="12" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="66" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="68" y2="54" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="46" x2="16" y2="62" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+      <rect x="2" y="12" width="22" height="16" rx="2.5" fill="#E84393" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-22 13 20)"/>
+      <rect x="28" y="2" width="22" height="17" rx="2.5" fill="#F5C842" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(4 39 10)"/>
+      <rect x="56" y="10" width="22" height="17" rx="2.5" fill="#5BB8F5" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(22 67 18)"/>
+      <rect x="60" y="44" width="18" height="14" rx="2.5" fill="#E8542A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(32 69 51)"/>
+      <rect x="6" y="54" width="18" height="14" rx="2.5" fill="#4CC97A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-28 15 61)"/>
+    </svg>
+    <div>
+      <div style="color:#fff;font-size:13px;font-weight:700;line-height:1.2;">My Shirt Printing</div>
+      <div style="color:rgba(255,255,255,0.5);font-size:10px;">Group Order Portal</div>
+    </div>
+  </div>
+
+  <div class="container" style="max-width:660px;">
+    <div class="order-hero">
+      <div class="order-hero-tag">Group Order</div>
+      <h2 id="form-order-name">Order</h2>
+      <div class="order-hero-meta">
+        <span>&#128197; Deadline: <strong id="form-order-deadline" style="color:#fff;">--</strong></span>
+        <span>&#128085; <span id="form-response-count">0</span> responses so far</span>
+      </div>
+    </div>
+
+    <div class="notice notice-warn" id="order-closed-notice" style="display:none;margin-bottom:16px;">
+      <span>&#9888;&#65039;</span><span>This order is <strong>closed</strong> and no longer accepting responses.</span>
+    </div>
+
+    <div class="order-form-content" id="order-form-content">
+      <div class="card"><div class="card-body">
+        <h3 style="margin-bottom:16px;">Enter your order</h3>
+
+        <div class="form-group">
+          <label for="member-name">Your full name *</label>
+          <input type="text" id="member-name" placeholder="e.g. Sarah Johnson" autocomplete="name">
+          <div class="field-error" id="err-name">Please enter your name.</div>
+        </div>
+
+        <!-- Cart display -->
+        <div id="cart-section" style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <label style="margin-bottom:0;">Your shirts</label>
+            <span id="cart-count-badge" style="font-size:11px;color:var(--muted);"></span>
+          </div>
+          <div class="cart-items" id="cart-items-list"></div>
+          <div class="cart-total-row" id="cart-total-row" style="display:none;">
+            <div class="cart-total-label">Total shirts in order</div>
+            <div class="cart-total-value" id="cart-total-num">0</div>
+          </div>
+        </div>
+
+        <!-- Add shirt button -->
+        <button class="add-shirt-btn" id="add-shirt-btn" onclick="openAddShirtPanel()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add a shirt
+        </button>
+
+        <!-- Add shirt panel -->
+        <div class="add-shirt-panel" id="add-shirt-panel">
+          <h3 style="margin-bottom:14px;font-size:14px;">Configure shirt</h3>
+
+          <!-- Shirt option -->
+          <div class="panel-section" id="panel-shirt-opts" style="display:none;">
+            <label>Choose style *</label>
+            <div class="shirt-options-grid" id="panel-options-grid"></div>
+            <div class="field-error" id="perr-shirt">Please select a shirt option.</div>
+          </div>
+
+          <!-- Color -->
+          <div class="panel-section" id="panel-color-sec" style="display:none;">
+            <label>Shirt color *</label>
+            <div id="panel-color-swatches" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+            <div class="field-error" id="perr-color">Please select a color.</div>
+          </div>
+
+          <!-- Decoration -->
+          <div class="panel-section" id="panel-deco-sec" style="display:none;">
+            <label>Included decoration</label>
+            <p class="muted" style="font-size:12px;margin-bottom:8px;margin-top:-2px;">This comes with the shirt you selected.</p>
+            <div id="panel-deco-tags"></div>
+          </div>
+
+          <!-- Uniform personalization (name/number) -->
+          <div class="panel-section" id="panel-uniform-sec" style="display:none;">
+            <label><span class="uni-badge">&#127944; Team Uniform</span></label>
+            <p class="muted" style="font-size:12px;margin-bottom:10px;margin-top:6px;">Add the name &amp; number to print on this uniform.</p>
+            <div class="jersey-preview">
+              <div class="jersey-svg-wrap" id="jersey-svg"></div>
+              <div class="jersey-fields" id="jersey-fields"></div>
+            </div>
+            <div class="field-error" id="perr-uniform">Please fill in the required personalization fields.</div>
+          </div>
+
+          <!-- Size -->
+          <div class="panel-section">
+            <label>Size *</label>
+            <div class="size-cat-label"><span class="size-cat-dot dot-baby"></span><span style="color:var(--baby-tx);">Baby</span></div>
+            <div class="size-grid" id="panel-sizes-baby">
+              <button class="size-btn baby" data-size="0-3M" data-cat="baby" onclick="panelSelectSize(this)">0&#8211;3M</button>
+              <button class="size-btn baby" data-size="3-6M" data-cat="baby" onclick="panelSelectSize(this)">3&#8211;6M</button>
+              <button class="size-btn baby" data-size="6-12M" data-cat="baby" onclick="panelSelectSize(this)">6&#8211;12M</button>
+              <button class="size-btn baby" data-size="12-18M" data-cat="baby" onclick="panelSelectSize(this)">12&#8211;18M</button>
+              <button class="size-btn baby" data-size="18-24M" data-cat="baby" onclick="panelSelectSize(this)">18&#8211;24M</button>
+            </div>
+            <div class="size-cat-label"><span class="size-cat-dot dot-toddler"></span><span style="color:var(--todd-tx);">Toddler</span></div>
+            <div class="size-grid">
+              <button class="size-btn toddler" data-size="2T" data-cat="toddler" onclick="panelSelectSize(this)">2T</button>
+              <button class="size-btn toddler" data-size="3T" data-cat="toddler" onclick="panelSelectSize(this)">3T</button>
+              <button class="size-btn toddler" data-size="4T" data-cat="toddler" onclick="panelSelectSize(this)">4T</button>
+              <button class="size-btn toddler" data-size="5T" data-cat="toddler" onclick="panelSelectSize(this)">5T</button>
+            </div>
+            <div class="size-cat-label"><span class="size-cat-dot dot-youth"></span><span style="color:var(--youth-tx);">Youth</span></div>
+            <div class="size-grid">
+              <button class="size-btn youth" data-size="YXS" data-cat="youth" onclick="panelSelectSize(this)">YXS</button>
+              <button class="size-btn youth" data-size="YS" data-cat="youth" onclick="panelSelectSize(this)">YS</button>
+              <button class="size-btn youth" data-size="YM" data-cat="youth" onclick="panelSelectSize(this)">YM</button>
+              <button class="size-btn youth" data-size="YL" data-cat="youth" onclick="panelSelectSize(this)">YL</button>
+              <button class="size-btn youth" data-size="YXL" data-cat="youth" onclick="panelSelectSize(this)">YXL</button>
+            </div>
+            <div class="size-cat-label"><span class="size-cat-dot dot-adult"></span><span style="color:var(--navy);">Adult</span></div>
+            <div class="size-grid">
+              <button class="size-btn" data-size="XS" data-cat="adult" onclick="panelSelectSize(this)">XS</button>
+              <button class="size-btn" data-size="S" data-cat="adult" onclick="panelSelectSize(this)">S</button>
+              <button class="size-btn" data-size="M" data-cat="adult" onclick="panelSelectSize(this)">M</button>
+              <button class="size-btn" data-size="L" data-cat="adult" onclick="panelSelectSize(this)">L</button>
+              <button class="size-btn" data-size="XL" data-cat="adult" onclick="panelSelectSize(this)">XL</button>
+              <button class="size-btn" data-size="2XL" data-cat="adult" onclick="panelSelectSize(this)">2XL</button>
+              <button class="size-btn" data-size="3XL" data-cat="adult" onclick="panelSelectSize(this)">3XL</button>
+            </div>
+            <div class="field-error" id="perr-size">Please select a size.</div>
+          </div>
+
+          <!-- Qty -->
+          <div class="panel-section">
+            <label>Quantity</label>
+            <div class="cart-item-qty">
+              <button class="cq-btn" id="panel-qty-minus" onclick="panelChangeQty(-1)" disabled>&#8722;</button>
+              <span class="cq-num" id="panel-qty-num">1</span>
+              <button class="cq-btn" id="panel-qty-plus" onclick="panelChangeQty(1)">+</button>
+              <span class="muted" style="font-size:12px;">of this size/style</span>
+            </div>
+          </div>
+
+          <!-- Notes for this item -->
+          <div class="panel-section">
+            <label for="panel-item-notes">Notes for this shirt <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+            <input type="text" id="panel-item-notes" placeholder="e.g. Name on back: Johnson #12">
+          </div>
+
+          <div class="panel-section" id="panel-price-box" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 13px;">
+            <div class="price-line"><span>Base shirt</span><span id="pp-base">$0.00</span></div>
+            <div class="price-line" id="pp-deco-line" style="display:none;"><span id="pp-deco-label">Decoration</span><span id="pp-deco">$0.00</span></div>
+            <div class="price-line"><span>Per shirt</span><span id="pp-unit">$0.00</span></div>
+            <div class="price-line total"><span>This item (<span id="pp-qty">1</span>x)</span><span id="pp-total">$0.00</span></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn btn-yellow" onclick="addToCart()">Add to order</button>
+            <button class="btn btn-outline" onclick="closeAddShirtPanel()">Cancel</button>
+          </div>
+        </div>
+
+        <div class="field-error" id="err-cart" style="margin-top:6px;">Please add at least one shirt to your order.</div>
+
+        <!-- Order notes -->
+        <div class="form-group" style="margin-top:16px;">
+          <label for="member-notes">General notes <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+          <textarea id="member-notes" placeholder="Any general notes for the whole order&#8230;"></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="submitOrder()" style="border-radius:10px;padding:13px;">Submit My Order &#8594;</button>
+        <p class="muted" style="text-align:center;margin-top:10px;font-size:12px;">Questions? <a href="tel:6692319059" style="color:var(--navy);font-weight:600;">669-231-9059</a></p>
+      </div></div>
+    </div>
+
+    <!-- Success -->
+    <div class="success-screen" id="success-screen">
+      <div class="success-icon">&#10003;</div>
+      <h2 style="margin-bottom:8px;">Order submitted!</h2>
+      <p class="muted" style="margin-bottom:20px;">Thanks! My Shirt Printing will be in touch.</p>
+      <div id="success-cart-summary" style="max-width:380px;margin:0 auto 20px;text-align:left;"></div>
+      <a href="https://myshirtsantaclara.com" class="btn btn-outline">Visit myshirtsantaclara.com</a>
+    </div>
+  </div>
+
+  <footer>
+    <strong style="color:rgba(255,255,255,0.8);">My Shirt &amp; Signs</strong> &nbsp;&#183;&nbsp;
+    3331 Edward Avenue, Santa Clara, CA 95054 &nbsp;&#183;&nbsp;
+    <a href="tel:6692319059">669-231-9059</a> &nbsp;&#183;&nbsp; Mon&#8211;Fri 9am&#8211;5pm
+  </footer>
+</div>
+
+<!-- ══════ CREATE ORDER MODAL ══════ -->
+<div class="modal-overlay" id="create-modal" onclick="if(event.target===this)closeCreateModal()">
+<div class="modal">
+  <button class="modal-close" onclick="closeCreateModal()">&#215;</button>
+  <h2>New Group Order</h2>
+  <div class="form-group"><label for="new-order-name">Order name *</label><input type="text" id="new-order-name" placeholder="e.g. Little League Spring 2025"><div class="field-error" id="err-new-name">Required.</div></div>
+  <div class="form-row">
+    <div class="form-group"><label for="new-order-deadline">Response deadline *</label><input type="date" id="new-order-deadline"><div class="field-error" id="err-new-deadline">Required.</div></div>
+  </div>
+  <div class="form-group">
+    <label for="new-order-purge">Auto-delete data on <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional &mdash; Supabase removes all order data on this date)</span></label>
+    <input type="date" id="new-order-purge">
+    <div class="deadline-info">&#128465;&#65039; Leave blank to keep data indefinitely. With Supabase connected, a daily job purges orders past this date.</div>
+  </div>
+  <div class="form-group"><label for="new-order-desc">Instructions for group <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label><textarea id="new-order-desc" placeholder="Any info your group needs&#8230;" style="min-height:52px;"></textarea></div>
+  <hr class="divider">
+  <div class="section-header" style="margin-bottom:8px;">
+    <div><div class="eyebrow" style="margin-bottom:2px;">Shirt Options</div><p class="muted" style="font-size:12px;">Add styles your group chooses from.</p></div>
+    <button class="btn btn-outline btn-sm" onclick="addShirtOption()">+ Add Option</button>
+  </div>
+  <div class="shirt-options-list" id="shirt-options-builder"></div>
+  <div class="field-error" id="err-shirt-options">Add at least one shirt option.</div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+    <button class="btn btn-outline" onclick="closeCreateModal()">Cancel</button>
+    <button class="btn btn-yellow" onclick="createOrder()">Create Order</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════ SUBMISSIONS MODAL ══════ -->
+<div class="modal-overlay" id="detail-modal" onclick="if(event.target===this)closeDetailModal()">
+<div class="modal" style="max-width:860px;">
+  <button class="modal-close" onclick="closeDetailModal()">&#215;</button>
+  <div id="detail-modal-content"></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════ CONSTANTS ════════════ */
+const STORE_KEY='myshirt_v5';
+const PASS_KEY='myshirt_pass';
+const LOG_KEY='myshirt_log';
+const ACCOUNTS_KEY='myshirt_accounts';
+const SESSION_KEY='myshirt_session';
+const DEFAULT_PASS='myshirt2025';
+
+const SHIRT_STYLES=[
+  {id:'tee',label:'T-Shirt',icon:'&#128085;'},
+  {id:'polo',label:'Polo Shirt',icon:'&#127949;'},
+  {id:'long',label:'Long Sleeve',icon:'&#128084;'},
+  {id:'hoodie',label:'Hoodie',icon:'&#129405;'},
+  {id:'tank',label:'Tank Top',icon:'&#129713;'},
+  {id:'zip',label:'Zip-Up Hoodie',icon:'&#129405;'},
+  {id:'vest',label:'Vest / Jacket',icon:'&#129470;'},
+  {id:'custom',label:'Custom / Other',icon:'&#9999;&#65039;'},
+];
+const UNIFORM_PRESETS=[
+  {id:'name_back',label:'Name back',places:['name_back']},
+  {id:'num_back',label:'Number back',places:['num_back']},
+  {id:'name_num_back',label:'Name + Number back',places:['name_back','num_back']},
+  {id:'num_front_back',label:'Number front + back',places:['num_front','num_back']},
+  {id:'full',label:'Name back + Number front & back',places:['name_back','num_front','num_back']},
+];
+const PLACEMENTS=[
+  {id:'name_front',label:'Name \u2014 front',kind:'name'},
+  {id:'name_back',label:'Name \u2014 back',kind:'name'},
+  {id:'num_front',label:'Number \u2014 front',kind:'num'},
+  {id:'num_back',label:'Number \u2014 back',kind:'num'},
+];
+const DECO_OPTIONS=[
+  'Screen print \u2014 front only','Screen print \u2014 back only','Screen print \u2014 front & back',
+  'Embroidery \u2014 left chest','Embroidery \u2014 right chest','Embroidery \u2014 center chest',
+  'Embroidery \u2014 full back','Embroidery \u2014 sleeve',
+  'Heat transfer \u2014 front','Heat transfer \u2014 back',
+];
+
+/* ════════════ DATA LAYER ════════════ */
+function loadOrders(){
+  try{
+    const stored=JSON.parse(localStorage.getItem(STORE_KEY))||[];
+    const orders=stored.map(order=>{
+      if(!order||!Object.prototype.hasOwnProperty.call(order,'leaderCode'))return order;
+      const {leaderCode,...cleanOrder}=order;
+      return cleanOrder;
+    });
+    if(orders.some((order,idx)=>order!==stored[idx]))saveOrders(orders);
+    return orders;
+  }catch(e){return[];}
+}
+function saveOrders(o){localStorage.setItem(STORE_KEY,JSON.stringify(o));}
+function getOrder(id){return loadOrders().find(o=>o.id===id);}
+function getPass(){return localStorage.getItem(PASS_KEY)||DEFAULT_PASS;}
+function setPass(p){localStorage.setItem(PASS_KEY,p);}
+/* Leader accounts: [{id,name,email,pass,created}] */
+function getAccounts(){try{return JSON.parse(localStorage.getItem(ACCOUNTS_KEY))||[];}catch(e){return[];}}
+function saveAccounts(a){localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(a));}
+function getAccountByEmail(email){return getAccounts().find(a=>a.email.toLowerCase()===String(email||'').toLowerCase());}
+function getAccountById(id){return getAccounts().find(a=>a.id===id);}
+/* lightweight hash so passwords aren't stored as raw plaintext (NOT real security) */
+function hashPass(p){let h=5381;for(let i=0;i<p.length;i++){h=((h<<5)+h)+p.charCodeAt(i);h=h&0xffffffff;}return 'h'+(h>>>0).toString(16);}
+function getLog(){try{return JSON.parse(localStorage.getItem(LOG_KEY))||[];}catch(e){return[];}}
+function addLog(msg,type){
+  const log=getLog();
+  log.unshift({msg,type:type||'info',time:Date.now()});
+  if(log.length>200)log.length=200;
+  localStorage.setItem(LOG_KEY,JSON.stringify(log));
+}
+
+function cleanupLegacyCodeAccess(){
+  localStorage.removeItem('myshirt_leaders');
+}
+
+/* seed demo */
+function seedDemo(){
+  if(loadOrders().length>0)return;
+  saveOrders([{
+    id:'demo-1',name:'Little League Spring 2025',deadline:'2025-06-30',
+    desc:'One shirt per player. Submit by June 30.',ownerName:'Shop Admin',ownerId:null,
+    status:'open',created:Date.now()-864e5*8,
+    shirtOptions:[
+      {id:'so-1',styleId:'tee',styleName:'T-Shirt',desc:'Soft cotton tee, blank',basePrice:12.00,
+       colors:[{hex:'#FFFFFF',name:'White'},{hex:'#1B2A4A',name:'Navy'},{hex:'#E84393',name:'Pink'}],
+       decos:[{name:'Screen print \u2014 front & back',price:8.00}],images:[]},
+      {id:'so-2',styleId:'polo',styleName:'Polo Shirt',desc:'Pique polo, blank',basePrice:18.00,
+       colors:[{hex:'#1B2A4A',name:'Navy'},{hex:'#000000',name:'Black'}],
+       decos:[{name:'Embroidery \u2014 left chest',price:7.00}],images:[]},
+    ],
+    responses:[
+      {id:'r1',name:'Sarah Johnson',items:[
+        {shirtOptionId:'so-1',shirtLabel:'T-Shirt',color:'White',deco:'Screen print \u2014 front & back',size:'M',cat:'adult',qty:1,notes:'Name on back: Johnson #12',unitPrice:20.00},
+        {shirtOptionId:'so-1',shirtLabel:'T-Shirt',color:'Pink',deco:'Screen print \u2014 front & back',size:'YM',cat:'youth',qty:1,notes:'For daughter',unitPrice:20.00},
+      ],notes:'',date:Date.now()-864e5*2},
+      {id:'r2',name:'Mike Ramirez',items:[
+        {shirtOptionId:'so-2',shirtLabel:'Polo Shirt',color:'Navy',deco:'Embroidery \u2014 left chest',size:'XL',cat:'adult',qty:1,notes:'',unitPrice:25.00},
+        {shirtOptionId:'so-1',shirtLabel:'T-Shirt',color:'White',deco:'Screen print \u2014 front & back',size:'3T',cat:'toddler',qty:1,notes:'For son',unitPrice:20.00},
+      ],notes:'',date:Date.now()-864e5*3},
+      {id:'r3',name:'Tina Park',items:[
+        {shirtOptionId:'so-1',shirtLabel:'T-Shirt',color:'Navy',deco:'Screen print \u2014 front & back',size:'6-12M',cat:'baby',qty:1,notes:'New baby!',unitPrice:20.00},
+        {shirtOptionId:'so-1',shirtLabel:'T-Shirt',color:'White',deco:'Screen print \u2014 front & back',size:'L',cat:'adult',qty:1,notes:'',unitPrice:20.00},
+      ],notes:'',date:Date.now()-864e5*3},
+    ]
+  }]);
+  addLog('Demo order created: Little League Spring 2025','new');
+}
+
+/* ════════════ AUTH ════════════ */
+let currentRole=null;        // 'admin' or 'leader'
+let currentLeaderOrderId=null; // used when a member-ish leader-code login targets ONE order
+let currentLeaderId=null;     // logged-in leader account id (owns multiple orders)
+
+function switchLoginTab(tab){
+  ['leader','admin','member'].forEach(t=>{
+    document.getElementById('ltab-'+t).classList.toggle('active',t===tab);
+  });
+  document.getElementById('login-leader-form').style.display=tab==='leader'?'block':'none';
+  document.getElementById('login-admin-form').style.display=tab==='admin'?'block':'none';
+  document.getElementById('login-member-form').style.display=tab==='member'?'block':'none';
+  document.getElementById('login-err')?.classList.remove('show');
+  document.getElementById('leader-login-err')?.classList.remove('show');
+}
+
+function showLeaderView(view){
+  document.getElementById('leader-signin-view').style.display=view==='signin'?'block':'none';
+  document.getElementById('leader-signup-view').style.display=view==='signup'?'block':'none';
+  document.getElementById('leader-login-err').classList.remove('show');
+}
+
+function leaderErr(msg){
+  const e=document.getElementById('leader-login-err');
+  e.textContent=msg;e.classList.add('show');
+}
+
+function doLeaderSignup(){
+  const name=document.getElementById('signup-name').value.trim();
+  const email=document.getElementById('signup-email').value.trim();
+  const pass=document.getElementById('signup-pass').value;
+  const pass2=document.getElementById('signup-pass2').value;
+  if(!name){leaderErr('Please enter your name.');return;}
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){leaderErr('Please enter a valid email.');return;}
+  if(getAccountByEmail(email)){leaderErr('An account with that email already exists. Try signing in.');return;}
+  if(pass.length<6){leaderErr('Password must be at least 6 characters.');return;}
+  if(pass!==pass2){leaderErr('Passwords do not match.');return;}
+  const acct={id:'leader-'+Date.now(),name,email,pass:hashPass(pass),created:Date.now()};
+  const accts=getAccounts();accts.push(acct);saveAccounts(accts);
+  addLog('New leader account: '+name+' ('+email+')','new');
+  enterAsLeader(acct);
+}
+
+function doLeaderLogin(){
+  const email=document.getElementById('leader-email').value.trim();
+  const pass=document.getElementById('leader-pass').value;
+  const acct=getAccountByEmail(email);
+  if(!acct||acct.pass!==hashPass(pass)){leaderErr('Incorrect email or password.');return;}
+  enterAsLeader(acct);
+}
+
+function enterAsLeader(acct){
+  currentRole='leader';
+  currentLeaderId=acct.id;
+  currentLeaderOrderId=null;
+  // clear fields
+  ['leader-email','leader-pass','signup-name','signup-email','signup-pass','signup-pass2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('leader-login-err').classList.remove('show');
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById('app-shell').style.display='block';
+  document.getElementById('nav-role-label').textContent=acct.name+' (Leader)';
+  // Leaders can see Dashboard + their Orders, but not the global Log or admin Settings
+  document.getElementById('nav-orders').style.display='';
+  document.getElementById('nav-log').style.display='none';
+  document.getElementById('nav-settings').style.display='none';
+  showAdminPage('dashboard');
+  addLog('Leader signed in: '+acct.name);
+}
+
+function doAdminLogin(){
+  const pass=document.getElementById('login-pass').value;
+  if(pass===getPass()){
+    currentRole='admin';
+    currentLeaderId=null;
+    currentLeaderOrderId=null;
+    document.getElementById('login-pass').value='';
+    document.getElementById('login-err').classList.remove('show');
+    document.getElementById('page-login').classList.remove('active');
+    document.getElementById('app-shell').style.display='block';
+    document.getElementById('nav-role-label').textContent='Shop Admin';
+    document.getElementById('nav-orders').style.display='';
+    document.getElementById('nav-log').style.display='';
+    document.getElementById('nav-settings').style.display='';
+    showAdminPage('dashboard');
+    addLog('Admin logged in');
+    return;
+  }
+  document.getElementById('login-err').classList.add('show');
+}
+
+/* Which orders can the current session see? */
+function visibleOrders(){
+  const all=loadOrders();
+  if(currentRole==='admin')return all;
+  if(currentRole==='leader'){
+    if(currentLeaderId)return all.filter(o=>o.ownerId===currentLeaderId);
+    if(currentLeaderOrderId)return all.filter(o=>o.id===currentLeaderOrderId);
+  }
+  return [];
+}
+/* Can the current session manage (edit/close/delete/export) this order? */
+function canManage(order){
+  if(currentRole==='admin')return true;
+  if(currentRole==='leader'&&currentLeaderId&&order.ownerId===currentLeaderId)return true;
+  return false;
+}
+
+function openMemberLink(){
+  const val=document.getElementById('link-input').value.trim();
+  if(!val){showToast('Paste a link first');return;}
+  try{
+    const url=new URL(val);
+    const oid=url.searchParams.get('order');
+    if(oid){loadOrderForm(oid);return;}
+  }catch(e){}
+  // also accept a bare order id
+  if(/^order-|^demo-/.test(val)){loadOrderForm(val);return;}
+  showToast('Invalid link. Check the URL and try again.');
+}
+
+function doLogout(){
+  currentRole=null; currentLeaderOrderId=null; currentLeaderId=null;
+  document.getElementById('app-shell').style.display='none';
+  document.getElementById('page-order').classList.remove('active');
+  document.getElementById('page-login').classList.add('active');
+  const lp=document.getElementById('login-pass');if(lp)lp.value='';
+  document.getElementById('login-err')?.classList.remove('show');
+  switchLoginTab('leader');
+  showLeaderView('signin');
+  addLog('Logged out');
+}
+
+function goHome(){if(currentRole)showAdminPage('dashboard');}
+
+/* ════════════ ADMIN PAGES ════════════ */
+let currentFilter='all';
+let currentAdminPage='dashboard';
+
+function showAdminPage(name){
+  currentAdminPage=name;
+  ['dashboard','orders','log','settings'].forEach(p=>{
+    const el=document.getElementById('page-'+p);
+    if(el)el.classList.toggle('active',p===name);
+    const nav=document.getElementById('nav-'+p);
+    if(nav)nav.classList.toggle('active',p===name);
+  });
+  if(name==='dashboard')renderDashboard(currentLeaderOrderId||null);
+  if(name==='orders')renderOrdersPage();
+  if(name==='log')renderLog();
+  if(name==='settings')renderSettings();
+}
+
+function renderDashboard(filterOrderId){
+  const orders=visibleOrders();
+  const shown=filterOrderId?orders.filter(o=>o.id===filterOrderId):orders;
+  const openOrders=shown.filter(o=>o.status==='open');
+  const totalResponses=shown.reduce((s,o)=>s+o.responses.length,0);
+  const totalShirts=shown.reduce((s,o)=>s+o.responses.reduce((a,r)=>a+r.items.reduce((x,i)=>x+i.qty,0),0),0);
+  const recentActivity=shown.reduce((s,o)=>s+(o.responses.filter(r=>Date.now()-r.date<864e5).length),0);
+
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Open Orders</div><div class="stat-value">${openOrders.length}</div><div class="stat-sub">Collecting now</div></div>
+    <div class="stat-card"><div class="stat-label">Responses</div><div class="stat-value">${totalResponses}</div><div class="stat-sub">Total submissions</div></div>
+    <div class="stat-card"><div class="stat-label">Total Shirts</div><div class="stat-value">${totalShirts}</div><div class="stat-sub">Across ${currentRole==='admin'?'all orders':'your orders'}</div></div>
+    <div class="stat-card"><div class="stat-label">Last 24h</div><div class="stat-value">${recentActivity}</div><div class="stat-sub">New responses</div></div>`;
+
+  const container=document.getElementById('dashboard-orders');
+  const toShow=(filterOrderId?shown:openOrders).slice(0,5);
+  if(!toShow.length){container.innerHTML='<p class="muted" style="padding:20px 0;">No open orders. <button class="btn btn-outline btn-sm" onclick="openCreateModal()" style="margin-left:8px;">Create one</button></p>';return;}
+  container.innerHTML=toShow.map(o=>renderOrderCard(o,true)).join('');
+}
+
+function renderOrdersPage(){
+  const orders=visibleOrders();
+  const filtered=orders.filter(o=>currentFilter==='all'||o.status===currentFilter);
+  ['all','open','closed'].forEach(x=>document.getElementById('filter-'+x).className=x===currentFilter?'btn btn-primary btn-sm':'btn btn-outline btn-sm');
+  const el=document.getElementById('all-orders-list');
+  const empty=document.getElementById('empty-state');
+  if(!filtered.length){el.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  el.innerHTML=filtered.map(o=>renderOrderCard(o,false)).join('');
+}
+
+function setFilter(f){currentFilter=f;renderOrdersPage();}
+
+function renderOrderCard(order,compact){
+  const totalShirts=order.responses.reduce((s,r)=>s+r.items.reduce((a,i)=>a+i.qty,0),0);
+  const cardRevenue=order.responses.reduce((s,r)=>s+r.items.reduce((a,i)=>a+(Number(i.unitPrice)||0)*i.qty,0),0);
+  const dl=order.deadline?new Date(order.deadline+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
+  const isOpen=order.status==='open';
+  const shareUrl=location.href.split('?')[0]+'?order='+order.id;
+
+  // size tally
+  const cats={baby:[],toddler:[],youth:[],adult:[]};
+  const tally={};
+  order.responses.forEach(r=>r.items.forEach(i=>{
+    const k=i.size+'|'+i.cat;
+    if(!tally[k])tally[k]={size:i.size,cat:i.cat,count:0};
+    tally[k].count+=i.qty;
+  }));
+  Object.values(tally).forEach(t=>cats[t.cat]&&cats[t.cat].push(t));
+  const catHTML=(lbl,items,cls)=>items.length?`<div class="sb-row"><div class="sb-label">${lbl}</div><div class="sb-chips">${items.map(t=>`<span class="chip ${cls}">${esc(t.size)} x${t.count}</span>`).join('')}</div></div>`:''
+  const breakdown=[catHTML('Baby',cats.baby,'baby'),catHTML('Toddler',cats.toddler,'toddler'),catHTML('Youth',cats.youth,'youth'),catHTML('Adult',cats.adult,'')].filter(Boolean).join('');
+
+  const optsSummary=(order.shirtOptions||[]).map(so=>{
+    const si=SHIRT_STYLES.find(s=>s.id===so.styleId);
+    const imgTag=so.images&&so.images.length?`<img src="${so.images[0]}" style="width:34px;height:34px;border-radius:5px;object-fit:cover;border:1px solid var(--border);" alt="">`:`<span style="font-size:22px;">${si?si.icon:'&#128085;'}</span>`;
+    const swatches=(so.colors||[]).map(c=>`<span class="color-swatch" style="background:${c.hex};" title="${esc(c.name)}"></span>`).join('');
+    const priceInfo=(so.basePrice>0)?`<span style="font-size:10px;font-weight:800;color:var(--success);margin-left:6px;">${fmtPrice(so.basePrice)} base${(so.decos||[]).some(d=>d.price>0)?' + deco':''}</span>`:'';
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;padding:5px 8px;background:var(--bg);border-radius:6px;border:.5px solid var(--border);">
+      ${imgTag}
+      <div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:700;color:var(--navy);">${esc(so.styleName)}${priceInfo}</div>
+      <div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(so.desc||'')}</div>
+      <div style="display:flex;gap:3px;margin-top:2px;">${swatches}</div></div></div>`;
+  }).join('');
+
+  const ownerBadge=(currentRole==='admin'&&order.ownerName)?`<span style="background:var(--bg);color:var(--muted);border:.5px solid var(--border);border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;">&#128100; ${esc(order.ownerName)}</span>`:'';
+
+  return `<div class="order-card" style="margin-bottom:14px;">
+    <div class="order-card-header">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px;">
+          <h3 style="font-size:14px;">${esc(order.name)}</h3>
+          <span class="badge ${isOpen?'badge-open':'badge-closed'}">${isOpen?'Open':'Closed'}</span>
+          ${ownerBadge}
+        </div>
+        <div class="muted">Deadline: ${dl} &middot; ${order.responses.length} response${order.responses.length!==1?'s':''} &middot; ${totalShirts} shirt${totalShirts!==1?'s':''}</div>${order.purgeDate?`<div class="deadline-info">&#128465;&#65039; Auto-deletes ${new Date(order.purgeDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>`:''}
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
+        <button class="btn btn-outline btn-sm" onclick="viewSubmissions('${order.id}')">Submissions</button>
+        ${canManage(order)?`<button class="btn btn-outline btn-sm" onclick="toggleStatus('${order.id}')">${isOpen?'Close':'Reopen'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteOrder('${order.id}')">Delete</button>`:''}
+      </div>
+    </div>
+    <div class="order-card-body">
+      ${optsSummary?`<div style="margin-bottom:10px;">${optsSummary}</div>`:''}
+      ${totalShirts>0?`<div class="progress-bar" style="margin-bottom:8px;"><div class="progress-fill" style="width:${Math.min(100,order.responses.length*8)}%"></div></div><div class="size-breakdown">${breakdown}</div>`:
+      '<p class="muted" style="font-style:italic;font-size:12px;">No responses yet.</p>'}
+      ${isOpen?`<div class="share-box" style="margin-top:12px;">
+        <div class="eyebrow" style="margin-bottom:2px;font-size:9px;">Share link</div>
+        <p class="muted" style="font-size:11px;">Members click this to submit their order.</p>
+        <div class="share-url-row">
+          <input class="share-url-input" type="text" value="${shareUrl}" readonly id="share-${order.id}" onclick="this.select()">
+          <button class="copy-btn" onclick="copyLink('${order.id}')">Copy</button>
+        </div>
+        <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="previewForm('${order.id}')">Preview form &rarr;</button>
+          ${canManage(order)?`<button class="btn btn-outline btn-sm" onclick="exportCSV('${order.id}')">&#8595; Export CSV</button>`:''}
+        </div>
+      </div>`:''}
+    </div>
+    ${totalShirts>0?`<div class="total-bar"><div class="total-bar-label">${cardRevenue>0?'Revenue / Shirts':'Total shirts'}</div><div style="display:flex;gap:12px;align-items:center;">${cardRevenue>0?`<div class="total-bar-value">${fmtPrice(cardRevenue)}</div><div style="color:rgba(255,255,255,0.3);">|</div>`:''}<div class="total-bar-value">${totalShirts} shirt${totalShirts!==1?'s':''}</div></div></div>`:''}
+  </div>`;
+}
+
+function renderLog(){
+  const logs=getLog();
+  const el=document.getElementById('activity-log-list');
+  if(!logs.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);">No activity yet.</div>';return;}
+  el.innerHTML=logs.slice(0,100).map(l=>`
+    <div class="log-item">
+      <div class="log-dot ${l.type==='new'?'new':''}"></div>
+      <div style="flex:1;">${esc(l.msg)}</div>
+      <div class="log-time">${new Date(l.time).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>
+    </div>`).join('');
+}
+
+function renderSettings(){
+  // Leader accounts list
+  const accts=getAccounts();
+  const allOrders=loadOrders();
+  const accEl=document.getElementById('leader-accounts-list');
+  if(accEl){
+    accEl.innerHTML=accts.length?accts.map(a=>{
+      const cnt=allOrders.filter(o=>o.ownerId===a.id).length;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--bg);border-radius:7px;margin-bottom:6px;font-size:13px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;color:var(--navy);">${esc(a.name)}</div>
+          <div class="muted" style="font-size:12px;">${esc(a.email)} &middot; ${cnt} order${cnt!==1?'s':''}</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="removeLeaderAccount('${a.id}')">Remove</button>
+      </div>`;
+    }).join(''):'<p class="muted" style="font-size:13px;">No leader accounts have registered yet.</p>';
+  }
+}
+
+function removeLeaderAccount(id){
+  const a=getAccountById(id);if(!a)return;
+  const cnt=loadOrders().filter(o=>o.ownerId===id).length;
+  if(!confirm('Remove leader account "'+a.name+'"?'+(cnt?' Their '+cnt+' order(s) will remain but become admin-owned.':'')))return;
+  // reassign their orders to admin-owned (keep the data)
+  const orders=loadOrders();
+  orders.forEach(o=>{if(o.ownerId===id){o.ownerId=null;o.ownerName=a.name+' (removed)';}});
+  saveOrders(orders);
+  saveAccounts(getAccounts().filter(x=>x.id!==id));
+  renderSettings();showToast('Leader account removed.');addLog('Leader account removed: '+a.name,'warn');
+}
+function changePassword(){
+  const cur=document.getElementById('cur-pass').value;
+  const nw=document.getElementById('new-pass').value;
+  const cf=document.getElementById('conf-pass').value;
+  const err=document.getElementById('pass-err');
+  if(cur!==getPass()){err.textContent='Current password is incorrect.';err.classList.add('show');return;}
+  if(nw.length<6){err.textContent='New password must be at least 6 characters.';err.classList.add('show');return;}
+  if(nw!==cf){err.textContent='Passwords do not match.';err.classList.add('show');return;}
+  setPass(nw);err.classList.remove('show');
+  ['cur-pass','new-pass','conf-pass'].forEach(id=>document.getElementById(id).value='');
+  showToast('\u2713 Password updated!');addLog('Admin password changed');
+}
+
+function exportAllData(){
+  const data={orders:loadOrders(),log:getLog(),exported:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='myshirt_backup_'+Date.now()+'.json';a.click();
+  URL.revokeObjectURL(url);showToast('Data exported!');addLog('Data exported');
+}
+
+function clearAllData(){
+  if(!confirm('Delete ALL orders and data? This cannot be undone.'))return;
+  localStorage.removeItem(STORE_KEY);localStorage.removeItem(LOG_KEY);
+  renderDashboard(null);showToast('All data cleared.');
+}
+
+/* ════════════ SUBMISSIONS MODAL ════════════ */
+function viewSubmissions(id){
+  const order=getOrder(id);if(!order)return;
+  const totalShirts=order.responses.reduce((s,r)=>s+r.items.reduce((a,i)=>a+i.qty,0),0);
+  const dl=order.deadline?new Date(order.deadline+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
+  const colorHex=(name)=>{for(const so of order.shirtOptions||[]){const c=(so.colors||[]).find(x=>x.name===name);if(c)return c.hex;}return '#ccc';};
+
+  const grandRevenue=order.responses.reduce((s,r)=>s+r.items.reduce((a,i)=>a+(Number(i.unitPrice)||0)*i.qty,0),0);
+  const anyPrice=grandRevenue>0;
+  const rows=order.responses.length?order.responses.map(r=>{
+    const personTotal=r.items.reduce((a,i)=>a+(Number(i.unitPrice)||0)*i.qty,0);
+    const itemRows=r.items.map((item,idx)=>`
+      <tr style="${idx>0?'border-top:.5px solid #f0f0f0':''}">
+        ${idx===0?`<td rowspan="${r.items.length}" style="font-weight:700;vertical-align:top;">${esc(r.name)}${anyPrice?`<br><span style="font-size:11px;font-weight:800;color:var(--success);">${fmtPrice(personTotal)}</span>`:''}</td>`:''}
+        <td style="font-size:12px;white-space:nowrap;">${esc(item.shirtLabel||'')}</td>
+        <td><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:50%;background:${colorHex(item.color)};border:1px solid rgba(0,0,0,0.15);flex-shrink:0;display:inline-block;"></span>${esc(item.color||'')}</span></td>
+        <td style="font-size:11px;color:var(--muted);white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;" title="${esc(item.deco||'')}">${esc(item.deco||'--')}</td>
+        <td><span class="chip ${item.cat}">${esc(item.size)}</span></td>
+        <td style="font-weight:700;">${item.qty}</td>
+        ${anyPrice?`<td style="font-weight:700;color:var(--success);white-space:nowrap;">${fmtPrice((Number(item.unitPrice)||0)*item.qty)}</td>`:''}
+        <td style="font-size:11px;color:var(--muted);">${esc(item.notes||'')}</td>
+        ${idx===0?`<td rowspan="${r.items.length}" style="color:var(--muted);font-size:11px;white-space:nowrap;vertical-align:top;">${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
+        <td rowspan="${r.items.length}" style="vertical-align:top;">${canManage(order)?`<button style="background:none;border:none;color:var(--error);cursor:pointer;font-size:11px;" onclick="deleteResponse('${id}','${r.id}')">Remove</button>`:''}</td>`:''}
+      </tr>`).join('');
+    return itemRows;
+  }).join('')
+  :`<tr><td colspan="${anyPrice?10:9}" style="text-align:center;color:var(--muted);padding:20px;">No responses yet.</td></tr>`;
+
+  document.getElementById('detail-modal-content').innerHTML=`
+    <h2 style="margin-bottom:4px;">${esc(order.name)}</h2>
+    <p class="muted" style="margin-bottom:18px;">Deadline: ${dl} &middot; ${order.responses.length} response${order.responses.length!==1?'s':''} &middot; ${totalShirts} shirt${totalShirts!==1?'s':''} total</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Style</th><th>Color</th><th>Decoration</th><th>Size</th><th>Qty</th>${anyPrice?'<th>Price</th>':''}<th>Item Notes</th><th>Date</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${totalShirts>0?`<div class="total-bar"><div class="total-bar-label">Total shirts</div><div style="display:flex;gap:16px;align-items:center;"><div class="total-bar-value">${totalShirts}</div>${anyPrice?`<div style="color:rgba(255,255,255,0.4);">|</div><div class="total-bar-label">Revenue</div><div class="total-bar-value">${fmtPrice(grandRevenue)}</div>`:''}</div></div>`:''}
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+      ${canManage(order)?`<button class="btn btn-primary" onclick="exportCSV('${id}')">&#8595; Export CSV</button>`:''}
+      <button class="btn btn-outline" onclick="closeDetailModal()">Close</button>
+    </div>`;
+  document.getElementById('detail-modal').classList.add('open');
+}
+function closeDetailModal(){document.getElementById('detail-modal').classList.remove('open');}
+function deleteResponse(orderId,responseId){
+  if(!confirm('Remove this person\'s entire order?'))return;
+  const orders=loadOrders();const o=orders.find(x=>x.id===orderId);
+  if(o){
+    const r=o.responses.find(x=>x.id===responseId);
+    if(r)addLog('Response removed: '+r.name+' from '+o.name,'warn');
+    o.responses=o.responses.filter(r=>r.id!==responseId);
+    saveOrders(orders);viewSubmissions(orderId);renderDashboard(currentLeaderOrderId||null);
+  }
+}
+
+/* ════════════ CREATE ORDER MODAL ════════════ */
+let optCounter=0;
+const optImages={},optColors={},optStyleSel={},optUniform={};
+
+function openCreateModal(){
+  ['new-order-name','new-order-desc'].forEach(id=>document.getElementById(id).value='');
+  ['err-new-name','err-new-deadline','err-shirt-options'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  const d=new Date();d.setDate(d.getDate()+14);
+  document.getElementById('new-order-deadline').value=d.toISOString().split('T')[0];
+  optCounter=0;
+  Object.keys(optImages).forEach(k=>delete optImages[k]);
+  Object.keys(optColors).forEach(k=>delete optColors[k]);
+  Object.keys(optStyleSel).forEach(k=>delete optStyleSel[k]);
+  document.getElementById('shirt-options-builder').innerHTML='';
+  addShirtOption();
+  document.getElementById('create-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('new-order-name').focus(),120);
+}
+function closeCreateModal(){document.getElementById('create-modal').classList.remove('open');}
+
+function addShirtOption(){
+  optCounter++;const tid='opt'+optCounter;
+  optImages[tid]=[];optColors[tid]=[{hex:'#FFFFFF',name:'White'},{hex:'#000000',name:'Black'},{hex:'#1B2A4A',name:'Navy'}];optStyleSel[tid]=null;optUniform[tid]={on:false,places:{},price:5};
+  const div=document.createElement('div');div.className='shirt-option-builder';div.id='builder-'+tid;
+  div.innerHTML=`
+    <button type="button" class="remove-option-btn" onclick="removeShirtOption('${tid}')">&times;</button>
+    <div style="font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:9px;">Option ${optCounter}</div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label style="margin-bottom:4px;">Style *</label>
+      <div class="style-grid" id="sg-${tid}">${SHIRT_STYLES.map(s=>`<button type="button" class="style-btn" id="sb-${tid}-${s.id}" onclick="selStyle('${tid}','${s.id}','${s.label}')">${s.icon} ${s.label}</button>`).join('')}</div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px;"><label style="margin-bottom:4px;">Description</label><input type="text" id="bdesc-${tid}" placeholder="e.g. White tee, base blank"></div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label style="margin-bottom:4px;">Base shirt price (blank garment) *</label>
+      <div class="price-input-wrap"><input type="text" inputmode="decimal" class="price-input" id="bprice-${tid}" placeholder="0.00" value="12.00"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px;">Price of the shirt before any printing/embroidery.</div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label style="margin-bottom:4px;">Colors</label>
+      <div class="color-builder" id="cb-${tid}"></div>
+      <button type="button" class="btn btn-outline btn-sm" style="margin-top:6px;" onclick="addColor('${tid}')">+ Add color</button>
+    </div>
+    <div class="form-group" style="margin-bottom:10px;"><label style="margin-bottom:4px;">Decoration options &amp; pricing</label>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:7px;">Toggle the options to offer, then set the added cost for each.</div>
+      <div id="db-${tid}">${DECO_OPTIONS.map((d,di)=>`
+        <div class="deco-price-row">
+          <span class="deco-tag" onclick="toggleDecoPrice(this,'${tid}',${di})" data-deco="${esc(d)}">${d}</span>
+          <div class="price-input-wrap" style="display:none;" id="dpwrap-${tid}-${di}"><input type="text" inputmode="decimal" class="price-input" id="dprice-${tid}-${di}" placeholder="0.00" value="6.00" style="width:90px!important;"></div>
+        </div>`).join('')}</div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label style="margin-bottom:4px;">Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+      <div class="upload-zone" ondragover="this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event,'${tid}')">
+        <input type="file" accept="image/*" multiple onchange="handleImgUpload(event,'${tid}')">
+        <div style="font-size:22px;">&#128247;</div>
+        <div style="font-size:12px;color:var(--muted)"><strong style="color:var(--navy);">Click to upload</strong> or drag &amp; drop</div>
+      </div>
+      <div class="upload-preview" id="pv-${tid}"></div>
+    </div>
+    <div class="uniform-toggle-row">
+      <label class="uni-switch"><input type="checkbox" id="uni-${tid}" onchange="toggleUniform('${tid}',this.checked)"><span class="uni-slider"></span></label>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);">&#127944; This is a team uniform</div>
+        <div style="font-size:11px;color:var(--muted);">Members can add their name &amp; number for personalization.</div>
+      </div>
+    </div>
+    <div class="uni-config" id="uniconf-${tid}">
+      <label style="margin-bottom:5px;">Quick presets</label>
+      <div class="preset-btns" id="presets-${tid}">
+        ${UNIFORM_PRESETS.map(p=>`<button type="button" class="preset-btn" onclick="applyPreset('${tid}','${p.id}')">${p.label}</button>`).join('')}
+      </div>
+      <label style="margin-bottom:5px;">Personalization placements</label>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:7px;">Toggle what members can add. Mark each Required or Optional.</div>
+      <div class="placement-grid" id="places-${tid}">
+        ${PLACEMENTS.map(p=>`
+          <div class="placement-toggle" id="pl-${tid}-${p.id}" onclick="togglePlacement(event,'${tid}','${p.id}')">
+            <span class="placement-check">&#10003;</span>
+            <span>${p.label}</span>
+            <span class="placement-req" id="req-${tid}-${p.id}" onclick="togglePlacementReq(event,'${tid}','${p.id}')">Optional</span>
+          </div>`).join('')}
+      </div>
+      <div class="uni-priceline">
+        <label style="margin-bottom:0;">Personalization price (added per shirt)</label>
+        <div class="price-input-wrap"><input type="text" inputmode="decimal" class="price-input" id="uniprice-${tid}" placeholder="0.00" value="5.00" style="width:90px!important;"></div>
+      </div>
+    </div>`;
+  document.getElementById('shirt-options-builder').appendChild(div);
+  renderCB(tid);
+}
+function removeShirtOption(tid){const el=document.getElementById('builder-'+tid);if(el)el.remove();delete optImages[tid];delete optColors[tid];delete optStyleSel[tid];delete optUniform[tid];}
+function selStyle(tid,sid,name){document.querySelectorAll(`#sg-${tid} .style-btn`).forEach(b=>b.classList.remove('sel'));document.getElementById(`sb-${tid}-${sid}`)?.classList.add('sel');optStyleSel[tid]={id:sid,name};}
+
+/* ── UNIFORM BUILDER HANDLERS ── */
+function toggleUniform(tid,on){
+  optUniform[tid].on=on;
+  document.getElementById('uniconf-'+tid).classList.toggle('open',on);
+}
+function applyPreset(tid,presetId){
+  const preset=UNIFORM_PRESETS.find(p=>p.id===presetId);if(!preset)return;
+  // clear all, then enable preset places (as required by default)
+  optUniform[tid].places={};
+  PLACEMENTS.forEach(pl=>{
+    const on=preset.places.includes(pl.id);
+    setPlacementUI(tid,pl.id,on,on); // required if on
+    if(on)optUniform[tid].places[pl.id]={required:true};
+  });
+  document.querySelectorAll(`#presets-${tid} .preset-btn`).forEach(b=>b.classList.remove('sel'));
+  event.currentTarget.classList.add('sel');
+}
+function togglePlacement(e,tid,plId){
+  if(e.target.classList.contains('placement-req'))return; // handled separately
+  const cur=optUniform[tid].places[plId];
+  if(cur){delete optUniform[tid].places[plId];setPlacementUI(tid,plId,false,false);}
+  else{optUniform[tid].places[plId]={required:false};setPlacementUI(tid,plId,true,false);}
+  // clear preset highlight since manual edit
+  document.querySelectorAll(`#presets-${tid} .preset-btn`).forEach(b=>b.classList.remove('sel'));
+}
+function togglePlacementReq(e,tid,plId){
+  e.stopPropagation();
+  const cur=optUniform[tid].places[plId];
+  if(!cur){ // turning on via the req chip also enables it
+    optUniform[tid].places[plId]={required:true};setPlacementUI(tid,plId,true,true);return;
+  }
+  cur.required=!cur.required;
+  setPlacementUI(tid,plId,true,cur.required);
+}
+function setPlacementUI(tid,plId,on,required){
+  const tog=document.getElementById('pl-'+tid+'-'+plId);
+  const req=document.getElementById('req-'+tid+'-'+plId);
+  if(tog)tog.classList.toggle('on',on);
+  if(req){req.textContent=required?'Required':'Optional';req.classList.toggle('required',required);}
+}
+function addColor(tid){optColors[tid]=optColors[tid]||[];optColors[tid].push({hex:'#888888',name:'Color '+(optColors[tid].length+1)});renderCB(tid);}
+function renderCB(tid){
+  const w=document.getElementById('cb-'+tid);if(!w)return;
+  w.innerHTML=(optColors[tid]||[]).map((c,i)=>`
+    <div class="color-row-item">
+      <div class="color-input-swatch" style="background:${c.hex};"><input type="color" value="${c.hex}" oninput="updHex('${tid}',${i},this.value)"></div>
+      <input type="text" class="color-name-input" value="${esc(c.name)}" onchange="updName('${tid}',${i},this.value)" placeholder="Name">
+      <button type="button" class="color-remove-btn" onclick="rmColor('${tid}',${i})">&times;</button>
+    </div>`).join('');
+}
+function updHex(tid,i,v){if(optColors[tid]&&optColors[tid][i]){optColors[tid][i].hex=v;const s=document.querySelector(`#cb-${tid} .color-row-item:nth-child(${i+1}) .color-input-swatch`);if(s)s.style.background=v;}}
+function updName(tid,i,v){if(optColors[tid]&&optColors[tid][i])optColors[tid][i].name=v;}
+function rmColor(tid,i){optColors[tid].splice(i,1);renderCB(tid);}
+function handleImgUpload(e,tid){Array.from(e.target.files).forEach(f=>{if(f.size>5*1024*1024){showToast('Max 5MB');return;}const r=new FileReader();r.onload=ev=>{optImages[tid].push(ev.target.result);renderPV(tid);};r.readAsDataURL(f);});e.target.value='';}
+function handleDrop(e,tid){e.preventDefault();document.getElementById('zone-'+tid)?.classList.remove('dragover');Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')).forEach(f=>{const r=new FileReader();r.onload=ev=>{optImages[tid].push(ev.target.result);renderPV(tid);};r.readAsDataURL(f);});}
+function renderPV(tid){const w=document.getElementById('pv-'+tid);if(!w)return;w.innerHTML=(optImages[tid]||[]).map((s,i)=>`<div class="thumb-wrap"><img src="${s}" class="upload-thumb" alt=""><button type="button" class="thumb-remove" onclick="rmImg('${tid}',${i})">&times;</button></div>`).join('');}
+function rmImg(tid,i){optImages[tid].splice(i,1);renderPV(tid);}
+
+function toggleDecoPrice(el,tid,di){
+  el.classList.toggle('sel');
+  const wrap=document.getElementById('dpwrap-'+tid+'-'+di);
+  if(wrap)wrap.style.display=el.classList.contains('sel')?'inline-block':'none';
+}
+function parsePrice(v){const n=parseFloat(String(v).replace(/[^0-9.]/g,''));return isNaN(n)?0:Math.round(n*100)/100;}
+function fmtPrice(n){return '$'+(Number(n)||0).toFixed(2);}
+
+function createOrder(){
+  const name=document.getElementById('new-order-name').value.trim();
+  const deadline=document.getElementById('new-order-deadline').value;
+  let valid=true;
+  if(!name){document.getElementById('err-new-name').classList.add('show');valid=false;}else document.getElementById('err-new-name').classList.remove('show');
+  if(!deadline){document.getElementById('err-new-deadline').classList.add('show');valid=false;}else document.getElementById('err-new-deadline').classList.remove('show');
+  const builders=document.querySelectorAll('.shirt-option-builder');
+  const shirtOptions=[];
+  builders.forEach(el=>{
+    const tid=el.id.replace('builder-','');
+    const sel=optStyleSel[tid];
+    const basePrice=parsePrice(document.getElementById('bprice-'+tid)?.value||'0');
+    // collect selected decos WITH their prices
+    const decoObjs=[];
+    DECO_OPTIONS.forEach((d,di)=>{
+      const tag=document.querySelector(`#db-${tid} .deco-tag[data-deco="${cssEsc(d)}"]`);
+      if(tag&&tag.classList.contains('sel')){
+        const price=parsePrice(document.getElementById('dprice-'+tid+'-'+di)?.value||'0');
+        decoObjs.push({name:d,price});
+      }
+    });
+    // uniform config
+    let uniform=null;
+    const u=optUniform[tid];
+    if(u&&u.on){
+      const places=PLACEMENTS.filter(pl=>u.places[pl.id]).map(pl=>({id:pl.id,label:pl.label,kind:pl.kind,required:!!u.places[pl.id].required}));
+      if(places.length){
+        uniform={places,price:parsePrice(document.getElementById('uniprice-'+tid)?.value||'0')};
+      }
+    }
+    shirtOptions.push({id:'so-'+Date.now()+Math.random().toString(36).slice(2,5),styleId:sel?sel.id:'custom',styleName:sel?sel.name:'Custom',desc:document.getElementById('bdesc-'+tid)?.value.trim()||'',basePrice,colors:(optColors[tid]||[]).slice(),decos:decoObjs,images:(optImages[tid]||[]).slice(),uniform});
+  });
+  if(!shirtOptions.length){document.getElementById('err-shirt-options').classList.add('show');valid=false;}else document.getElementById('err-shirt-options').classList.remove('show');
+  if(!valid)return;
+  const orders=loadOrders();
+  const purgeDate=document.getElementById('new-order-purge').value||null;
+  // ownership: if a logged-in leader created it, they own it; admin-created orders have no leader owner
+  const ownerAcct=currentLeaderId?getAccountById(currentLeaderId):null;
+  const ownerId=ownerAcct?ownerAcct.id:null;
+  const ownerName=ownerAcct?ownerAcct.name:'Shop Admin';
+  const newOrder={id:'order-'+Date.now(),name,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),ownerId,ownerName,status:'open',created:Date.now(),shirtOptions,responses:[]};
+  orders.unshift(newOrder);saveOrders(orders);
+  closeCreateModal();
+  addLog('Order created by '+ownerName+': '+name,'new');
+  showToast('\u2713 "'+name+'" created! Share the order link with your group.');
+  showAdminPage(currentAdminPage);
+}
+
+/* ════════════ ORDER ACTIONS ════════════ */
+function toggleStatus(id){const orders=loadOrders();const o=orders.find(x=>x.id===id);if(o){const was=o.status;o.status=was==='open'?'closed':'open';saveOrders(orders);addLog('Order '+(o.status==='closed'?'closed':'reopened')+': '+o.name);showAdminPage(currentAdminPage);}}
+function deleteOrder(id){const o=getOrder(id);if(!o||!confirm('Delete "'+o.name+'"?'))return;saveOrders(loadOrders().filter(x=>x.id!==id));addLog('Order deleted: '+o.name,'warn');showAdminPage(currentAdminPage);showToast('Order deleted.');}
+function copyLink(id){const inp=document.getElementById('share-'+id);if(!inp)return;inp.select();inp.setSelectionRange(0,9999);try{document.execCommand('copy');}catch(e){}const btn=inp.nextElementSibling;btn.textContent='\u2713 Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2e3);showToast('Link copied!');}
+function previewForm(id){loadOrderForm(id);}
+
+/* ════════════ EXPORT CSV ════════════ */
+function exportCSV(id){
+  const order=getOrder(id);if(!order)return;
+  const header='Name,Shirt Style,Color,Decoration,Size,Category,Quantity,Unit Price,Line Total,Item Notes,Order Notes,Date';
+  const rows=[];
+  order.responses.forEach(r=>r.items.forEach(i=>{
+    const unit=Number(i.unitPrice)||0;
+    rows.push([
+      '"'+r.name.replace(/"/g,'""')+'"',i.shirtLabel||'',i.color||'',i.deco||'',
+      i.size,i.cat.charAt(0).toUpperCase()+i.cat.slice(1),i.qty,
+      unit.toFixed(2),(unit*i.qty).toFixed(2),
+      '"'+(i.notes||'').replace(/"/g,'""')+'"','"'+(r.notes||'').replace(/"/g,'""')+'"',
+      new Date(r.date).toLocaleDateString()
+    ].join(','));
+  }));
+  // grand total row
+  const grand=order.responses.reduce((s,r)=>s+r.items.reduce((a,i)=>a+(Number(i.unitPrice)||0)*i.qty,0),0);
+  if(grand>0)rows.push(['','','','','','','','','GRAND TOTAL: '+grand.toFixed(2),'','',''].join(','));
+  const blob=new Blob([[header,...rows].join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=order.name.replace(/[^a-z0-9]/gi,'_')+'_orders.csv';a.click();
+  URL.revokeObjectURL(url);showToast('CSV downloaded!');addLog('CSV exported: '+order.name);
+}
+
+/* ════════════ MEMBER FORM ════════════ */
+let currentOrderId=null;
+// cart = array of {shirtOptionId,shirtLabel,color,deco,size,cat,qty,notes}
+let cart=[];
+// panel state
+let panelShirtId=null,panelColor=null,panelDeco=null,panelDecoPrice=0,panelSize=null,panelCat=null,panelQty=1;
+let panelUniform=null;       // {places:[...],price} from the option
+let panelUniformVals={};     // {name_back:'JOHNSON', num_back:'12', ...}
+let panelUniformPrice=0;
+
+function loadOrderForm(id){
+  // hide app shell, show order page
+  document.getElementById('app-shell').style.display='none';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-order').classList.add('active');
+  currentOrderId=id;cart=[];
+  panelShirtId=null;panelColor=null;panelDeco=null;panelSize=null;panelCat=null;panelQty=1;
+  document.getElementById('member-name').value='';
+  document.getElementById('member-notes').value='';
+  ['err-name','err-cart'].forEach(i=>{const e=document.getElementById(i);if(e)e.classList.remove('show');});
+  document.getElementById('success-screen').classList.remove('show');
+  document.getElementById('order-form-content').classList.remove('hide');
+  document.getElementById('order-form-content').style.display='block';
+  closeAddShirtPanel();
+  renderCart();
+
+  const order=getOrder(id);
+  if(!order){document.getElementById('form-order-name').textContent='Order not found';return;}
+  document.getElementById('form-order-name').textContent=order.name;
+  const dl=order.deadline?new Date(order.deadline+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'--';
+  document.getElementById('form-order-deadline').textContent=dl;
+  document.getElementById('form-response-count').textContent=order.responses.length;
+  const closed=order.status==='closed';
+  document.getElementById('order-closed-notice').style.display=closed?'flex':'none';
+  document.getElementById('order-form-content').style.display=closed?'none':'block';
+
+  // populate shirt options in panel
+  const opts=order.shirtOptions||[];
+  const panelOptsEl=document.getElementById('panel-shirt-opts');
+  const grid=document.getElementById('panel-options-grid');
+  if(opts.length>0){
+    panelOptsEl.style.display='block';
+    grid.innerHTML=opts.map(so=>{
+      const si=SHIRT_STYLES.find(s=>s.id===so.styleId);
+      const imgHTML=so.images&&so.images.length?`<img src="${so.images[0]}" alt="${esc(so.styleName)}">`:`<div class="option-img-placeholder"><span style="font-size:30px;">${si?si.icon:'&#128085;'}</span><span>${esc(so.styleName)}</span></div>`;
+      const sw=(so.colors||[]).map(c=>`<span class="color-swatch" style="background:${c.hex};" title="${esc(c.name)}"></span>`).join('');
+      const decoText=(so.decos||[]).map(d=>d.name).join(', ');
+      const optPrice=(Number(so.basePrice)||0)+(so.decos||[]).reduce((s,d)=>s+(Number(d.price)||0),0);
+      const hasPrice=optPrice>0;
+      return `<div class="shirt-option-card" id="popt-${so.id}" onclick="panelSelectShirt('${order.id}','${so.id}')">
+        <div class="option-img-wrap">${imgHTML}<div class="option-check">&#10003;</div></div>
+        <div class="option-info">
+          <div class="option-name">${esc(so.styleName)}</div>
+          ${so.desc?`<div class="option-detail">${esc(so.desc)}</div>`:''}
+          ${decoText?`<div class="option-detail" style="color:var(--navy);font-weight:600;margin-top:3px;">${esc(decoText)}</div>`:''}
+          ${hasPrice?`<div style="font-size:13px;font-weight:800;color:var(--success);margin-top:5px;">${fmtPrice(optPrice)}</div>`:''}
+          <div class="option-colors-row">${sw}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } else panelOptsEl.style.display='none';
+}
+
+function openAddShirtPanel(){
+  // reset panel
+  panelShirtId=null;panelColor=null;panelDeco=null;panelSize=null;panelCat=null;panelQty=1;
+  panelUniform=null;panelUniformVals={};panelUniformPrice=0;
+  document.querySelectorAll('.shirt-option-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('#add-shirt-panel .size-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('panel-color-sec').style.display='none';
+  document.getElementById('panel-deco-sec').style.display='none';
+  document.getElementById('panel-uniform-sec').style.display='none';
+  document.getElementById('panel-item-notes').value='';
+  ['perr-shirt','perr-color','perr-deco','perr-size','perr-uniform'].forEach(id=>document.getElementById(id)?.classList.remove('show'));
+  panelUpdateQty();
+  document.getElementById('add-shirt-panel').classList.add('open');
+  document.getElementById('add-shirt-btn').style.display='none';
+  document.getElementById('add-shirt-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function closeAddShirtPanel(){
+  document.getElementById('add-shirt-panel').classList.remove('open');
+  document.getElementById('add-shirt-btn').style.display='flex';
+}
+
+function panelSelectShirt(orderId,optionId){
+  const order=getOrder(orderId);if(!order)return;
+  const opt=(order.shirtOptions||[]).find(s=>s.id===optionId);if(!opt)return;
+  panelShirtId=optionId;panelColor=null;
+  // Decoration is set by the admin and baked into the option. Auto-apply ALL of its decorations.
+  panelDeco=(opt.decos&&opt.decos.length)?opt.decos.map(d=>d.name).join(', '):null;
+  panelDecoPrice=(opt.decos||[]).reduce((s,d)=>s+(Number(d.price)||0),0);
+  document.querySelectorAll('.shirt-option-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('popt-'+optionId)?.classList.add('selected');
+  document.getElementById('perr-shirt')?.classList.remove('show');
+  const colorSec=document.getElementById('panel-color-sec');
+  const decoSec=document.getElementById('panel-deco-sec');
+  if(opt.colors&&opt.colors.length){
+    colorSec.style.display='block';
+    document.getElementById('panel-color-swatches').innerHTML=opt.colors.map(c=>`
+      <span class="color-swatch color-swatch-lg" style="background:${c.hex};" title="${esc(c.name)}" onclick="panelSelColor('${esc(c.name)}',this)"></span>`).join('');
+  }else colorSec.style.display='none';
+  // Read-only decoration display (no picker) — shows what's included with this shirt
+  if(opt.decos&&opt.decos.length){
+    decoSec.style.display='block';
+    document.getElementById('panel-deco-tags').innerHTML=opt.decos.map(d=>{
+      const icon=/embroider/i.test(d.name)?'\u{1F9F5}':(/heat/i.test(d.name)?'\u{1F525}':'\u{1F58C}\uFE0F');
+      return `<div class="deco-included">
+        <span class="deco-choice-icon">${icon}</span>
+        <span class="deco-choice-label">${esc(d.name)}</span>
+        ${d.price>0?`<span class="deco-choice-price">+${fmtPrice(d.price)}</span>`:''}
+      </div>`;
+    }).join('');
+  }else decoSec.style.display='none';
+  panelUpdatePrice();
+}
+function panelSelColor(name,el){panelColor=name;document.querySelectorAll('#panel-color-swatches .color-swatch').forEach(s=>s.classList.remove('sel-color'));el.classList.add('sel-color');document.getElementById('perr-color')?.classList.remove('show');}
+function panelSelectSize(btn){document.querySelectorAll('#add-shirt-panel .size-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');panelSize=btn.dataset.size;panelCat=btn.dataset.cat;document.getElementById('perr-size')?.classList.remove('show');}
+function panelChangeQty(d){panelQty=Math.max(1,Math.min(99,panelQty+d));panelUpdateQty();panelUpdatePrice();}
+function panelUpdateQty(){document.getElementById('panel-qty-num').textContent=panelQty;document.getElementById('panel-qty-minus').disabled=panelQty<=1;}
+function panelUpdatePrice(){
+  const order=getOrder(currentOrderId);if(!order)return;
+  const opt=(order.shirtOptions||[]).find(s=>s.id===panelShirtId);
+  const box=document.getElementById('panel-price-box');
+  if(!opt){box.style.display='none';return;}
+  const base=Number(opt.basePrice)||0;
+  const decoPrice=Number(panelDecoPrice)||0;
+  const unit=base+decoPrice;
+  // only show pricing if this order actually has prices set
+  const hasPrices=(opt.basePrice>0)||(opt.decos||[]).some(d=>d.price>0);
+  if(!hasPrices){box.style.display='none';return;}
+  box.style.display='block';
+  document.getElementById('pp-base').textContent=fmtPrice(base);
+  const decoLine=document.getElementById('pp-deco-line');
+  if(panelDeco&&decoPrice>0){decoLine.style.display='flex';document.getElementById('pp-deco-label').textContent='Decoration';document.getElementById('pp-deco').textContent='+'+fmtPrice(decoPrice);}
+  else decoLine.style.display='none';
+  document.getElementById('pp-unit').textContent=fmtPrice(unit);
+  document.getElementById('pp-qty').textContent=panelQty;
+  document.getElementById('pp-total').textContent=fmtPrice(unit*panelQty);
+}
+
+function addToCart(){
+  const order=getOrder(currentOrderId);if(!order)return;
+  const hasOpts=(order.shirtOptions||[]).length>0;
+  let valid=true;
+  if(hasOpts){
+    const opt=(order.shirtOptions||[]).find(s=>s.id===panelShirtId);
+    if(!panelShirtId){document.getElementById('perr-shirt').classList.add('show');valid=false;}else document.getElementById('perr-shirt').classList.remove('show');
+    if(opt&&opt.colors&&opt.colors.length&&!panelColor){document.getElementById('perr-color').classList.add('show');valid=false;}else document.getElementById('perr-color')?.classList.remove('show');
+  }
+  if(!panelSize){document.getElementById('perr-size').classList.add('show');valid=false;}else document.getElementById('perr-size').classList.remove('show');
+  if(!valid)return;
+  const opt=hasOpts?(order.shirtOptions||[]).find(s=>s.id===panelShirtId):null;
+  const unitPrice=(Number(opt?.basePrice)||0)+(Number(panelDecoPrice)||0);
+  cart.push({shirtOptionId:panelShirtId,shirtLabel:opt?.styleName||null,color:panelColor,deco:panelDeco,size:panelSize,cat:panelCat,qty:panelQty,notes:document.getElementById('panel-item-notes').value.trim(),unitPrice});
+  document.getElementById('err-cart')?.classList.remove('show');
+  renderCart();
+  closeAddShirtPanel();
+  showToast('\u2713 Added to order!');
+}
+
+function renderCart(){
+  const list=document.getElementById('cart-items-list');
+  const totalRow=document.getElementById('cart-total-row');
+  const badge=document.getElementById('cart-count-badge');
+  const totalNum=document.getElementById('cart-total-num');
+  const totalShirts=cart.reduce((s,i)=>s+i.qty,0);
+  const grandTotal=cart.reduce((s,i)=>s+(Number(i.unitPrice)||0)*i.qty,0);
+  const anyPriceT=cart.some(i=>i.unitPrice>0);
+  badge.textContent=totalShirts>0?totalShirts+' shirt'+(totalShirts!==1?'s':'') +' in your order':'';
+  totalNum.innerHTML=anyPriceT?(totalShirts+' &middot; <span style="color:#fff;">'+fmtPrice(grandTotal)+'</span>'):totalShirts;
+  totalRow.style.display=totalShirts>0?'flex':'none';
+  if(!cart.length){list.innerHTML='<div style="padding:12px 0;color:var(--muted);font-size:13px;font-style:italic;">No shirts added yet. Click "Add a shirt" below.</div>';return;}
+  const anyPrice=cart.some(i=>i.unitPrice>0);
+  list.innerHTML=cart.map((item,idx)=>{
+    const detail=[item.color,item.deco,item.size+(item.cat!=='adult'?' ('+item.cat+')':'')].filter(Boolean).join(' &middot; ');
+    const lineTotal=(Number(item.unitPrice)||0)*item.qty;
+    return `<div class="cart-item">
+      <div class="cart-item-icon">&#128085;</div>
+      <div class="cart-item-info">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+          <div class="cart-item-title">${esc(item.shirtLabel||'Shirt')} &mdash; ${esc(item.size)}</div>
+          ${anyPrice?`<span class="cart-item-price">${fmtPrice(lineTotal)}</span>`:''}
+        </div>
+        <div class="cart-item-detail">${detail}${anyPrice&&item.unitPrice>0?' &middot; '+fmtPrice(item.unitPrice)+' ea':''}${item.notes?'<br>&#128203; '+esc(item.notes):''}</div>
+        <div class="cart-item-qty">
+          <button class="cq-btn" onclick="cartChangeQty(${idx},-1)" ${item.qty<=1?'disabled':''}>&#8722;</button>
+          <span class="cq-num">${item.qty}</span>
+          <button class="cq-btn" onclick="cartChangeQty(${idx},1)">+</button>
+          <span style="font-size:11px;color:var(--muted);">qty</span>
+        </div>
+      </div>
+      <button class="cart-item-remove" onclick="removeCartItem(${idx})" title="Remove">&times;</button>
+    </div>`;
+  }).join('');
+}
+function cartChangeQty(idx,d){if(cart[idx]){cart[idx].qty=Math.max(1,Math.min(99,cart[idx].qty+d));renderCart();}}
+function removeCartItem(idx){cart.splice(idx,1);renderCart();}
+
+function submitOrder(){
+  const name=document.getElementById('member-name').value.trim();
+  const notes=document.getElementById('member-notes').value.trim();
+  let valid=true;
+  if(!name){document.getElementById('err-name').classList.add('show');document.getElementById('member-name').classList.add('input-error');valid=false;}
+  else{document.getElementById('err-name').classList.remove('show');document.getElementById('member-name').classList.remove('input-error');}
+  if(!cart.length){document.getElementById('err-cart').classList.add('show');valid=false;}
+  else document.getElementById('err-cart').classList.remove('show');
+  if(!valid)return;
+
+  const orders=loadOrders();const o=orders.find(x=>x.id===currentOrderId);if(!o)return;
+  const totalShirts=cart.reduce((s,i)=>s+i.qty,0);
+  const grandTotal=cart.reduce((s,i)=>s+(Number(i.unitPrice)||0)*i.qty,0);
+  const anySuccessPrice=cart.some(i=>i.unitPrice>0);
+  o.responses.push({id:'r-'+Date.now(),name,items:cart.slice(),notes,date:Date.now(),orderTotal:grandTotal});
+  saveOrders(orders);
+  addLog(name+' submitted order ('+totalShirts+' shirt'+(totalShirts!==1?'s':'')+'): '+o.name,'new');
+
+  document.getElementById('order-form-content').classList.add('hide');
+  // build success summary
+  const summaryHTML=`
+    <div class="notice notice-success">
+      <span>&#128203;</span>
+      <div>
+        <strong>${esc(name)}</strong><br>
+        ${cart.map(item=>{
+          const lt=(Number(item.unitPrice)||0)*item.qty;
+          const d=[item.qty+'x '+esc(item.shirtLabel||'shirt'),esc(item.color||''),esc(item.size)+(item.cat!=='adult'?' ('+item.cat+')':'')].filter(Boolean).join(' &middot; ');
+          return `<span style="font-size:12px;display:block;">${d}${anySuccessPrice?' &mdash; <strong>'+fmtPrice(lt)+'</strong>':''}${item.notes?'<br><span style=\"color:var(--muted);\">&#128203; '+esc(item.notes)+'</span>':''}</span>`;
+        }).join('')}
+        <span style="font-size:12px;color:var(--muted);display:block;margin-top:4px;">${totalShirts} shirt${totalShirts!==1?'s':''}${anySuccessPrice?' &middot; <strong style=\"color:var(--success);\">Total '+fmtPrice(grandTotal)+'</strong>':''}</span>
+      </div>
+    </div>`;
+  document.getElementById('success-cart-summary').innerHTML=summaryHTML;
+  document.getElementById('success-screen').classList.add('show');
+}
+
+/* ════════════ UTILS ════════════ */
+function cssEsc(s){return String(s||'').replace(/"/g,'\\"');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
+
+/* ════════════ URL ROUTING ════════════ */
+function checkRoute(){
+  const params=new URLSearchParams(location.search);
+  const orderId=params.get('order');
+  if(orderId){loadOrderForm(orderId);}
+  // else stay on login
+}
+
+/* ════════════ INIT ════════════ */
+cleanupLegacyCodeAccess();
+seedDemo();
+switchLoginTab('leader');
+showLeaderView('signin');
+checkRoute();
+</script>
+</body>
+</html>
