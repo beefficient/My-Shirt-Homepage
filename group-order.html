@@ -91,7 +91,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .login-error{background:#fef0ee;border:1px solid #f0c0bb;border-radius:7px;padding:8px 12px;color:var(--error);font-size:13px;margin-bottom:14px;display:none}
 .login-error.show{display:block}
 .login-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:10px}
-.login-sync-note{margin-bottom:16px}
 
 /* ── SHIRT OPTION BUILDER ── */
 .shirt-options-list{display:flex;flex-direction:column;gap:12px;margin-top:8px}
@@ -494,10 +493,6 @@ footer a{color:var(--yellow);text-decoration:none}
     <button class="login-tab" id="ltab-member" onclick="switchLoginTab('member')">Order Link</button>
   </div>
 
-  <div class="notice notice-info login-sync-note" id="login-sync-note">
-    <span>&#128241;</span><span>Leader accounts and changed admin passwords are saved on this device only. To use them on another phone or computer, connect a backend. Members should use the shared order link.</span>
-  </div>
-
   <!-- Leader login / signup -->
   <div id="login-leader-form">
     <div class="login-error" id="leader-login-err"></div>
@@ -685,9 +680,9 @@ footer a{color:var(--yellow);text-decoration:none}
   </div>
 
   <div class="data-info">
-    &#128196; <strong>Data storage:</strong> Orders are saved in your browser's <strong>localStorage</strong> right now — fast and zero setup, but device-specific.
-    To sync across devices, connect a backend: <strong>Supabase</strong>, <strong>Firebase</strong>, or <strong>Airtable</strong> are all great free options.
-    <a href="https://supabase.com" target="_blank">supabase.com</a> &bull; <a href="https://firebase.google.com" target="_blank">firebase.google.com</a>
+    &#128196; <strong>Data storage:</strong> Member <strong>responses</strong> are saved to <strong>Supabase</strong> when it's configured (see <code>supabase-config.js</code>); otherwise everything falls back to this browser's <strong>localStorage</strong>.
+    <strong>Orders</strong> are still created locally on this device &mdash; to make an order loadable by members, add it to your Supabase <code>orders</code> table (the current read-only policy means the app can't insert orders for you).
+    <a href="https://supabase.com" target="_blank">supabase.com</a>
   </div>
 
   <div class="stats-grid" id="stats-grid"></div>
@@ -821,6 +816,8 @@ footer a{color:var(--yellow);text-decoration:none}
         <span>&#128085; <span id="form-response-count">0</span> responses so far</span>
       </div>
     </div>
+
+    <div class="notice notice-warn" id="order-unavailable-notice" style="display:none;margin-bottom:16px;"></div>
 
     <div class="notice notice-warn" id="order-closed-notice" style="display:none;margin-bottom:16px;">
       <span>&#9888;&#65039;</span><span>This order is <strong>closed</strong> and no longer accepting responses.</span>
@@ -967,7 +964,8 @@ footer a{color:var(--yellow);text-decoration:none}
           <textarea id="member-notes" placeholder="Any general notes for the whole order&#8230;"></textarea>
         </div>
 
-        <button class="btn btn-primary btn-full" onclick="submitOrder()" style="border-radius:10px;padding:13px;">Submit My Order &#8594;</button>
+        <div class="notice notice-warn" id="submit-error" style="display:none;margin-bottom:12px;"></div>
+        <button class="btn btn-primary btn-full" id="submit-order-btn" onclick="submitOrder()" style="border-radius:10px;padding:13px;">Submit My Order &#8594;</button>
         <p class="muted" style="text-align:center;margin-top:10px;font-size:12px;">Questions? <a href="tel:6692319059" style="color:var(--navy);font-weight:600;">669-231-9059</a></p>
       </div></div>
     </div>
@@ -1027,6 +1025,9 @@ footer a{color:var(--yellow);text-decoration:none}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js" onerror="console.info('supabase-config.js not found — running in local-storage mode.')"></script>
 
 <script>
 /* ════════════ CONSTANTS ════════════ */
@@ -1103,6 +1104,107 @@ function cleanupLegacyCodeAccess(){
   localStorage.removeItem('myshirt_leaders');
 }
 
+let SB=null;
+(function initSupabase(){
+  try{
+    const cfg=window.SUPABASE_CONFIG;
+    const hasLib=window.supabase&&typeof window.supabase.createClient==='function';
+    const configured=cfg&&cfg.url&&cfg.anonKey
+      &&!/YOUR-PROJECT-REF|YOUR-ANON/.test(cfg.url+cfg.anonKey);
+    if(hasLib&&configured){
+      SB=window.supabase.createClient(cfg.url,cfg.anonKey);
+      console.info('Supabase connected.');
+    }else{
+      console.info('Supabase not configured — using local storage. '
+        +(hasLib?'(Add supabase-config.js to connect.)':'(Client library failed to load.)'));
+    }
+  }catch(e){console.warn('Supabase init failed; using local storage.',e);SB=null;}
+})();
+function sbReady(){return !!SB;}
+
+function genResponseId(){
+  return 'r-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
+}
+
+function dbOrderToApp(row){
+  return {
+    id:row.id,
+    name:row.name,
+    deadline:row.deadline||null,
+    purgeDate:row.purge_date||null,
+    desc:row.description||'',
+    status:row.status||'open',
+    shirtOptions:Array.isArray(row.shirt_options)?row.shirt_options:(row.shirt_options||[]),
+    responses:[],
+    created:row.created_at?new Date(row.created_at).getTime():Date.now(),
+    ownerName:'Shop Admin',ownerId:null,
+    _source:'supabase'
+  };
+}
+function dbResponseToApp(row){
+  return {
+    id:row.id,
+    name:row.name,
+    items:Array.isArray(row.items)?row.items:(row.items||[]),
+    notes:row.notes||'',
+    orderTotal:Number(row.order_total)||0,
+    date:row.created_at?new Date(row.created_at).getTime():Date.now()
+  };
+}
+
+function isOrderExpired(order){
+  if(!order||!order.deadline)return false;
+  const today=new Date();today.setHours(0,0,0,0);
+  const dl=new Date(order.deadline+'T23:59:59');
+  return dl<today;
+}
+
+async function fetchOrderById(id){
+  if(sbReady()){
+    try{
+      const {data,error}=await SB.from('orders').select('*').eq('id',id).maybeSingle();
+      if(error)return {ok:false,reason:'error',error};
+      if(!data)return {ok:false,reason:'notfound'};
+      return {ok:true,order:dbOrderToApp(data)};
+    }catch(e){return {ok:false,reason:'error',error:e};}
+  }
+  const local=getOrder(id);
+  return local?{ok:true,order:local}:{ok:false,reason:'notfound'};
+}
+
+async function insertResponseRow(payload){
+  if(sbReady()){
+    try{
+      const {error}=await SB.from('responses').insert(payload);
+      if(error)return {ok:false,error};
+      return {ok:true};
+    }catch(e){return {ok:false,error:e};}
+  }
+  try{
+    const orders=loadOrders();const o=orders.find(x=>x.id===payload.order_id);
+    if(o){
+      o.responses=o.responses||[];
+      o.responses.push({id:payload.id,name:payload.name,items:payload.items,
+        notes:payload.notes,orderTotal:payload.order_total,date:Date.now()});
+      saveOrders(orders);
+    }
+    return {ok:true};
+  }catch(e){return {ok:false,error:e};}
+}
+
+async function fetchResponsesByOrder(orderId){
+  if(sbReady()){
+    try{
+      const {data,error}=await SB.from('responses').select('*')
+        .eq('order_id',orderId).order('created_at',{ascending:true});
+      if(error)return {ok:false,error};
+      return {ok:true,responses:(data||[]).map(dbResponseToApp)};
+    }catch(e){return {ok:false,error:e};}
+  }
+  const o=getOrder(orderId);
+  return {ok:true,responses:o?(o.responses||[]):[]};
+}
+
 /* seed demo */
 function seedDemo(){
   if(loadOrders().length>0)return;
@@ -1148,7 +1250,6 @@ function switchLoginTab(tab){
   document.getElementById('login-leader-form').style.display=tab==='leader'?'block':'none';
   document.getElementById('login-admin-form').style.display=tab==='admin'?'block':'none';
   document.getElementById('login-member-form').style.display=tab==='member'?'block':'none';
-  document.getElementById('login-sync-note').style.display=tab==='member'?'none':'flex';
   document.getElementById('login-err')?.classList.remove('show');
   document.getElementById('leader-login-err')?.classList.remove('show');
 }
@@ -1184,7 +1285,7 @@ function doLeaderLogin(){
   const email=document.getElementById('leader-email').value.trim();
   const pass=document.getElementById('leader-pass').value;
   const acct=getAccountByEmail(email);
-  if(!acct||acct.pass!==hashPass(pass)){leaderErr('Incorrect email or password. Accounts created on another device will not appear here.');return;}
+  if(!acct||acct.pass!==hashPass(pass)){leaderErr('Incorrect email or password.');return;}
   enterAsLeader(acct);
 }
 
@@ -1224,7 +1325,6 @@ function doAdminLogin(){
     addLog('Admin logged in');
     return;
   }
-  document.getElementById('login-err').textContent='Incorrect password. Changed passwords stay on the device where they were set.';
   document.getElementById('login-err').classList.add('show');
 }
 
@@ -1463,8 +1563,13 @@ function clearAllData(){
 }
 
 /* ════════════ SUBMISSIONS MODAL ════════════ */
-function viewSubmissions(id){
+async function viewSubmissions(id){
   const order=getOrder(id);if(!order)return;
+  document.getElementById('detail-modal-content').innerHTML=
+    '<h2 style="margin-bottom:4px;">'+esc(order.name)+'</h2><p class="muted">Loading responses…</p>';
+  document.getElementById('detail-modal').classList.add('open');
+  const rr=await fetchResponsesByOrder(id);
+  order.responses=rr.ok?rr.responses:(order.responses||[]);
   const totalShirts=order.responses.reduce((s,r)=>s+r.items.reduce((a,i)=>a+i.qty,0),0);
   const dl=order.deadline?new Date(order.deadline+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
   const colorHex=(name)=>{for(const so of order.shirtOptions||[]){const c=(so.colors||[]).find(x=>x.name===name);if(c)return c.hex;}return '#ccc';};
@@ -1484,7 +1589,7 @@ function viewSubmissions(id){
         ${anyPrice?`<td style="font-weight:700;color:var(--success);white-space:nowrap;">${fmtPrice((Number(item.unitPrice)||0)*item.qty)}</td>`:''}
         <td style="font-size:11px;color:var(--muted);">${esc(item.notes||'')}</td>
         ${idx===0?`<td rowspan="${r.items.length}" style="color:var(--muted);font-size:11px;white-space:nowrap;vertical-align:top;">${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
-        <td rowspan="${r.items.length}" style="vertical-align:top;">${canManage(order)?`<button style="background:none;border:none;color:var(--error);cursor:pointer;font-size:11px;" onclick="deleteResponse('${id}','${r.id}')">Remove</button>`:''}</td>`:''}
+        <td rowspan="${r.items.length}" style="vertical-align:top;">${(canManage(order)&&!sbReady())?`<button style="background:none;border:none;color:var(--error);cursor:pointer;font-size:11px;" onclick="deleteResponse('${id}','${r.id}')">Remove</button>`:''}</td>`:''}
       </tr>`).join('');
     return itemRows;
   }).join('')
@@ -1731,8 +1836,10 @@ function copyLink(id){const inp=document.getElementById('share-'+id);if(!inp)ret
 function previewForm(id){loadOrderForm(id);}
 
 /* ════════════ EXPORT CSV ════════════ */
-function exportCSV(id){
+async function exportCSV(id){
   const order=getOrder(id);if(!order)return;
+  const rr=await fetchResponsesByOrder(id);
+  order.responses=rr.ok?rr.responses:(order.responses||[]);
   const header='Name,Shirt Style,Color,Decoration,Size,Category,Quantity,Unit Price,Line Total,Item Notes,Order Notes,Date';
   const rows=[];
   order.responses.forEach(r=>r.items.forEach(i=>{
@@ -1756,6 +1863,11 @@ function exportCSV(id){
 
 /* ════════════ MEMBER FORM ════════════ */
 let currentOrderId=null;
+let currentOrderData=null;
+let orderSubmitting=false;
+function currentOrder(){
+  return (currentOrderData&&currentOrderData.id===currentOrderId)?currentOrderData:getOrder(currentOrderId);
+}
 // cart = array of {shirtOptionId,shirtLabel,color,deco,size,cat,qty,notes}
 let cart=[];
 // panel state
@@ -1764,31 +1876,63 @@ let panelUniform=null;       // {places:[...],price} from the option
 let panelUniformVals={};     // {name_back:'JOHNSON', num_back:'12', ...}
 let panelUniformPrice=0;
 
-function loadOrderForm(id){
-  // hide app shell, show order page
+async function loadOrderForm(id){
   document.getElementById('app-shell').style.display='none';
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-order').classList.add('active');
-  currentOrderId=id;cart=[];
+  currentOrderId=id;currentOrderData=null;cart=[];orderSubmitting=false;
   panelShirtId=null;panelColor=null;panelDeco=null;panelSize=null;panelCat=null;panelQty=1;
   document.getElementById('member-name').value='';
   document.getElementById('member-notes').value='';
   ['err-name','err-cart'].forEach(i=>{const e=document.getElementById(i);if(e)e.classList.remove('show');});
   document.getElementById('success-screen').classList.remove('show');
   document.getElementById('order-form-content').classList.remove('hide');
-  document.getElementById('order-form-content').style.display='block';
   closeAddShirtPanel();
   renderCart();
 
-  const order=getOrder(id);
-  if(!order){document.getElementById('form-order-name').textContent='Order not found';return;}
+  const nameEl=document.getElementById('form-order-name');
+  const closedNotice=document.getElementById('order-closed-notice');
+  const unavailable=document.getElementById('order-unavailable-notice');
+  const formContent=document.getElementById('order-form-content');
+
+  if(unavailable)unavailable.style.display='none';
+  closedNotice.style.display='none';
+  formContent.style.display='none';
+  nameEl.textContent='Loading order…';
+  document.getElementById('form-order-deadline').textContent='--';
+  document.getElementById('form-response-count').textContent='0';
+
+  const res=await fetchOrderById(id);
+  if(!res.ok){
+    nameEl.textContent = res.reason==='notfound' ? 'Order not found' : 'Could not load order';
+    if(unavailable){
+      unavailable.innerHTML = res.reason==='notfound'
+        ? '<span>&#128533;</span><span>We couldn’t find that order. Double-check the link your group leader sent you.</span>'
+        : '<span>&#9888;&#65039;</span><span>Something went wrong loading this order. Please refresh and try again.</span>';
+      unavailable.style.display='flex';
+    }
+    return;
+  }
+
+  const order=res.order;
+  currentOrderData=order;
+
   document.getElementById('form-order-name').textContent=order.name;
   const dl=order.deadline?new Date(order.deadline+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'--';
   document.getElementById('form-order-deadline').textContent=dl;
   document.getElementById('form-response-count').textContent=order.responses.length;
   const closed=order.status==='closed';
-  document.getElementById('order-closed-notice').style.display=closed?'flex':'none';
-  document.getElementById('order-form-content').style.display=closed?'none':'block';
+  const expired=isOrderExpired(order);
+  if(closed||expired){
+    closedNotice.innerHTML = closed
+      ? '<span>&#9888;&#65039;</span><span>This order is <strong>closed</strong> and no longer accepting responses.</span>'
+      : '<span>&#9888;&#65039;</span><span>This order’s deadline has <strong>passed</strong> and it is no longer accepting responses.</span>';
+    closedNotice.style.display='flex';
+    formContent.style.display='none';
+    return;
+  }
+  closedNotice.style.display='none';
+  formContent.style.display='block';
 
   // populate shirt options in panel
   const opts=order.shirtOptions||[];
@@ -1839,7 +1983,7 @@ function closeAddShirtPanel(){
 }
 
 function panelSelectShirt(orderId,optionId){
-  const order=getOrder(orderId);if(!order)return;
+  const order=currentOrder();if(!order)return;
   const opt=(order.shirtOptions||[]).find(s=>s.id===optionId);if(!opt)return;
   panelShirtId=optionId;panelColor=null;
   // Decoration is set by the admin and baked into the option. Auto-apply ALL of its decorations.
@@ -1874,7 +2018,7 @@ function panelSelectSize(btn){document.querySelectorAll('#add-shirt-panel .size-
 function panelChangeQty(d){panelQty=Math.max(1,Math.min(99,panelQty+d));panelUpdateQty();panelUpdatePrice();}
 function panelUpdateQty(){document.getElementById('panel-qty-num').textContent=panelQty;document.getElementById('panel-qty-minus').disabled=panelQty<=1;}
 function panelUpdatePrice(){
-  const order=getOrder(currentOrderId);if(!order)return;
+  const order=currentOrder();if(!order)return;
   const opt=(order.shirtOptions||[]).find(s=>s.id===panelShirtId);
   const box=document.getElementById('panel-price-box');
   if(!opt){box.style.display='none';return;}
@@ -1895,7 +2039,7 @@ function panelUpdatePrice(){
 }
 
 function addToCart(){
-  const order=getOrder(currentOrderId);if(!order)return;
+  const order=currentOrder();if(!order)return;
   const hasOpts=(order.shirtOptions||[]).length>0;
   let valid=true;
   if(hasOpts){
@@ -1952,9 +2096,13 @@ function renderCart(){
 function cartChangeQty(idx,d){if(cart[idx]){cart[idx].qty=Math.max(1,Math.min(99,cart[idx].qty+d));renderCart();}}
 function removeCartItem(idx){cart.splice(idx,1);renderCart();}
 
-function submitOrder(){
+async function submitOrder(){
+  if(orderSubmitting)return;
   const name=document.getElementById('member-name').value.trim();
   const notes=document.getElementById('member-notes').value.trim();
+  const submitErr=document.getElementById('submit-error');
+  const btn=document.getElementById('submit-order-btn');
+  if(submitErr)submitErr.style.display='none';
   let valid=true;
   if(!name){document.getElementById('err-name').classList.add('show');document.getElementById('member-name').classList.add('input-error');valid=false;}
   else{document.getElementById('err-name').classList.remove('show');document.getElementById('member-name').classList.remove('input-error');}
@@ -1962,16 +2110,38 @@ function submitOrder(){
   else document.getElementById('err-cart').classList.remove('show');
   if(!valid)return;
 
-  const orders=loadOrders();const o=orders.find(x=>x.id===currentOrderId);if(!o)return;
   const totalShirts=cart.reduce((s,i)=>s+i.qty,0);
   const grandTotal=cart.reduce((s,i)=>s+(Number(i.unitPrice)||0)*i.qty,0);
   const anySuccessPrice=cart.some(i=>i.unitPrice>0);
-  o.responses.push({id:'r-'+Date.now(),name,items:cart.slice(),notes,date:Date.now(),orderTotal:grandTotal});
-  saveOrders(orders);
-  addLog(name+' submitted order ('+totalShirts+' shirt'+(totalShirts!==1?'s':'')+'): '+o.name,'new');
+
+  const payload={
+    id:genResponseId(),
+    order_id:currentOrderId,
+    name,
+    items:cart.slice(),
+    notes,
+    order_total:grandTotal
+  };
+
+  orderSubmitting=true;
+  const btnLabel=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.style.opacity='.7';btn.style.cursor='wait';btn.innerHTML='Submitting…';}
+
+  const result=await insertResponseRow(payload);
+  if(!result.ok){
+    orderSubmitting=false;
+    if(btn){btn.disabled=false;btn.style.opacity='';btn.style.cursor='';btn.innerHTML=btnLabel;}
+    if(submitErr){
+      submitErr.innerHTML='<span>&#9888;&#65039;</span><span>We couldn’t save your order just now. Please check your connection and try again.</span>';
+      submitErr.style.display='flex';
+    }
+    console.warn('Response insert failed:',result.error);
+    return;
+  }
+
+  addLog(name+' submitted order ('+totalShirts+' shirt'+(totalShirts!==1?'s':'')+'): '+(currentOrderData?currentOrderData.name:currentOrderId),'new');
 
   document.getElementById('order-form-content').classList.add('hide');
-  // build success summary
   const summaryHTML=`
     <div class="notice notice-success">
       <span>&#128203;</span>
@@ -1987,6 +2157,7 @@ function submitOrder(){
     </div>`;
   document.getElementById('success-cart-summary').innerHTML=summaryHTML;
   document.getElementById('success-screen').classList.add('show');
+  if(btn){btn.disabled=false;btn.style.opacity='';btn.style.cursor='';btn.innerHTML=btnLabel;}
 }
 
 /* ════════════ UTILS ════════════ */
