@@ -65,6 +65,11 @@ h3{font-size:15px;font-weight:700;color:var(--navy)}
 .form-group{margin-bottom:16px}
 label{display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 input[type="text"],input[type="date"],input[type="password"],textarea,select{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--white);font-family:inherit;transition:border-color .15s,box-shadow .15s;outline:none;-webkit-appearance:none;appearance:none}
+.password-wrap{position:relative}
+.password-wrap input{padding-right:64px}
+.password-toggle{position:absolute;top:50%;right:9px;transform:translateY(-50%);border:none;background:none;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;padding:4px 6px;border-radius:6px;line-height:1}
+.password-toggle:hover{color:var(--navy);background:var(--bg)}
+.password-toggle:focus{outline:none;box-shadow:0 0 0 3px rgba(27,42,74,0.10)}
 input:focus,textarea:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,42,74,0.10)}
 textarea{resize:vertical;min-height:64px}
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7A99' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
@@ -500,7 +505,10 @@ footer a{color:var(--yellow);text-decoration:none}
       </div>
       <div class="form-group">
         <label for="leader-pass">Password</label>
-        <input type="password" id="leader-pass" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLeaderLogin()">
+        <div class="password-wrap">
+          <input type="password" id="leader-pass" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLeaderLogin()">
+          <button type="button" class="password-toggle" onclick="togglePassword('leader-pass',this)" aria-label="Show password">Show</button>
+        </div>
       </div>
       <button class="btn btn-yellow btn-full" onclick="doLeaderLogin()">Sign in</button>
       <div class="login-hint">New here? <a href="#" onclick="showLeaderView('signup');return false;" style="color:var(--navy);font-weight:700;">Create a leader account</a></div>
@@ -517,11 +525,17 @@ footer a{color:var(--yellow);text-decoration:none}
       </div>
       <div class="form-group">
         <label for="signup-pass">Create password</label>
-        <input type="password" id="signup-pass" placeholder="At least 6 characters" autocomplete="new-password">
+        <div class="password-wrap">
+          <input type="password" id="signup-pass" placeholder="At least 6 characters" autocomplete="new-password">
+          <button type="button" class="password-toggle" onclick="togglePassword('signup-pass',this)" aria-label="Show password">Show</button>
+        </div>
       </div>
       <div class="form-group">
         <label for="signup-pass2">Confirm password</label>
-        <input type="password" id="signup-pass2" placeholder="Repeat password" autocomplete="new-password">
+        <div class="password-wrap">
+          <input type="password" id="signup-pass2" placeholder="Repeat password" autocomplete="new-password">
+          <button type="button" class="password-toggle" onclick="togglePassword('signup-pass2',this)" aria-label="Show password">Show</button>
+        </div>
       </div>
       <button class="btn btn-yellow btn-full" onclick="doLeaderSignup()">Create account &amp; sign in</button>
       <div class="login-hint">Already have an account? <a href="#" onclick="showLeaderView('signin');return false;" style="color:var(--navy);font-weight:700;">Sign in</a></div>
@@ -533,7 +547,10 @@ footer a{color:var(--yellow);text-decoration:none}
     <div class="login-error" id="login-err">Incorrect password. Try again.</div>
     <div class="form-group">
       <label for="login-pass">Shop admin password</label>
-      <input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+      <div class="password-wrap">
+        <input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+        <button type="button" class="password-toggle" onclick="togglePassword('login-pass',this)" aria-label="Show password">Show</button>
+      </div>
     </div>
     <button class="btn btn-yellow btn-full" onclick="doAdminLogin()">Sign in as Admin</button>
   </div>
@@ -720,15 +737,24 @@ footer a{color:var(--yellow);text-decoration:none}
     <div class="card-body">
       <div class="form-group">
         <label for="cur-pass">Current password</label>
-        <input type="password" id="cur-pass" placeholder="Current password">
+        <div class="password-wrap">
+          <input type="password" id="cur-pass" placeholder="Current password">
+          <button type="button" class="password-toggle" onclick="togglePassword('cur-pass',this)" aria-label="Show password">Show</button>
+        </div>
       </div>
       <div class="form-group">
         <label for="new-pass">New password</label>
-        <input type="password" id="new-pass" placeholder="At least 6 characters">
+        <div class="password-wrap">
+          <input type="password" id="new-pass" placeholder="At least 6 characters">
+          <button type="button" class="password-toggle" onclick="togglePassword('new-pass',this)" aria-label="Show password">Show</button>
+        </div>
       </div>
       <div class="form-group" style="margin-bottom:0;">
         <label for="conf-pass">Confirm new password</label>
-        <input type="password" id="conf-pass" placeholder="Repeat new password">
+        <div class="password-wrap">
+          <input type="password" id="conf-pass" placeholder="Repeat new password">
+          <button type="button" class="password-toggle" onclick="togglePassword('conf-pass',this)" aria-label="Show password">Show</button>
+        </div>
       </div>
       <div class="field-error" id="pass-err" style="margin-top:8px;"></div>
       <button class="btn btn-primary" style="margin-top:14px;" onclick="changePassword()">Update Password</button>
@@ -1957,6 +1983,14 @@ function submitOrder(){
 }
 
 /* ════════════ UTILS ════════════ */
+function togglePassword(inputId,btn){
+  const input=document.getElementById(inputId);
+  if(!input||!btn)return;
+  const showing=input.type==='text';
+  input.type=showing?'password':'text';
+  btn.textContent=showing?'Show':'Hide';
+  btn.setAttribute('aria-label',showing?'Show password':'Hide password');
+}
 function cssEsc(s){return String(s||'').replace(/"/g,'\\"');}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 let toastTimer;
