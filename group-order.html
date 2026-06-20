@@ -349,13 +349,116 @@ footer a{color:var(--yellow);text-decoration:none}
 
 /* ── EMPTY ── */
 .empty-state{text-align:center;padding:44px 20px}
+
+/* ══════════════ LOGIN LANDING PAGE ══════════════ */
+.lp-page{background:var(--bg);min-height:100vh}
+/* slim brand header */
+.lp-topbar{background:var(--navy);padding:13px 24px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lp-brand{display:flex;align-items:center;gap:10px}
+.lp-brand-name{color:#fff;font-size:14px;font-weight:700;line-height:1.2}
+.lp-brand-sub{color:rgba(255,255,255,.5);font-size:11px;line-height:1.2}
+.lp-topbar-note{color:rgba(255,255,255,.55);font-size:12px;font-weight:500}
+
+/* hero band (navy, holds copy + login box) */
+.lp-hero{background:var(--navy);padding:14px 20px 60px}
+.lp-hero-inner{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+.lp-hero-copy{padding-top:18px}
+.lp-eyebrow{display:inline-block;font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--yellow);background:rgba(245,200,66,.12);border:1px solid rgba(245,200,66,.32);padding:5px 13px;border-radius:20px;margin-bottom:18px}
+.lp-hero-copy h1{font-size:42px;line-height:1.12;color:#fff;font-weight:800;letter-spacing:-.5px;margin-bottom:15px}
+.lp-hero-copy h1 .hl{color:var(--yellow)}
+.lp-sub{font-size:16px;line-height:1.6;color:rgba(255,255,255,.72);max-width:460px;margin-bottom:24px}
+.lp-points{display:flex;flex-direction:column;gap:11px}
+.lp-point{display:flex;align-items:center;gap:11px;font-size:14px;font-weight:500;color:rgba(255,255,255,.9)}
+.lp-point-check{width:22px;height:22px;border-radius:50%;background:rgba(245,200,66,.16);color:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.lp-hero-form{display:flex;justify-content:center}
+.lp-hero-form .login-box{margin:0}
+
+/* light info sections */
+.lp-section{padding:54px 20px}
+.lp-section-head{max-width:1080px;margin:0 auto 30px;text-align:center}
+.lp-section-head .lp-sec-eyebrow{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.lp-section-head h2{font-size:26px;margin-bottom:9px}
+.lp-section-head p{color:var(--muted);font-size:15px;max-width:560px;margin:0 auto;line-height:1.55}
+
+.lp-benefit-grid{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.lp-benefit{background:var(--white);border:.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 20px;transition:transform .15s,box-shadow .15s}
+.lp-benefit:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(27,42,74,.12)}
+.lp-benefit-icon{width:44px;height:44px;border-radius:11px;background:var(--yellow-lt);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px}
+.lp-benefit h3{font-size:15px;margin-bottom:6px}
+.lp-benefit p{font-size:13px;color:var(--muted);line-height:1.55}
+
+/* how it works strip */
+.lp-steps{background:var(--white);border-top:.5px solid var(--border);border-bottom:.5px solid var(--border)}
+.lp-steps-inner{max-width:880px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.lp-step{text-align:center}
+.lp-step-num{width:38px;height:38px;border-radius:50%;background:var(--navy);color:var(--yellow);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.lp-step h3{font-size:14px;margin-bottom:5px}
+.lp-step p{font-size:13px;color:var(--muted);line-height:1.5}
+
+@media(max-width:860px){
+  .lp-hero-inner{grid-template-columns:1fr;gap:30px}
+  .lp-hero-copy{text-align:center;padding-top:6px}
+  .lp-sub{margin-left:auto;margin-right:auto}
+  .lp-points{align-items:center}
+  .lp-hero-copy h1{font-size:34px}
+  .lp-benefit-grid{grid-template-columns:1fr 1fr}
+  .lp-steps-inner{grid-template-columns:1fr;gap:20px}
+}
+@media(max-width:520px){
+  .lp-topbar-note{display:none}
+  .lp-hero{padding-bottom:42px}
+  .lp-hero-copy h1{font-size:27px}
+  .lp-sub{font-size:15px}
+  .lp-benefit-grid{grid-template-columns:1fr}
+  .lp-section{padding:40px 18px}
+  .lp-section-head h2{font-size:22px}
+}
 </style>
 </head>
 <body>
 
 <!-- ══════════════ LOGIN PAGE ══════════════ -->
-<div id="page-login" class="page active" style="min-height:100vh;background:var(--navy);">
-<div class="login-wrap">
+<div id="page-login" class="page active lp-page" style="min-height:100vh;background:var(--bg);">
+
+  <!-- slim brand header -->
+  <div class="lp-topbar">
+    <div class="lp-brand">
+      <svg width="30" height="30" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="40" cy="46" r="11" fill="#F5C842"/><circle cx="40" cy="46" r="7.5" fill="#1B2A4A"/><circle cx="40" cy="46" r="3.5" fill="#F5C842"/>
+        <line x1="40" y1="46" x2="14" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="46" x2="40" y2="12" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="46" x2="66" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="46" x2="68" y2="54" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="46" x2="16" y2="62" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+        <rect x="2" y="12" width="22" height="16" rx="2.5" fill="#E84393" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-22 13 20)"/>
+        <rect x="28" y="2" width="22" height="17" rx="2.5" fill="#F5C842" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(4 39 10)"/>
+        <rect x="56" y="10" width="22" height="17" rx="2.5" fill="#5BB8F5" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(22 67 18)"/>
+        <rect x="60" y="44" width="18" height="14" rx="2.5" fill="#E8542A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(32 69 51)"/>
+        <rect x="6" y="54" width="18" height="14" rx="2.5" fill="#4CC97A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-28 15 61)"/>
+      </svg>
+      <div>
+        <div class="lp-brand-name">My Shirt Printing</div>
+        <div class="lp-brand-sub">Group Order Portal</div>
+      </div>
+    </div>
+    <div class="lp-topbar-note">Custom printing &amp; embroidery, organized.</div>
+  </div>
+
+  <!-- hero: headline + login form -->
+  <div class="lp-hero">
+    <div class="lp-hero-inner">
+      <div class="lp-hero-copy">
+        <span class="lp-eyebrow">Group Order Portal</span>
+        <h1>Group Ordering <span class="hl">Made Simple</span></h1>
+        <p class="lp-sub">Collect, customize, and manage group print &amp; embroidery orders in one place. Share a single link &mdash; everyone picks their own sizes, colors, names, and numbers.</p>
+        <div class="lp-points">
+          <div class="lp-point"><span class="lp-point-check">&#10003;</span> No accounts needed for your members</div>
+          <div class="lp-point"><span class="lp-point-check">&#10003;</span> Set your products, prices &amp; options once</div>
+          <div class="lp-point"><span class="lp-point-check">&#10003;</span> Track submissions and totals as they arrive</div>
+        </div>
+      </div>
+
+      <div class="lp-hero-form">
 <div class="login-box">
   <div class="login-logo">
     <svg width="40" height="40" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
@@ -447,7 +550,72 @@ footer a{color:var(--yellow);text-decoration:none}
     <button class="btn btn-primary btn-full" onclick="openMemberLink()">Open Order Form</button>
   </div>
 </div>
-</div>
+      </div><!-- /.lp-hero-form -->
+    </div><!-- /.lp-hero-inner -->
+  </div><!-- /.lp-hero -->
+
+  <!-- benefits -->
+  <div class="lp-section">
+    <div class="lp-section-head">
+      <div class="lp-sec-eyebrow">Why use it</div>
+      <h2>Everything you need to run a group order</h2>
+      <p>From the first shirt to the final tally, the whole order stays organized in one place.</p>
+    </div>
+    <div class="lp-benefit-grid">
+      <div class="lp-benefit">
+        <div class="lp-benefit-icon">&#128203;</div>
+        <h3>Easy group order collection</h3>
+        <p>Share one link and let members add their own shirts &mdash; no sign-ups or back-and-forth texts required.</p>
+      </div>
+      <div class="lp-benefit">
+        <div class="lp-benefit-icon">&#128085;</div>
+        <h3>Custom names, numbers &amp; sizes</h3>
+        <p>Collect personalized names, numbers, sizes, colors, and decoration choices for every single person.</p>
+      </div>
+      <div class="lp-benefit">
+        <div class="lp-benefit-icon">&#127991;</div>
+        <h3>Admin-controlled pricing &amp; setup</h3>
+        <p>You define the products, prices, and options up front. Everyone orders from the same catalog you built.</p>
+      </div>
+      <div class="lp-benefit">
+        <div class="lp-benefit-icon">&#9989;</div>
+        <h3>Tracking &amp; organized submissions</h3>
+        <p>Watch responses roll in, see running totals, and keep every submission neat and easy to review.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- how it works -->
+  <div class="lp-steps">
+    <div class="lp-section">
+      <div class="lp-section-head">
+        <div class="lp-sec-eyebrow">How it works</div>
+        <h2>Three steps from idea to order</h2>
+      </div>
+      <div class="lp-steps-inner">
+        <div class="lp-step">
+          <div class="lp-step-num">1</div>
+          <h3>Create a group order</h3>
+          <p>Pick your products and set sizes, colors, decoration, and pricing.</p>
+        </div>
+        <div class="lp-step">
+          <div class="lp-step-num">2</div>
+          <h3>Share the link</h3>
+          <p>Send your group one link to collect everyone&rsquo;s choices in their own words.</p>
+        </div>
+        <div class="lp-step">
+          <div class="lp-step-num">3</div>
+          <h3>Track &amp; submit</h3>
+          <p>Review submissions and totals, then close the order when you&rsquo;re ready.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    My Shirt Printing &mdash; Group Order Portal &nbsp;&bull;&nbsp; Custom printing &amp; embroidery
+  </footer>
+
 </div>
 
 <!-- ══════════════ MAIN APP SHELL ══════════════ -->
