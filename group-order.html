@@ -589,7 +589,6 @@ footer a{color:var(--yellow);text-decoration:none}
       </div>
       <button class="btn btn-yellow btn-full" onclick="doLeaderLogin()">Sign in</button>
       <div class="login-hint">New here? <a href="#" onclick="showLeaderView('signup');return false;" style="color:var(--navy);font-weight:700;">Create a leader account</a></div>
-      <div class="login-hint">No confirmation email? <button type="button" class="link-btn" onclick="resendLeaderConfirmation()">Resend it</button></div>
     </div>
 
     <div id="leader-signup-view" style="display:none;">
@@ -615,7 +614,7 @@ footer a{color:var(--yellow);text-decoration:none}
           <button type="button" class="password-toggle" onclick="togglePassword('signup-pass2',this)" aria-label="Show password">Show</button>
         </div>
       </div>
-      <button class="btn btn-yellow btn-full" onclick="doLeaderSignup()">Create account</button>
+      <button class="btn btn-yellow btn-full" onclick="doLeaderSignup()">Create account &amp; sign in</button>
       <div class="login-hint">Already have an account? <a href="#" onclick="showLeaderView('signin');return false;" style="color:var(--navy);font-weight:700;">Sign in</a></div>
     </div>
   </div>
@@ -1192,8 +1191,10 @@ function friendlyAuthError(error,defaultMessage){
   const msg=String(error&&error.message||'').trim();
   if(!msg)return defaultMessage;
   if(/invalid login credentials/i.test(msg))return 'Incorrect email or password.';
-  if(/email.*not confirmed|confirm your email/i.test(msg))return 'Check your email to confirm your account, then sign in.';
+  if(/email.*not confirmed|confirm your email/i.test(msg))return 'This account is still waiting for email confirmation. Turn off email confirmation in Supabase Auth settings to allow immediate sign-in.';
   if(/already registered|already been registered|user already registered/i.test(msg))return 'An account with that email already exists. Try signing in.';
+  if(/signup.*disabled|email.*disabled/i.test(msg))return 'Email signups are disabled in Supabase Auth settings.';
+  if(/rate limit|security purposes/i.test(msg))return 'Supabase is temporarily limiting account requests. Please wait a minute, then try again.';
   return msg;
 }
 function getLegacyLeaderAccount(email,pass){
@@ -1450,7 +1451,6 @@ let currentRole=null;        // 'admin' or 'leader'
 let currentLeaderOrderId=null; // used when a member-ish leader-code login targets ONE order
 let currentLeaderId=null;     // logged-in leader account id (owns multiple orders)
 let currentLeaderName=null;
-let pendingLeaderEmail='';
 
 function switchLoginTab(tab){
   ['leader','admin','member'].forEach(t=>{
@@ -1477,36 +1477,8 @@ function leaderMessage(msg,type){
 }
 function leaderErr(msg){leaderMessage(msg);}
 
-function getAuthRedirectUrl(){
-  const url=new URL(location.href);
-  if(!/^https?:$/.test(url.protocol))return '';
-  url.hash='';
-  url.search='';
-  return url.toString();
-}
-
 function getSignupOptions(name){
-  const options={data:{name}};
-  const redirectTo=getAuthRedirectUrl();
-  if(sbReady()&&redirectTo)options.emailRedirectTo=redirectTo;
-  return options;
-}
-
-async function resendLeaderConfirmation(){
-  const email=(document.getElementById('leader-email').value||document.getElementById('signup-email').value||pendingLeaderEmail||'').trim();
-  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){leaderErr('Enter your email address above, then resend the confirmation email.');return;}
-  pendingLeaderEmail=email;
-  if(!sbReady()){leaderMessage('This page is running in local-storage mode, so no confirmation email can be sent from here. You can sign in with the password you created on this device.', 'info');return;}
-  try{
-    const payload={type:'signup',email};
-    const redirectTo=getAuthRedirectUrl();
-    if(redirectTo)payload.options={emailRedirectTo:redirectTo};
-    const {error}=await SB.auth.resend(payload);
-    if(error){leaderErr(friendlyAuthError(error,'Could not resend the confirmation email. Try again.'));return;}
-    leaderMessage('Confirmation email sent. Check your inbox and spam folder, then return here to sign in.', 'success');
-  }catch(e){
-    leaderErr(friendlyAuthError(e,'Could not resend the confirmation email. Try again.'));
-  }
+  return {data:{name}};
 }
 
 async function doLeaderSignup(){
@@ -1524,26 +1496,18 @@ async function doLeaderSignup(){
       if(error){leaderErr(friendlyAuthError(error,'Could not create account. Try again.'));return;}
       ['signup-pass','signup-pass2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       addLog('New leader account: '+name+' ('+email+')','new');
-      pendingLeaderEmail=email;
       if(data&&data.user&&data.session){
         await enterAsLeader(leaderAccountFromSupabaseUser(data.user,name));
-        showToast('Account created. Email verification is not required in the current Supabase settings.');
+        showToast('Account created. You are signed in.');
         return;
       }
-      document.getElementById('signup-name').value='';
-      document.getElementById('signup-email').value='';
       document.getElementById('leader-email').value=email;
       showLeaderView('signin');
-      leaderMessage('Account created. Check your email to confirm it, then sign in. If it does not arrive, use Resend it below.', 'success');
+      leaderMessage('Supabase created the account, but email confirmation is still enabled. Turn it off in Supabase Auth settings, then this form will sign people in immediately after account creation.', 'info');
       return;
     }catch(e){leaderErr(friendlyAuthError(e,'Could not create account. Try again.'));return;}
   }
-  if(getAccountByEmail(email)){leaderErr('An account with that email already exists. Try signing in.');return;}
-  const acct={id:'leader-'+Date.now(),name,email,pass:hashPass(pass),created:Date.now()};
-  const accts=getAccounts();accts.push(acct);saveAccounts(accts);
-  addLog('New leader account: '+name+' ('+email+')','new');
-  await enterAsLeader(acct);
-  showToast('Account created locally. Email verification is unavailable in local-storage mode.');
+  leaderMessage('Cannot create a verified leader account because Supabase Auth is not connected on this page. Check that supabase-config.js and the Supabase script are loading on the live site, then try again.', 'info');
 }
 
 async function doLeaderLogin(){
