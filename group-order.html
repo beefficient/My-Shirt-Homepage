@@ -969,7 +969,7 @@ footer a{color:var(--yellow);text-decoration:none}
     <div class="success-screen" id="success-screen">
       <div class="success-icon">&#10003;</div>
       <h2 style="margin-bottom:8px;">Order submitted!</h2>
-      <p class="muted" style="margin-bottom:20px;">Thanks! My Shirt Printing will be in touch.</p>
+      <p class="muted" style="margin-bottom:20px;">Your order has been submitted to the group leader.</p>
       <div id="success-cart-summary" style="max-width:380px;margin:0 auto 20px;text-align:left;"></div>
       <a href="https://myshirtsantaclara.com" class="btn btn-outline">Visit myshirtsantaclara.com</a>
     </div>
@@ -997,6 +997,13 @@ footer a{color:var(--yellow);text-decoration:none}
     <div class="deadline-info">&#128465;&#65039; Leave blank to keep data indefinitely. With Supabase connected, a daily job purges orders past this date.</div>
   </div>
   <div class="form-group"><label for="new-order-desc">Instructions for group <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label><textarea id="new-order-desc" placeholder="Any info your group needs&#8230;" style="min-height:52px;"></textarea></div>
+  <div class="uniform-toggle-row" style="margin-top:4px;">
+    <label class="uni-switch"><input type="checkbox" id="new-order-show-pricing" checked><span class="uni-slider"></span></label>
+    <div>
+      <div style="font-weight:700;font-size:13px;color:var(--navy);">Show pricing to members</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.35;">When off, members won&#8217;t see any prices or totals on the order form. You&#8217;ll still see full pricing in your submissions.</div>
+    </div>
+  </div>
   <hr class="divider">
   <div class="section-header" style="margin-bottom:8px;">
     <div><div class="eyebrow" style="margin-bottom:2px;">Shirt Options</div><p class="muted" style="font-size:12px;">Add styles your group chooses from.</p></div>
@@ -1158,6 +1165,7 @@ function dbOrderToApp(row){
     desc:row.description||'',
     status:row.status||'open',
     shirtOptions:Array.isArray(row.shirt_options)?row.shirt_options:(row.shirt_options||[]),
+    showPricing:row.show_pricing!==false,
     responses:[],
     created:row.created_at?new Date(row.created_at).getTime():Date.now(),
     ownerName:row.owner_id&&row.owner_id===currentLeaderId?(currentLeaderName||'Group Leader'):'Shop Admin',ownerId:row.owner_id||null,
@@ -1209,9 +1217,16 @@ async function insertOrderRow(order){
       description:order.desc,
       status:order.status,
       shirt_options:order.shirtOptions,
+      show_pricing:order.showPricing!==false,
       owner_id:userData.user.id
     };
-    const {error}=await SB.from('orders').insert(payload);
+    let {error}=await SB.from('orders').insert(payload);
+    if(error&&/show_pricing/i.test(error.message||'')){
+      // Older databases may not have the show_pricing column yet — save without it.
+      const {show_pricing,...legacyPayload}=payload;
+      console.warn('orders.show_pricing column not found — saving without member-pricing preference. Add it with: alter table orders add column show_pricing boolean default true;');
+      ({error}=await SB.from('orders').insert(legacyPayload));
+    }
     if(error)return {ok:false,error};
     return {ok:true};
   }catch(e){return {ok:false,error:e};}
@@ -1773,6 +1788,7 @@ const optImages={},optColors={},optStyleSel={},optUniform={};
 
 function openCreateModal(){
   ['new-order-name','new-order-desc'].forEach(id=>document.getElementById(id).value='');
+  const spc=document.getElementById('new-order-show-pricing');if(spc)spc.checked=true;
   ['err-new-name','err-new-deadline','err-shirt-options'].forEach(id=>document.getElementById(id).classList.remove('show'));
   const d=new Date();d.setDate(d.getDate()+14);
   document.getElementById('new-order-deadline').value=d.toISOString().split('T')[0];
@@ -1964,7 +1980,8 @@ async function createOrder(){
   const ownerAcct=currentLeaderId?getAccountById(currentLeaderId):null;
   const ownerId=currentLeaderId||null;
   const ownerName=currentLeaderName||(ownerAcct?ownerAcct.name:'Shop Admin');
-  const newOrder={id:'order-'+Date.now(),name,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),ownerId,ownerName,status:'open',created:Date.now(),shirtOptions,responses:[]};
+  const showPricing=document.getElementById('new-order-show-pricing')?document.getElementById('new-order-show-pricing').checked:true;
+  const newOrder={id:'order-'+Date.now(),name,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),ownerId,ownerName,status:'open',created:Date.now(),showPricing,shirtOptions,responses:[]};
   if(sbReady()){
     const result=await insertOrderRow(newOrder);
     if(!result.ok){
@@ -2022,6 +2039,8 @@ let orderSubmitting=false;
 function currentOrder(){
   return (currentOrderData&&currentOrderData.id===currentOrderId)?currentOrderData:getOrder(currentOrderId);
 }
+// Whether members should see prices/totals on this order (leader-controlled; defaults on)
+function pricingVisible(){const o=currentOrder();return o?o.showPricing!==false:true;}
 // cart = array of {shirtOptionId,shirtLabel,color,deco,size,cat,qty,notes}
 let cart=[];
 // panel state
@@ -2100,7 +2119,7 @@ async function loadOrderForm(id){
       const sw=(so.colors||[]).map(c=>`<span class="color-swatch" style="background:${c.hex};" title="${esc(c.name)}"></span>`).join('');
       const decoText=(so.decos||[]).map(d=>d.name).join(', ');
       const optPrice=(Number(so.basePrice)||0)+(so.decos||[]).reduce((s,d)=>s+(Number(d.price)||0),0);
-      const hasPrice=optPrice>0;
+      const hasPrice=optPrice>0&&pricingVisible();
       return `<div class="shirt-option-card" id="popt-${so.id}" onclick="panelSelectShirt('${order.id}','${so.id}')">
         <div class="option-img-wrap">${imgHTML}<div class="option-check">&#10003;</div></div>
         <div class="option-info">
@@ -2161,7 +2180,7 @@ function panelSelectShirt(orderId,optionId){
       return `<div class="deco-included">
         <span class="deco-choice-icon">${icon}</span>
         <span class="deco-choice-label">${esc(d.name)}</span>
-        ${d.price>0?`<span class="deco-choice-price">+${fmtPrice(d.price)}</span>`:''}
+        ${d.price>0&&pricingVisible()?`<span class="deco-choice-price">+${fmtPrice(d.price)}</span>`:''}
       </div>`;
     }).join('');
   }else decoSec.style.display='none';
@@ -2242,7 +2261,7 @@ function panelUpdatePrice(){
   const uniPrice=Number(panelUniformPrice)||0;
   const unit=base+decoPrice+uniPrice;
   // only show pricing if this order actually has prices set
-  const hasPrices=(opt.basePrice>0)||(opt.decos||[]).some(d=>d.price>0)||(panelUniform&&(Number(panelUniform.price)||0)>0);
+  const hasPrices=pricingVisible()&&((opt.basePrice>0)||(opt.decos||[]).some(d=>d.price>0)||(panelUniform&&(Number(panelUniform.price)||0)>0));
   if(!hasPrices){box.style.display='none';return;}
   box.style.display='block';
   document.getElementById('pp-base').textContent=fmtPrice(base);
@@ -2298,12 +2317,12 @@ function renderCart(){
   const totalNum=document.getElementById('cart-total-num');
   const totalShirts=cart.reduce((s,i)=>s+i.qty,0);
   const grandTotal=cart.reduce((s,i)=>s+(Number(i.unitPrice)||0)*i.qty,0);
-  const anyPriceT=cart.some(i=>i.unitPrice>0);
+  const anyPriceT=pricingVisible()&&cart.some(i=>i.unitPrice>0);
   badge.textContent=totalShirts>0?totalShirts+' shirt'+(totalShirts!==1?'s':'') +' in your order':'';
   totalNum.innerHTML=anyPriceT?(totalShirts+' &middot; <span style="color:#fff;">'+fmtPrice(grandTotal)+'</span>'):totalShirts;
   totalRow.style.display=totalShirts>0?'flex':'none';
   if(!cart.length){list.innerHTML='<div style="padding:12px 0;color:var(--muted);font-size:13px;font-style:italic;">No shirts added yet. Click "Add a shirt" below.</div>';return;}
-  const anyPrice=cart.some(i=>i.unitPrice>0);
+  const anyPrice=pricingVisible()&&cart.some(i=>i.unitPrice>0);
   list.innerHTML=cart.map((item,idx)=>{
     const detail=[item.color,item.deco,item.size+(item.cat!=='adult'?' ('+item.cat+')':'')].filter(Boolean).join(' &middot; ');
     const lineTotal=(Number(item.unitPrice)||0)*item.qty;
@@ -2345,7 +2364,7 @@ async function submitOrder(){
 
   const totalShirts=cart.reduce((s,i)=>s+i.qty,0);
   const grandTotal=cart.reduce((s,i)=>s+(Number(i.unitPrice)||0)*i.qty,0);
-  const anySuccessPrice=cart.some(i=>i.unitPrice>0);
+  const anySuccessPrice=pricingVisible()&&cart.some(i=>i.unitPrice>0);
 
   const payload={
     id:genResponseId(),
