@@ -139,10 +139,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .login-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:10px}
 .link-btn{border:none;background:none;color:var(--navy);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;padding:0}
 .link-btn:hover{opacity:.8}
-.auth-status{display:none;margin:-8px 0 14px;padding:8px 11px;border-radius:7px;font-size:12px;line-height:1.4}
-.auth-status.show{display:block}
-.auth-status.ok{background:var(--youth-bg);border:1px solid var(--youth-bd);color:var(--success)}
-.auth-status.warn{background:var(--yellow-lt);border:1px solid #E8D88A;color:#8A6E00}
 
 /* ── SHIRT OPTION BUILDER ── */
 .shirt-options-list{display:flex;flex-direction:column;gap:12px;margin-top:8px}
@@ -573,7 +569,6 @@ footer a{color:var(--yellow);text-decoration:none}
     <button class="login-tab" id="ltab-admin" onclick="switchLoginTab('admin')">Shop Admin</button>
     <button class="login-tab" id="ltab-member" onclick="switchLoginTab('member')">Order Link</button>
   </div>
-  <div class="auth-status" id="auth-status"></div>
 
   <!-- Leader login / signup -->
   <div id="login-leader-form">
@@ -1234,15 +1229,6 @@ let SB=null;
   }catch(e){console.warn('Supabase init failed; using local storage.',e);SB=null;}
 })();
 function sbReady(){return !!SB;}
-
-function renderAuthStatus(){
-  const el=document.getElementById('auth-status');
-  if(!el)return;
-  el.className='auth-status show '+(sbReady()?'ok':'warn');
-  el.textContent=sbReady()
-    ? 'Supabase Auth connected. New leader accounts should appear under Authentication > Users.'
-    : 'Supabase Auth is not connected on this page. New leader accounts are being saved only in this browser, and no confirmation email will be sent.';
-}
 
 function genResponseId(){
   return 'r-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
@@ -2671,7 +2657,6 @@ function checkRoute(){
 
 /* ════════════ INIT ════════════ */
 async function initApp(){
-  renderAuthStatus();
   cleanupLegacyCodeAccess();
   seedDemo();
   switchLoginTab('leader');
