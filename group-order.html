@@ -589,6 +589,7 @@ footer a{color:var(--yellow);text-decoration:none}
       </div>
       <button class="btn btn-yellow btn-full" onclick="doLeaderLogin()">Sign in</button>
       <div class="login-hint">New here? <a href="#" onclick="showLeaderView('signup');return false;" style="color:var(--navy);font-weight:700;">Create a leader account</a></div>
+      <div class="login-hint"><button type="button" class="link-btn" onclick="requestLeaderPasswordReset()">Forgot password?</button></div>
     </div>
 
     <div id="leader-signup-view" style="display:none;">
@@ -1103,6 +1104,29 @@ footer a{color:var(--yellow);text-decoration:none}
 </div>
 </div>
 
+<!-- ══════ PASSWORD RESET MODAL ══════ -->
+<div class="modal-overlay" id="password-reset-modal">
+<div class="modal" style="max-width:420px;">
+  <h2>Set New Password</h2>
+  <div class="login-error" id="reset-pass-err"></div>
+  <div class="form-group">
+    <label for="reset-new-pass">New password</label>
+    <div class="password-wrap">
+      <input type="password" id="reset-new-pass" placeholder="At least 6 characters" autocomplete="new-password">
+      <button type="button" class="password-toggle" onclick="togglePassword('reset-new-pass',this)" aria-label="Show password">Show</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="reset-conf-pass">Confirm password</label>
+    <div class="password-wrap">
+      <input type="password" id="reset-conf-pass" placeholder="Repeat new password" autocomplete="new-password">
+      <button type="button" class="password-toggle" onclick="togglePassword('reset-conf-pass',this)" aria-label="Show password">Show</button>
+    </div>
+  </div>
+  <button class="btn btn-yellow btn-full" onclick="completeLeaderPasswordReset()">Update password &amp; sign in</button>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1451,6 +1475,7 @@ let currentRole=null;        // 'admin' or 'leader'
 let currentLeaderOrderId=null; // used when a member-ish leader-code login targets ONE order
 let currentLeaderId=null;     // logged-in leader account id (owns multiple orders)
 let currentLeaderName=null;
+let passwordRecoveryMode=false;
 
 function switchLoginTab(tab){
   ['leader','admin','member'].forEach(t=>{
@@ -1479,6 +1504,82 @@ function leaderErr(msg){leaderMessage(msg);}
 
 function getSignupOptions(name){
   return {data:{name}};
+}
+
+function getPageUrlWithoutAuthParams(){
+  const url=new URL(location.href);
+  if(!/^https?:$/.test(url.protocol))return '';
+  url.search='';
+  url.hash='';
+  return url.toString();
+}
+
+function isPasswordRecoveryUrl(){
+  return /type=recovery|type=password_recovery/i.test(location.search+location.hash);
+}
+
+function setupAuthRecoveryListener(){
+  if(!sbReady())return;
+  SB.auth.onAuthStateChange(function(event,session){
+    if(event==='PASSWORD_RECOVERY'){
+      passwordRecoveryMode=true;
+      document.getElementById('page-login').classList.add('active');
+      document.getElementById('app-shell').style.display='none';
+      switchLoginTab('leader');
+      openPasswordResetModal();
+    }
+  });
+}
+
+function openPasswordResetModal(){
+  const modal=document.getElementById('password-reset-modal');
+  if(modal)modal.classList.add('open');
+  const err=document.getElementById('reset-pass-err');
+  if(err){err.textContent='';err.classList.remove('show');}
+  setTimeout(()=>document.getElementById('reset-new-pass')?.focus(),50);
+}
+
+function closePasswordResetModal(){
+  document.getElementById('password-reset-modal')?.classList.remove('open');
+}
+
+function resetPassErr(msg){
+  const err=document.getElementById('reset-pass-err');
+  err.textContent=msg;err.classList.add('show');
+}
+
+async function requestLeaderPasswordReset(){
+  const email=(document.getElementById('leader-email').value||'').trim();
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){leaderErr('Enter your email address, then choose Forgot password.');return;}
+  if(!sbReady()){leaderMessage('Password reset requires Supabase Auth to be connected on this page.', 'info');return;}
+  try{
+    const options={};
+    const redirectTo=getPageUrlWithoutAuthParams();
+    if(redirectTo)options.redirectTo=redirectTo;
+    const {error}=await SB.auth.resetPasswordForEmail(email,options);
+    if(error){leaderErr(friendlyAuthError(error,'Could not send password reset. Try again.'));return;}
+    leaderMessage('Password reset sent. Open the email link, then set a new password here.', 'success');
+  }catch(e){
+    leaderErr(friendlyAuthError(e,'Could not send password reset. Try again.'));
+  }
+}
+
+async function completeLeaderPasswordReset(){
+  const pass=document.getElementById('reset-new-pass').value;
+  const pass2=document.getElementById('reset-conf-pass').value;
+  if(pass.length<6){resetPassErr('Password must be at least 6 characters.');return;}
+  if(pass!==pass2){resetPassErr('Passwords do not match.');return;}
+  if(!sbReady()){resetPassErr('Supabase Auth is not connected.');return;}
+  try{
+    const {data,error}=await SB.auth.updateUser({password:pass});
+    if(error){resetPassErr(friendlyAuthError(error,'Could not update password. Try again.'));return;}
+    ['reset-new-pass','reset-conf-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    closePasswordResetModal();
+    showToast('Password updated. You are signed in.');
+    if(data&&data.user){await enterAsLeader(leaderAccountFromSupabaseUser(data.user));}
+  }catch(e){
+    resetPassErr(friendlyAuthError(e,'Could not update password. Try again.'));
+  }
 }
 
 async function doLeaderSignup(){
@@ -2625,7 +2726,9 @@ async function initApp(){
   seedDemo();
   switchLoginTab('leader');
   showLeaderView('signin');
-  await restoreLeaderSession();
+  setupAuthRecoveryListener();
+  passwordRecoveryMode=isPasswordRecoveryUrl();
+  if(!passwordRecoveryMode)await restoreLeaderSession();
   checkRoute();
 }
 initApp();
