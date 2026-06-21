@@ -134,7 +134,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .login-tab.active{background:var(--white);color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,0.10)}
 .login-error{background:#fef0ee;border:1px solid #f0c0bb;border-radius:7px;padding:8px 12px;color:var(--error);font-size:13px;margin-bottom:14px;display:none}
 .login-error.show{display:block}
+.login-error.info{background:var(--todd-bg);border-color:var(--todd-bd);color:var(--todd-tx)}
+.login-error.success{background:var(--youth-bg);border-color:var(--youth-bd);color:var(--success)}
 .login-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:10px}
+.link-btn{border:none;background:none;color:var(--navy);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;padding:0}
+.link-btn:hover{opacity:.8}
 
 /* ── SHIRT OPTION BUILDER ── */
 .shirt-options-list{display:flex;flex-direction:column;gap:12px;margin-top:8px}
@@ -585,6 +589,7 @@ footer a{color:var(--yellow);text-decoration:none}
       </div>
       <button class="btn btn-yellow btn-full" onclick="doLeaderLogin()">Sign in</button>
       <div class="login-hint">New here? <a href="#" onclick="showLeaderView('signup');return false;" style="color:var(--navy);font-weight:700;">Create a leader account</a></div>
+      <div class="login-hint">No confirmation email? <button type="button" class="link-btn" onclick="resendLeaderConfirmation()">Resend it</button></div>
     </div>
 
     <div id="leader-signup-view" style="display:none;">
@@ -610,7 +615,7 @@ footer a{color:var(--yellow);text-decoration:none}
           <button type="button" class="password-toggle" onclick="togglePassword('signup-pass2',this)" aria-label="Show password">Show</button>
         </div>
       </div>
-      <button class="btn btn-yellow btn-full" onclick="doLeaderSignup()">Create account &amp; sign in</button>
+      <button class="btn btn-yellow btn-full" onclick="doLeaderSignup()">Create account</button>
       <div class="login-hint">Already have an account? <a href="#" onclick="showLeaderView('signin');return false;" style="color:var(--navy);font-weight:700;">Sign in</a></div>
     </div>
   </div>
@@ -1445,6 +1450,7 @@ let currentRole=null;        // 'admin' or 'leader'
 let currentLeaderOrderId=null; // used when a member-ish leader-code login targets ONE order
 let currentLeaderId=null;     // logged-in leader account id (owns multiple orders)
 let currentLeaderName=null;
+let pendingLeaderEmail='';
 
 function switchLoginTab(tab){
   ['leader','admin','member'].forEach(t=>{
@@ -1463,9 +1469,44 @@ function showLeaderView(view){
   document.getElementById('leader-login-err').classList.remove('show');
 }
 
-function leaderErr(msg){
+function leaderMessage(msg,type){
   const e=document.getElementById('leader-login-err');
+  e.classList.remove('info','success');
+  if(type)e.classList.add(type);
   e.textContent=msg;e.classList.add('show');
+}
+function leaderErr(msg){leaderMessage(msg);}
+
+function getAuthRedirectUrl(){
+  const url=new URL(location.href);
+  if(!/^https?:$/.test(url.protocol))return '';
+  url.hash='';
+  url.search='';
+  return url.toString();
+}
+
+function getSignupOptions(name){
+  const options={data:{name}};
+  const redirectTo=getAuthRedirectUrl();
+  if(sbReady()&&redirectTo)options.emailRedirectTo=redirectTo;
+  return options;
+}
+
+async function resendLeaderConfirmation(){
+  const email=(document.getElementById('leader-email').value||document.getElementById('signup-email').value||pendingLeaderEmail||'').trim();
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){leaderErr('Enter your email address above, then resend the confirmation email.');return;}
+  pendingLeaderEmail=email;
+  if(!sbReady()){leaderMessage('This page is running in local-storage mode, so no confirmation email can be sent from here. You can sign in with the password you created on this device.', 'info');return;}
+  try{
+    const payload={type:'signup',email};
+    const redirectTo=getAuthRedirectUrl();
+    if(redirectTo)payload.options={emailRedirectTo:redirectTo};
+    const {error}=await SB.auth.resend(payload);
+    if(error){leaderErr(friendlyAuthError(error,'Could not resend the confirmation email. Try again.'));return;}
+    leaderMessage('Confirmation email sent. Check your inbox and spam folder, then return here to sign in.', 'success');
+  }catch(e){
+    leaderErr(friendlyAuthError(e,'Could not resend the confirmation email. Try again.'));
+  }
 }
 
 async function doLeaderSignup(){
@@ -1479,16 +1520,21 @@ async function doLeaderSignup(){
   if(pass!==pass2){leaderErr('Passwords do not match.');return;}
   if(sbReady()){
     try{
-      const {data,error}=await SB.auth.signUp({email,password:pass,options:{data:{name}}});
+      const {data,error}=await SB.auth.signUp({email,password:pass,options:getSignupOptions(name)});
       if(error){leaderErr(friendlyAuthError(error,'Could not create account. Try again.'));return;}
       ['signup-pass','signup-pass2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       addLog('New leader account: '+name+' ('+email+')','new');
-      if(data&&data.user&&data.session){await enterAsLeader(leaderAccountFromSupabaseUser(data.user,name));return;}
+      pendingLeaderEmail=email;
+      if(data&&data.user&&data.session){
+        await enterAsLeader(leaderAccountFromSupabaseUser(data.user,name));
+        showToast('Account created. Email verification is not required in the current Supabase settings.');
+        return;
+      }
       document.getElementById('signup-name').value='';
       document.getElementById('signup-email').value='';
       document.getElementById('leader-email').value=email;
       showLeaderView('signin');
-      leaderErr('Account created. Check your email to confirm it, then sign in.');
+      leaderMessage('Account created. Check your email to confirm it, then sign in. If it does not arrive, use Resend it below.', 'success');
       return;
     }catch(e){leaderErr(friendlyAuthError(e,'Could not create account. Try again.'));return;}
   }
@@ -1497,6 +1543,7 @@ async function doLeaderSignup(){
   const accts=getAccounts();accts.push(acct);saveAccounts(accts);
   addLog('New leader account: '+name+' ('+email+')','new');
   await enterAsLeader(acct);
+  showToast('Account created locally. Email verification is unavailable in local-storage mode.');
 }
 
 async function doLeaderLogin(){
