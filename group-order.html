@@ -64,6 +64,7 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 
 /* ── NAV ── */
 .nav{background:var(--navy);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:var(--site-header-h);z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.18)}
+.nav-start{display:flex;align-items:center;gap:10px;min-width:0}
 .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}
 .nav-brand-name{color:#fff;font-size:14px;font-weight:700;display:block;line-height:1.2}
 .nav-brand-sub{color:rgba(255,255,255,0.5);font-size:11px;display:block}
@@ -73,7 +74,9 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .nav-link.active{background:rgba(255,255,255,0.12);color:var(--yellow)}
 .nav-badge{background:var(--yellow);color:var(--navy);font-size:10px;font-weight:800;padding:2px 6px;border-radius:8px;margin-left:3px}
 .hamburger{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer}
-@media(max-width:600px){.nav-links{display:none}.nav-links.open{display:flex;flex-direction:column;position:absolute;top:58px;left:0;right:0;background:var(--navy);padding:12px;gap:4px;z-index:99}.hamburger{display:block}}
+.portal-back-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:#fff;border-radius:18px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;line-height:1}
+.portal-back-btn:hover{background:rgba(255,255,255,0.16)}
+@media(max-width:600px){.nav{padding:0 12px}.nav-start{gap:7px}.portal-back-btn{padding:5px 9px;font-size:11px}.nav-links{display:none}.nav-links.open{display:flex;flex-direction:column;position:absolute;top:58px;left:0;right:0;background:var(--navy);padding:12px;gap:4px;z-index:99}.hamburger{display:block}}
 
 /* ── PAGES ── */
 .page{display:none}.page.active{display:block}
@@ -717,23 +720,26 @@ footer a{color:var(--yellow);text-decoration:none}
 <div id="app-shell" style="display:none;">
 
 <nav class="nav">
-  <div class="nav-brand" onclick="goHome()">
-    <svg width="34" height="34" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="40" cy="46" r="11" fill="#F5C842"/><circle cx="40" cy="46" r="7.5" fill="#1B2A4A"/><circle cx="40" cy="46" r="3.5" fill="#F5C842"/>
-      <line x1="40" y1="46" x2="14" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
-      <line x1="40" y1="46" x2="40" y2="12" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
-      <line x1="40" y1="46" x2="66" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
-      <line x1="40" y1="46" x2="68" y2="54" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
-      <line x1="40" y1="46" x2="16" y2="62" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
-      <rect x="2" y="12" width="22" height="16" rx="2.5" fill="#E84393" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-22 13 20)"/>
-      <rect x="28" y="2" width="22" height="17" rx="2.5" fill="#F5C842" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(4 39 10)"/>
-      <rect x="56" y="10" width="22" height="17" rx="2.5" fill="#5BB8F5" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(22 67 18)"/>
-      <rect x="60" y="44" width="18" height="14" rx="2.5" fill="#E8542A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(32 69 51)"/>
-      <rect x="6" y="54" width="18" height="14" rx="2.5" fill="#4CC97A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-28 15 61)"/>
-    </svg>
-    <div>
-      <span class="nav-brand-name">My Shirt Printing</span>
-      <span class="nav-brand-sub" id="nav-role-label">Group Order Portal</span>
+  <div class="nav-start">
+    <button type="button" class="portal-back-btn" onclick="goBack()" aria-label="Go back">&#8592; Back</button>
+    <div class="nav-brand" onclick="goHome()">
+      <svg width="34" height="34" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="40" cy="46" r="11" fill="#F5C842"/><circle cx="40" cy="46" r="7.5" fill="#1B2A4A"/><circle cx="40" cy="46" r="3.5" fill="#F5C842"/>
+        <line x1="40" y1="46" x2="14" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="46" x2="40" y2="12" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="46" x2="66" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="46" x2="68" y2="54" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="46" x2="16" y2="62" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+        <rect x="2" y="12" width="22" height="16" rx="2.5" fill="#E84393" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-22 13 20)"/>
+        <rect x="28" y="2" width="22" height="17" rx="2.5" fill="#F5C842" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(4 39 10)"/>
+        <rect x="56" y="10" width="22" height="17" rx="2.5" fill="#5BB8F5" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(22 67 18)"/>
+        <rect x="60" y="44" width="18" height="14" rx="2.5" fill="#E8542A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(32 69 51)"/>
+        <rect x="6" y="54" width="18" height="14" rx="2.5" fill="#4CC97A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-28 15 61)"/>
+      </svg>
+      <div>
+        <span class="nav-brand-name">My Shirt Printing</span>
+        <span class="nav-brand-sub" id="nav-role-label">Group Order Portal</span>
+      </div>
     </div>
   </div>
   <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
@@ -860,6 +866,7 @@ footer a{color:var(--yellow);text-decoration:none}
 <div id="page-order" class="page" style="background:var(--bg);min-height:100vh;">
   <!-- simple nav for member -->
   <div style="background:var(--navy);padding:0 20px;height:52px;display:flex;align-items:center;gap:10px;">
+    <button type="button" class="portal-back-btn" onclick="goBack()" aria-label="Go back">&#8592; Back</button>
     <svg width="28" height="28" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
       <circle cx="40" cy="46" r="11" fill="#F5C842"/><circle cx="40" cy="46" r="7.5" fill="#1B2A4A"/><circle cx="40" cy="46" r="3.5" fill="#F5C842"/>
       <line x1="40" y1="46" x2="14" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
@@ -897,7 +904,11 @@ footer a{color:var(--yellow);text-decoration:none}
 
     <div class="order-form-content" id="order-form-content">
       <div class="card"><div class="card-body">
-        <h3 style="margin-bottom:16px;">Enter your order</h3>
+        <div class="notice notice-info" id="edit-mode-banner" style="display:none;margin-bottom:16px;align-items:flex-start;">
+          <span id="edit-mode-banner-icon">&#9999;&#65039;</span>
+          <div id="edit-mode-banner-text"></div>
+        </div>
+        <h3 id="order-form-heading" style="margin-bottom:16px;">Enter your order</h3>
 
         <div class="form-group">
           <label for="member-name">Your full name *</label>
@@ -1039,6 +1050,7 @@ footer a{color:var(--yellow);text-decoration:none}
 
         <div class="notice notice-warn" id="submit-error" style="display:none;margin-bottom:12px;"></div>
         <button class="btn btn-primary btn-full" id="submit-order-btn" onclick="submitOrder()" style="border-radius:10px;padding:13px;">Submit My Order &#8594;</button>
+        <button class="btn btn-outline btn-full" id="edit-cancel-btn" onclick="cancelEdit()" style="display:none;border-radius:10px;padding:13px;margin-top:8px;">Cancel &amp; go back</button>
         <p class="muted" style="text-align:center;margin-top:10px;font-size:12px;">Questions? <a href="tel:6692319059" style="color:var(--navy);font-weight:600;">669-231-9059</a></p>
       </div></div>
     </div>
@@ -1424,6 +1436,43 @@ async function insertResponseRow(payload){
   }catch(e){return {ok:false,error:e};}
 }
 
+async function updateResponseRow(payload){
+  if(sbReady()){
+    try{
+      const {error}=await SB.from('responses').update({
+        name:payload.name,items:payload.items,notes:payload.notes,order_total:payload.order_total
+      }).eq('id',payload.id);
+      if(error)return {ok:false,error};
+      return {ok:true};
+    }catch(e){return {ok:false,error:e};}
+  }
+  try{
+    const orders=loadOrders();const o=orders.find(x=>x.id===payload.order_id);
+    if(o){
+      o.responses=o.responses||[];
+      const r=o.responses.find(x=>x.id===payload.id);
+      if(r){r.name=payload.name;r.items=payload.items;r.notes=payload.notes;r.orderTotal=payload.order_total;}
+      saveOrders(orders);
+    }
+    return {ok:true};
+  }catch(e){return {ok:false,error:e};}
+}
+
+async function deleteResponseRow(orderId,responseId){
+  if(sbReady()){
+    try{
+      const {error}=await SB.from('responses').delete().eq('id',responseId);
+      if(error)return {ok:false,error};
+      return {ok:true};
+    }catch(e){return {ok:false,error:e};}
+  }
+  try{
+    const orders=loadOrders();const o=orders.find(x=>x.id===orderId);
+    if(o){o.responses=(o.responses||[]).filter(r=>r.id!==responseId);saveOrders(orders);}
+    return {ok:true};
+  }catch(e){return {ok:false,error:e};}
+}
+
 async function fetchResponsesByOrder(orderId){
   if(sbReady()){
     try{
@@ -1641,6 +1690,7 @@ async function enterAsLeader(acct){
   currentLeaderId=acct.id;
   currentLeaderName=acct.name||leaderNameFromEmail(acct.email);
   currentLeaderOrderId=null;
+  adminPageHistory=[];
   // clear fields
   ['leader-email','leader-pass','signup-name','signup-email','signup-pass','signup-pass2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('leader-login-err').classList.remove('show');
@@ -1652,7 +1702,7 @@ async function enterAsLeader(acct){
   document.getElementById('nav-log').style.display='none';
   document.getElementById('nav-settings').style.display='none';
   await refreshOrdersFromSupabase();
-  showAdminPage('dashboard');
+  showAdminPage('dashboard',{skipHistory:true});
   addLog('Leader signed in: '+currentLeaderName);
 }
 
@@ -1676,6 +1726,7 @@ function doAdminLogin(){
     currentLeaderId=null;
     currentLeaderName=null;
     currentLeaderOrderId=null;
+    adminPageHistory=[];
     document.getElementById('login-pass').value='';
     document.getElementById('login-err').classList.remove('show');
     document.getElementById('page-login').classList.remove('active');
@@ -1684,7 +1735,7 @@ function doAdminLogin(){
     document.getElementById('nav-orders').style.display='';
     document.getElementById('nav-log').style.display='';
     document.getElementById('nav-settings').style.display='';
-    showAdminPage('dashboard');
+    showAdminPage('dashboard',{skipHistory:true});
     addLog('Admin logged in');
     return;
   }
@@ -1726,6 +1777,8 @@ async function doLogout(){
     try{await SB.auth.signOut();}catch(e){console.warn('Supabase sign-out failed.',e);}
   }
   currentRole=null; currentLeaderOrderId=null; currentLeaderId=null; currentLeaderName=null;
+  adminPageHistory=[];
+  currentAdminPage='dashboard';
   document.getElementById('app-shell').style.display='none';
   document.getElementById('page-order').classList.remove('active');
   document.getElementById('page-login').classList.add('active');
@@ -1738,11 +1791,76 @@ async function doLogout(){
 
 function goHome(){if(currentRole)showAdminPage('dashboard');}
 
+function closeOpenOverlayForBack(){
+  const resetModal=document.getElementById('password-reset-modal');
+  if(resetModal&&resetModal.classList.contains('open')){closePasswordResetModal();return true;}
+  const detailModal=document.getElementById('detail-modal');
+  if(detailModal&&detailModal.classList.contains('open')){closeDetailModal();return true;}
+  const createModal=document.getElementById('create-modal');
+  if(createModal&&createModal.classList.contains('open')){closeCreateModal();return true;}
+  const addPanel=document.getElementById('add-shirt-panel');
+  if(addPanel&&addPanel.classList.contains('open')){closeAddShirtPanel();return true;}
+  return false;
+}
+
+function clearOrderQueryFromUrl(){
+  if(!location.search)return;
+  try{
+    const url=new URL(location.href);
+    if(!url.searchParams.has('order'))return;
+    url.searchParams.delete('order');
+    history.replaceState(null,'',url.pathname+(url.search||'')+(url.hash||''));
+  }catch(e){}
+}
+
+function returnFromOrderPage(){
+  if(editManagerMode){cancelEdit();return;}
+  document.getElementById('page-order').classList.remove('active');
+  if(currentRole){
+    document.getElementById('app-shell').style.display='block';
+    showAdminPage(currentAdminPage||'dashboard',{skipHistory:true});
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  if(window.history.length>1){window.history.back();return;}
+  clearOrderQueryFromUrl();
+  document.getElementById('page-login').classList.add('active');
+  switchLoginTab('member');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function goBack(){
+  if(closeOpenOverlayForBack())return;
+  const orderPage=document.getElementById('page-order');
+  if(orderPage&&orderPage.classList.contains('active')){returnFromOrderPage();return;}
+  if(currentRole){
+    if(adminPageHistory.length){
+      const previous=adminPageHistory.pop();
+      showAdminPage(previous,{skipHistory:true});
+      return;
+    }
+    if(currentAdminPage&&currentAdminPage!=='dashboard'){
+      showAdminPage('dashboard',{skipHistory:true});
+      return;
+    }
+    if(window.history.length>1){window.history.back();return;}
+    showToast('You are already at the dashboard.');
+    return;
+  }
+  if(window.history.length>1)window.history.back();
+}
+
 /* ════════════ ADMIN PAGES ════════════ */
 let currentFilter='all';
 let currentAdminPage='dashboard';
+let adminPageHistory=[];
 
-function showAdminPage(name){
+function showAdminPage(name,opts){
+  opts=opts||{};
+  if(!opts.skipHistory&&currentAdminPage&&currentAdminPage!==name){
+    adminPageHistory.push(currentAdminPage);
+    if(adminPageHistory.length>20)adminPageHistory.shift();
+  }
   currentAdminPage=name;
   ['dashboard','orders','log','settings'].forEach(p=>{
     const el=document.getElementById('page-'+p);
@@ -1834,7 +1952,8 @@ function renderOrderCard(order,compact){
       </div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
         <button class="btn btn-outline btn-sm" onclick="viewSubmissions('${order.id}')">Submissions</button>
-        ${canManage(order)?`<button class="btn btn-outline btn-sm" onclick="editOrder('${order.id}')">Edit</button>
+        ${canManage(order)?`<button class="btn btn-outline btn-sm" onclick="addResponseForMember('${order.id}')">&#43; Add order</button>
+        <button class="btn btn-outline btn-sm" onclick="editOrder('${order.id}')">Edit</button>
         <button class="btn btn-outline btn-sm" onclick="toggleStatus('${order.id}')">${isOpen?'Close':'Reopen'}</button>
         <button class="btn btn-danger btn-sm" onclick="deleteOrder('${order.id}')">Delete</button>`:''}
       </div>
@@ -1957,7 +2076,7 @@ async function viewSubmissions(id){
         ${anyPrice?`<td style="font-weight:700;color:var(--success);white-space:nowrap;">${fmtPrice((Number(item.unitPrice)||0)*item.qty)}</td>`:''}
         <td style="font-size:11px;color:var(--muted);">${esc(item.notes||'')}</td>
         ${idx===0?`<td rowspan="${r.items.length}" style="color:var(--muted);font-size:11px;white-space:nowrap;vertical-align:top;">${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
-        <td rowspan="${r.items.length}" style="vertical-align:top;">${(canManage(order)&&!sbReady())?`<button style="background:none;border:none;color:var(--error);cursor:pointer;font-size:11px;" onclick="deleteResponse('${id}','${r.id}')">Remove</button>`:''}</td>`:''}
+        <td rowspan="${r.items.length}" style="vertical-align:top;white-space:nowrap;">${canManage(order)?`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start;"><button style="background:none;border:none;color:var(--navy);cursor:pointer;font-size:11px;font-weight:700;padding:0;" onclick="editResponse('${id}','${r.id}')">&#9999;&#65039; Edit</button><button style="background:none;border:none;color:var(--error);cursor:pointer;font-size:11px;padding:0;" onclick="deleteResponse('${id}','${r.id}')">Remove</button></div>`:''}</td>`:''}
       </tr>`).join('');
     return itemRows;
   }).join('')
@@ -1974,20 +2093,113 @@ async function viewSubmissions(id){
       ${totalShirts>0?`<div class="total-bar"><div class="total-bar-label">Total shirts</div><div style="display:flex;gap:16px;align-items:center;"><div class="total-bar-value">${totalShirts}</div>${anyPrice?`<div style="color:rgba(255,255,255,0.4);">|</div><div class="total-bar-label">Revenue</div><div class="total-bar-value">${fmtPrice(grandRevenue)}</div>`:''}</div></div>`:''}
     </div>
     <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+      ${canManage(order)?`<button class="btn btn-yellow" onclick="addResponseForMember('${id}')">&#43; Add an order for someone</button>`:''}
       ${canManage(order)?`<button class="btn btn-primary" onclick="exportCSV('${id}')">&#8595; Export CSV</button>`:''}
       <button class="btn btn-outline" onclick="closeDetailModal()">Close</button>
     </div>`;
   document.getElementById('detail-modal').classList.add('open');
 }
 function closeDetailModal(){document.getElementById('detail-modal').classList.remove('open');}
-function deleteResponse(orderId,responseId){
+async function deleteResponse(orderId,responseId){
+  const order=getOrder(orderId);
+  if(order&&!canManage(order)){showToast('You don’t have permission to do that.');return;}
   if(!confirm('Remove this person\'s entire order?'))return;
+  const res=await deleteResponseRow(orderId,responseId);
+  if(!res.ok){showToast('Could not remove. Please try again.');console.warn('Delete response failed:',res.error);return;}
+  // keep local cache + log in sync (dashboard counts read from cache)
   const orders=loadOrders();const o=orders.find(x=>x.id===orderId);
   if(o){
-    const r=o.responses.find(x=>x.id===responseId);
+    const r=(o.responses||[]).find(x=>x.id===responseId);
     if(r)addLog('Response removed: '+r.name+' from '+o.name,'warn');
-    o.responses=o.responses.filter(r=>r.id!==responseId);
-    saveOrders(orders);viewSubmissions(orderId);renderDashboard(currentLeaderOrderId||null);
+    o.responses=(o.responses||[]).filter(x=>x.id!==responseId);
+    saveOrders(orders);
+  }
+  viewSubmissions(orderId);renderDashboard(currentLeaderOrderId||null);
+}
+
+/* Leader/Admin: pull up a member's submission and edit it using the order form. */
+async function editResponse(orderId,responseId){
+  const order=getOrder(orderId);
+  if(!order){showToast('Order not found.');return;}
+  if(!canManage(order)){showToast('You don’t have permission to edit this.');return;}
+  const rr=await fetchResponsesByOrder(orderId);
+  const responses=rr.ok?rr.responses:(order.responses||[]);
+  const resp=responses.find(r=>r.id===responseId);
+  if(!resp){showToast('Could not find that submission.');return;}
+  closeDetailModal();
+  await loadOrderForm(orderId,{mode:'edit',responseId,response:resp});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* Leader/Admin: add a brand-new order on a member's behalf (walk-ins, phone orders, etc.). */
+async function addResponseForMember(orderId){
+  const order=getOrder(orderId);
+  if(!order){showToast('Order not found.');return;}
+  if(!canManage(order)){showToast('You don’t have permission to add to this order.');return;}
+  closeDetailModal();
+  await loadOrderForm(orderId,{mode:'add'});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* Return from manager add/edit mode back to the order's submissions view. */
+function backToManagerFromEdit(orderId){
+  const rid=orderId||editManagerReturnOrderId;
+  editManagerMode=false;editingResponseId=null;editManagerReturnOrderId=null;orderSubmitting=false;
+  document.getElementById('page-order').classList.remove('active');
+  document.getElementById('app-shell').style.display='block';
+  applyEditModeUI(null);
+  showAdminPage('dashboard',{skipHistory:true});
+  if(rid)viewSubmissions(rid);
+}
+function cancelEdit(){backToManagerFromEdit(editManagerReturnOrderId);}
+
+/* Toggle the order form between member mode and manager add/edit mode. */
+function applyEditModeUI(editCtx){
+  const banner=document.getElementById('edit-mode-banner');
+  const bannerText=document.getElementById('edit-mode-banner-text');
+  const submitBtn=document.getElementById('submit-order-btn');
+  const cancelBtn=document.getElementById('edit-cancel-btn');
+  const heading=document.getElementById('order-form-heading');
+  if(!editCtx){
+    if(banner)banner.style.display='none';
+    if(heading)heading.textContent='Enter your order';
+    if(submitBtn)submitBtn.innerHTML='Submit My Order &#8594;';
+    if(cancelBtn)cancelBtn.style.display='none';
+    return;
+  }
+  // shared manager-mode chrome
+  if(banner)banner.style.display='flex';
+  if(cancelBtn)cancelBtn.style.display='flex';
+  if(editCtx.mode==='add'){
+    if(heading)heading.textContent='Add an order for a member';
+    if(bannerText)bannerText.innerHTML='You’re adding a <strong>new order on a member’s behalf</strong>. Enter their name, add their shirts, then choose <strong>Add order</strong>. This works even if the order is closed.';
+    if(submitBtn)submitBtn.innerHTML='Add order';
+    // start blank (loadOrderForm already cleared name/notes/cart)
+    document.getElementById('member-name').value='';
+    document.getElementById('member-notes').value='';
+    cart=[];
+    renderCart();
+  }else{ // 'edit'
+    const resp=editCtx.response||{};
+    if(heading)heading.textContent='Edit member’s order';
+    if(bannerText)bannerText.innerHTML='You’re editing <strong>'+esc(resp.name||'this member')+'</strong>’s order on their behalf. Adjust shirts, sizes, quantities or notes below, then choose <strong>Save changes</strong>. This works even if the order is closed.';
+    if(submitBtn)submitBtn.innerHTML='Save changes';
+    document.getElementById('member-name').value=resp.name||'';
+    document.getElementById('member-notes').value=resp.notes||'';
+    cart=(resp.items||[]).map(it=>({
+      shirtOptionId:it.shirtOptionId,
+      shirtLabel:it.shirtLabel||null,
+      color:it.color||null,
+      deco:it.deco||null,
+      size:it.size,
+      cat:it.cat||'adult',
+      qty:Number(it.qty)||1,
+      notes:it.notes||'',
+      personalization:it.personalization||null,
+      uniformVals:it.uniformVals||null,
+      unitPrice:Number(it.unitPrice)||0
+    }));
+    renderCart();
   }
 }
 
@@ -2322,6 +2534,10 @@ async function exportCSV(id){
 let currentOrderId=null;
 let currentOrderData=null;
 let orderSubmitting=false;
+// Manager edit mode (leader/admin editing a member's submission)
+let editingResponseId=null;        // when set, submitOrder updates this response instead of inserting
+let editManagerMode=false;         // true while a leader/admin edits on a member's behalf
+let editManagerReturnOrderId=null; // order whose submissions view we return to after save/cancel
 function currentOrder(){
   return (currentOrderData&&currentOrderData.id===currentOrderId)?currentOrderData:getOrder(currentOrderId);
 }
@@ -2335,7 +2551,10 @@ let panelUniform=null;       // {places:[...],price} from the option
 let panelUniformVals={};     // {name_back:'JOHNSON', num_back:'12', ...}
 let panelUniformPrice=0;
 
-async function loadOrderForm(id){
+async function loadOrderForm(id,editCtx){
+  editManagerMode=!!editCtx;
+  editingResponseId=(editCtx&&editCtx.mode==='edit')?editCtx.responseId:null;
+  editManagerReturnOrderId=editCtx?id:null;
   document.getElementById('app-shell').style.display='none';
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-order').classList.add('active');
@@ -2343,6 +2562,7 @@ async function loadOrderForm(id){
   panelShirtId=null;panelColor=null;panelDeco=null;panelSize=null;panelCat=null;panelQty=1;
   document.getElementById('member-name').value='';
   document.getElementById('member-notes').value='';
+  applyEditModeUI(null); // reset to member UI; real edit UI is applied after the form renders
   ['err-name','err-cart'].forEach(i=>{const e=document.getElementById(i);if(e)e.classList.remove('show');});
   document.getElementById('success-screen').classList.remove('show');
   document.getElementById('order-form-content').classList.remove('hide');
@@ -2382,7 +2602,7 @@ async function loadOrderForm(id){
   document.getElementById('form-response-count').textContent=order.responses.length;
   const closed=order.status==='closed';
   const expired=isOrderExpired(order);
-  if(closed||expired){
+  if((closed||expired)&&!editManagerMode){
     closedNotice.innerHTML = closed
       ? '<span>&#9888;&#65039;</span><span>This order is <strong>closed</strong> and no longer accepting responses.</span>'
       : '<span>&#9888;&#65039;</span><span>This order’s deadline has <strong>passed</strong> and it is no longer accepting responses.</span>';
@@ -2418,6 +2638,8 @@ async function loadOrderForm(id){
       </div>`;
     }).join('');
   } else panelOptsEl.style.display='none';
+
+  if(editManagerMode&&editCtx)applyEditModeUI(editCtx);
 }
 
 function openAddShirtPanel(){
@@ -2652,8 +2874,9 @@ async function submitOrder(){
   const grandTotal=cart.reduce((s,i)=>s+(Number(i.unitPrice)||0)*i.qty,0);
   const anySuccessPrice=pricingVisible()&&cart.some(i=>i.unitPrice>0);
 
+  const isEdit=!!editingResponseId;
   const payload={
-    id:genResponseId(),
+    id:isEdit?editingResponseId:genResponseId(),
     order_id:currentOrderId,
     name,
     items:cart.slice(),
@@ -2663,17 +2886,51 @@ async function submitOrder(){
 
   orderSubmitting=true;
   const btnLabel=btn?btn.innerHTML:'';
-  if(btn){btn.disabled=true;btn.style.opacity='.7';btn.style.cursor='wait';btn.innerHTML='Submitting…';}
+  if(btn){btn.disabled=true;btn.style.opacity='.7';btn.style.cursor='wait';btn.innerHTML=isEdit?'Saving…':'Submitting…';}
 
-  const result=await insertResponseRow(payload);
+  const result=isEdit?await updateResponseRow(payload):await insertResponseRow(payload);
   if(!result.ok){
     orderSubmitting=false;
     if(btn){btn.disabled=false;btn.style.opacity='';btn.style.cursor='';btn.innerHTML=btnLabel;}
     if(submitErr){
-      submitErr.innerHTML='<span>&#9888;&#65039;</span><span>We couldn’t save your order just now. Please check your connection and try again.</span>';
+      submitErr.innerHTML='<span>&#9888;&#65039;</span><span>We couldn’t save '+(isEdit?'your changes':'your order')+' just now. Please check your connection and try again.</span>';
       submitErr.style.display='flex';
     }
-    console.warn('Response insert failed:',result.error);
+    console.warn(isEdit?'Response update failed:':'Response insert failed:',result.error);
+    return;
+  }
+
+  if(isEdit){
+    // keep local cache in sync so dashboard/submissions reflect the edit immediately
+    const orders=loadOrders();const o=orders.find(x=>x.id===currentOrderId);
+    if(o){
+      o.responses=o.responses||[];
+      const r=o.responses.find(x=>x.id===editingResponseId);
+      if(r){r.name=name;r.items=cart.slice();r.notes=notes;r.orderTotal=grandTotal;}
+      saveOrders(orders);
+    }
+    addLog(name+'’s order edited by '+(currentRole==='admin'?'Shop Admin':'Group Leader')+' ('+totalShirts+' shirt'+(totalShirts!==1?'s':'')+'): '+(currentOrderData?currentOrderData.name:currentOrderId),'new');
+    if(btn){btn.disabled=false;btn.style.opacity='';btn.style.cursor='';btn.innerHTML=btnLabel;}
+    const backId=editManagerReturnOrderId||currentOrderId;
+    showToast('\u2713 Order updated for '+name);
+    backToManagerFromEdit(backId);
+    return;
+  }
+
+  if(editManagerMode){ // manager add mode (a new response was just inserted)
+    const orders=loadOrders();const o=orders.find(x=>x.id===currentOrderId);
+    if(o){
+      o.responses=o.responses||[];
+      if(!o.responses.some(x=>x.id===payload.id)){
+        o.responses.push({id:payload.id,name,items:cart.slice(),notes,orderTotal:grandTotal,date:Date.now()});
+        saveOrders(orders);
+      }
+    }
+    addLog(name+'’s order added by '+(currentRole==='admin'?'Shop Admin':'Group Leader')+' ('+totalShirts+' shirt'+(totalShirts!==1?'s':'')+'): '+(currentOrderData?currentOrderData.name:currentOrderId),'new');
+    if(btn){btn.disabled=false;btn.style.opacity='';btn.style.cursor='';btn.innerHTML=btnLabel;}
+    const backId=editManagerReturnOrderId||currentOrderId;
+    showToast('\u2713 Order added for '+name);
+    backToManagerFromEdit(backId);
     return;
   }
 
