@@ -679,12 +679,6 @@ footer a{color:var(--yellow);text-decoration:none}
     </button>
   </div>
 
-  <div class="data-info">
-    &#128196; <strong>Data storage:</strong> Member <strong>responses</strong> are saved to <strong>Supabase</strong> when it's configured (see <code>supabase-config.js</code>); otherwise everything falls back to this browser's <strong>localStorage</strong>.
-    <strong>Orders</strong> are still created locally on this device &mdash; to make an order loadable by members, add it to your Supabase <code>orders</code> table (the current read-only policy means the app can't insert orders for you).
-    <a href="https://supabase.com" target="_blank">supabase.com</a>
-  </div>
-
   <div class="stats-grid" id="stats-grid"></div>
 
   <div class="section-header"><h2>Open Orders</h2><button class="btn btn-outline btn-sm" onclick="showAdminPage('orders')">View all</button></div>
@@ -947,6 +941,7 @@ footer a{color:var(--yellow);text-decoration:none}
           <div class="panel-section" id="panel-price-box" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 13px;">
             <div class="price-line"><span>Base shirt</span><span id="pp-base">$0.00</span></div>
             <div class="price-line" id="pp-deco-line" style="display:none;"><span id="pp-deco-label">Decoration</span><span id="pp-deco">$0.00</span></div>
+            <div class="price-line" id="pp-uni-line" style="display:none;"><span>Personalization</span><span id="pp-uni">$0.00</span></div>
             <div class="price-line"><span>Per shirt</span><span id="pp-unit">$0.00</span></div>
             <div class="price-line total"><span>This item (<span id="pp-qty">1</span>x)</span><span id="pp-total">$0.00</span></div>
           </div>
@@ -1092,6 +1087,34 @@ function getAccountByEmail(email){return getAccounts().find(a=>a.email.toLowerCa
 function getAccountById(id){return getAccounts().find(a=>a.id===id);}
 /* lightweight hash so passwords aren't stored as raw plaintext (NOT real security) */
 function hashPass(p){let h=5381;for(let i=0;i<p.length;i++){h=((h<<5)+h)+p.charCodeAt(i);h=h&0xffffffff;}return 'h'+(h>>>0).toString(16);}
+function leaderNameFromEmail(email){
+  const local=(String(email||'').split('@')[0]||'').replace(/[._-]+/g,' ').trim();
+  return local?local.replace(/\b\w/g,m=>m.toUpperCase()):'Group Leader';
+}
+function leaderAccountFromSupabaseUser(user,fallbackName){
+  const meta=user&&user.user_metadata?user.user_metadata:{};
+  const email=user&&user.email?user.email:'';
+  const legacy=email?getAccountByEmail(email):null;
+  return {
+    id:user&&user.id?user.id:null,
+    name:meta.name||meta.full_name||fallbackName||(legacy&&legacy.name)||leaderNameFromEmail(email),
+    email:email||((legacy&&legacy.email)||''),
+    created:user&&user.created_at?new Date(user.created_at).getTime():Date.now(),
+    source:'supabase'
+  };
+}
+function friendlyAuthError(error,defaultMessage){
+  const msg=String(error&&error.message||'').trim();
+  if(!msg)return defaultMessage;
+  if(/invalid login credentials/i.test(msg))return 'Incorrect email or password.';
+  if(/email.*not confirmed|confirm your email/i.test(msg))return 'Check your email to confirm your account, then sign in.';
+  if(/already registered|already been registered|user already registered/i.test(msg))return 'An account with that email already exists. Try signing in.';
+  return msg;
+}
+function getLegacyLeaderAccount(email,pass){
+  const acct=getAccountByEmail(email);
+  return acct&&acct.pass===hashPass(pass)?acct:null;
+}
 function getLog(){try{return JSON.parse(localStorage.getItem(LOG_KEY))||[];}catch(e){return[];}}
 function addLog(msg,type){
   const log=getLog();
@@ -1137,7 +1160,7 @@ function dbOrderToApp(row){
     shirtOptions:Array.isArray(row.shirt_options)?row.shirt_options:(row.shirt_options||[]),
     responses:[],
     created:row.created_at?new Date(row.created_at).getTime():Date.now(),
-    ownerName:'Shop Admin',ownerId:null,
+    ownerName:row.owner_id&&row.owner_id===currentLeaderId?(currentLeaderName||'Group Leader'):'Shop Admin',ownerId:row.owner_id||null,
     _source:'supabase'
   };
 }
@@ -1170,6 +1193,54 @@ async function fetchOrderById(id){
   }
   const local=getOrder(id);
   return local?{ok:true,order:local}:{ok:false,reason:'notfound'};
+}
+
+async function insertOrderRow(order){
+  if(!sbReady())return {ok:false,error:new Error('Supabase is not connected.')};
+  try{
+    const {data:userData,error:userError}=await SB.auth.getUser();
+    if(userError)return {ok:false,error:userError};
+    if(!userData||!userData.user)return {ok:false,error:new Error('No signed-in leader found.')};
+    const payload={
+      id:order.id,
+      name:order.name,
+      deadline:order.deadline,
+      purge_date:order.purgeDate,
+      description:order.desc,
+      status:order.status,
+      shirt_options:order.shirtOptions,
+      owner_id:userData.user.id
+    };
+    const {error}=await SB.from('orders').insert(payload);
+    if(error)return {ok:false,error};
+    return {ok:true};
+  }catch(e){return {ok:false,error:e};}
+}
+
+async function fetchMyOrders(){
+  if(!sbReady())return {ok:true,orders:loadOrders()};
+  try{
+    const {data:userData,error:userError}=await SB.auth.getUser();
+    if(userError)return {ok:false,error:userError};
+    if(!userData||!userData.user)return {ok:false,error:new Error('No signed-in leader found.')};
+    const {data,error}=await SB.from('orders').select('*')
+      .eq('owner_id',userData.user.id)
+      .order('created_at',{ascending:false});
+    if(error)return {ok:false,error};
+    return {ok:true,orders:(data||[]).map(dbOrderToApp)};
+  }catch(e){return {ok:false,error:e};}
+}
+
+async function refreshOrdersFromSupabase(){
+  if(!sbReady())return {ok:true,orders:loadOrders()};
+  const result=await fetchMyOrders();
+  if(result.ok){
+    saveOrders(result.orders);
+    return result;
+  }
+  console.warn('Could not refresh orders from Supabase.',result.error);
+  showToast('Could not refresh your orders.');
+  return result;
 }
 
 async function insertResponseRow(payload){
@@ -1242,6 +1313,7 @@ function seedDemo(){
 let currentRole=null;        // 'admin' or 'leader'
 let currentLeaderOrderId=null; // used when a member-ish leader-code login targets ONE order
 let currentLeaderId=null;     // logged-in leader account id (owns multiple orders)
+let currentLeaderName=null;
 
 function switchLoginTab(tab){
   ['leader','admin','member'].forEach(t=>{
@@ -1265,46 +1337,93 @@ function leaderErr(msg){
   e.textContent=msg;e.classList.add('show');
 }
 
-function doLeaderSignup(){
+async function doLeaderSignup(){
   const name=document.getElementById('signup-name').value.trim();
   const email=document.getElementById('signup-email').value.trim();
   const pass=document.getElementById('signup-pass').value;
   const pass2=document.getElementById('signup-pass2').value;
   if(!name){leaderErr('Please enter your name.');return;}
   if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){leaderErr('Please enter a valid email.');return;}
-  if(getAccountByEmail(email)){leaderErr('An account with that email already exists. Try signing in.');return;}
   if(pass.length<6){leaderErr('Password must be at least 6 characters.');return;}
   if(pass!==pass2){leaderErr('Passwords do not match.');return;}
+  if(sbReady()){
+    try{
+      const {data,error}=await SB.auth.signUp({email,password:pass,options:{data:{name}}});
+      if(error){leaderErr(friendlyAuthError(error,'Could not create account. Try again.'));return;}
+      ['signup-pass','signup-pass2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      addLog('New leader account: '+name+' ('+email+')','new');
+      if(data&&data.user&&data.session){await enterAsLeader(leaderAccountFromSupabaseUser(data.user,name));return;}
+      document.getElementById('signup-name').value='';
+      document.getElementById('signup-email').value='';
+      document.getElementById('leader-email').value=email;
+      showLeaderView('signin');
+      leaderErr('Account created. Check your email to confirm it, then sign in.');
+      return;
+    }catch(e){leaderErr(friendlyAuthError(e,'Could not create account. Try again.'));return;}
+  }
+  if(getAccountByEmail(email)){leaderErr('An account with that email already exists. Try signing in.');return;}
   const acct={id:'leader-'+Date.now(),name,email,pass:hashPass(pass),created:Date.now()};
   const accts=getAccounts();accts.push(acct);saveAccounts(accts);
   addLog('New leader account: '+name+' ('+email+')','new');
-  enterAsLeader(acct);
+  await enterAsLeader(acct);
 }
 
-function doLeaderLogin(){
+async function doLeaderLogin(){
   const email=document.getElementById('leader-email').value.trim();
   const pass=document.getElementById('leader-pass').value;
-  const acct=getAccountByEmail(email);
-  if(!acct||acct.pass!==hashPass(pass)){leaderErr('Incorrect email or password.');return;}
-  enterAsLeader(acct);
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){leaderErr('Please enter a valid email.');return;}
+  if(!pass){leaderErr('Please enter your password.');return;}
+  if(sbReady()){
+    try{
+      const {data,error}=await SB.auth.signInWithPassword({email,password:pass});
+      if(!error&&data&&data.user){await enterAsLeader(leaderAccountFromSupabaseUser(data.user));return;}
+      const legacyAcct=getLegacyLeaderAccount(email,pass);
+      if(legacyAcct){await enterAsLeader(legacyAcct);return;}
+      leaderErr(friendlyAuthError(error,'Could not sign in. Try again.'));
+      return;
+    }catch(e){
+      const legacyAcct=getLegacyLeaderAccount(email,pass);
+      if(legacyAcct){await enterAsLeader(legacyAcct);return;}
+      leaderErr(friendlyAuthError(e,'Could not sign in. Try again.'));
+      return;
+    }
+  }
+  const acct=getLegacyLeaderAccount(email,pass);
+  if(!acct){leaderErr('Incorrect email or password.');return;}
+  await enterAsLeader(acct);
 }
 
-function enterAsLeader(acct){
+async function enterAsLeader(acct){
   currentRole='leader';
   currentLeaderId=acct.id;
+  currentLeaderName=acct.name||leaderNameFromEmail(acct.email);
   currentLeaderOrderId=null;
   // clear fields
   ['leader-email','leader-pass','signup-name','signup-email','signup-pass','signup-pass2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('leader-login-err').classList.remove('show');
   document.getElementById('page-login').classList.remove('active');
   document.getElementById('app-shell').style.display='block';
-  document.getElementById('nav-role-label').textContent=acct.name+' (Leader)';
+  document.getElementById('nav-role-label').textContent=currentLeaderName+' (Leader)';
   // Leaders can see Dashboard + their Orders, but not the global Log or admin Settings
   document.getElementById('nav-orders').style.display='';
   document.getElementById('nav-log').style.display='none';
   document.getElementById('nav-settings').style.display='none';
+  await refreshOrdersFromSupabase();
   showAdminPage('dashboard');
-  addLog('Leader signed in: '+acct.name);
+  addLog('Leader signed in: '+currentLeaderName);
+}
+
+async function restoreLeaderSession(){
+  if(!sbReady())return false;
+  try{
+    const {data,error}=await SB.auth.getSession();
+    if(error||!data||!data.session||!data.session.user)return false;
+    await enterAsLeader(leaderAccountFromSupabaseUser(data.session.user));
+    return true;
+  }catch(e){
+    console.warn('Could not restore leader session.',e);
+    return false;
+  }
 }
 
 function doAdminLogin(){
@@ -1312,6 +1431,7 @@ function doAdminLogin(){
   if(pass===getPass()){
     currentRole='admin';
     currentLeaderId=null;
+    currentLeaderName=null;
     currentLeaderOrderId=null;
     document.getElementById('login-pass').value='';
     document.getElementById('login-err').classList.remove('show');
@@ -1358,8 +1478,11 @@ function openMemberLink(){
   showToast('Invalid link. Check the URL and try again.');
 }
 
-function doLogout(){
-  currentRole=null; currentLeaderOrderId=null; currentLeaderId=null;
+async function doLogout(){
+  if(currentRole==='leader'&&sbReady()){
+    try{await SB.auth.signOut();}catch(e){console.warn('Supabase sign-out failed.',e);}
+  }
+  currentRole=null; currentLeaderOrderId=null; currentLeaderId=null; currentLeaderName=null;
   document.getElementById('app-shell').style.display='none';
   document.getElementById('page-order').classList.remove('active');
   document.getElementById('page-login').classList.add('active');
@@ -1511,7 +1634,8 @@ function renderSettings(){
   const allOrders=loadOrders();
   const accEl=document.getElementById('leader-accounts-list');
   if(accEl){
-    accEl.innerHTML=accts.length?accts.map(a=>{
+    const legacyNote=sbReady()?'<div class="notice" style="margin-bottom:10px;">Leader sign-ins are managed in Supabase Auth when connected. Any accounts listed here are older device-local accounts only.</div>':'';
+    accEl.innerHTML=accts.length?legacyNote+accts.map(a=>{
       const cnt=allOrders.filter(o=>o.ownerId===a.id).length;
       return `<div style="display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--bg);border-radius:7px;margin-bottom:6px;font-size:13px;">
         <div style="flex:1;min-width:0;">
@@ -1520,7 +1644,7 @@ function renderSettings(){
         </div>
         <button class="btn btn-danger btn-sm" onclick="removeLeaderAccount('${a.id}')">Remove</button>
       </div>`;
-    }).join(''):'<p class="muted" style="font-size:13px;">No leader accounts have registered yet.</p>';
+    }).join(''):sbReady()?'<p class="muted" style="font-size:13px;">Leader accounts now live in Supabase Auth. No legacy device-local accounts were found on this browser.</p>':'<p class="muted" style="font-size:13px;">No leader accounts have registered yet.</p>';
   }
 }
 
@@ -1781,7 +1905,7 @@ function toggleDecoPrice(el,tid,di){
 function parsePrice(v){const n=parseFloat(String(v).replace(/[^0-9.]/g,''));return isNaN(n)?0:Math.round(n*100)/100;}
 function fmtPrice(n){return '$'+(Number(n)||0).toFixed(2);}
 
-function createOrder(){
+async function createOrder(){
   const name=document.getElementById('new-order-name').value.trim();
   const deadline=document.getElementById('new-order-deadline').value;
   let valid=true;
@@ -1815,14 +1939,24 @@ function createOrder(){
   });
   if(!shirtOptions.length){document.getElementById('err-shirt-options').classList.add('show');valid=false;}else document.getElementById('err-shirt-options').classList.remove('show');
   if(!valid)return;
-  const orders=loadOrders();
   const purgeDate=document.getElementById('new-order-purge').value||null;
   // ownership: if a logged-in leader created it, they own it; admin-created orders have no leader owner
   const ownerAcct=currentLeaderId?getAccountById(currentLeaderId):null;
-  const ownerId=ownerAcct?ownerAcct.id:null;
-  const ownerName=ownerAcct?ownerAcct.name:'Shop Admin';
+  const ownerId=currentLeaderId||null;
+  const ownerName=currentLeaderName||(ownerAcct?ownerAcct.name:'Shop Admin');
   const newOrder={id:'order-'+Date.now(),name,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),ownerId,ownerName,status:'open',created:Date.now(),shirtOptions,responses:[]};
-  orders.unshift(newOrder);saveOrders(orders);
+  if(sbReady()){
+    const result=await insertOrderRow(newOrder);
+    if(!result.ok){
+      console.warn('Could not save order to Supabase.',result.error);
+      showToast('Could not save order. Try again.');
+      return;
+    }
+    await refreshOrdersFromSupabase();
+  }else{
+    const orders=loadOrders();
+    orders.unshift(newOrder);saveOrders(orders);
+  }
   closeCreateModal();
   addLog('Order created by '+ownerName+': '+name,'new');
   showToast('\u2713 "'+name+'" created! Share the order link with your group.');
@@ -2011,7 +2145,68 @@ function panelSelectShirt(orderId,optionId){
       </div>`;
     }).join('');
   }else decoSec.style.display='none';
+  // Team uniform: render personalization fields (name/number) for this option
+  panelRenderUniform(opt.uniform);
   panelUpdatePrice();
+}
+
+/* ── MEMBER UNIFORM PERSONALIZATION ── */
+function panelRenderUniform(uniform){
+  const sec=document.getElementById('panel-uniform-sec');
+  panelUniform=null;panelUniformVals={};panelUniformPrice=0;
+  if(!uniform||!uniform.places||!uniform.places.length){
+    sec.style.display='none';
+    document.getElementById('jersey-fields').innerHTML='';
+    document.getElementById('jersey-svg').innerHTML='';
+    document.getElementById('perr-uniform')?.classList.remove('show');
+    return;
+  }
+  panelUniform=uniform;
+  sec.style.display='block';
+  document.getElementById('jersey-fields').innerHTML=uniform.places.map(pl=>{
+    const isNum=pl.kind==='num';
+    const ph=isNum?'e.g. 12':'e.g. JOHNSON';
+    const max=isNum?3:14;
+    return `<div class="form-group" style="margin-bottom:10px;">
+      <label class="jersey-label" for="uni-fld-${pl.id}">${esc(pl.label)} ${pl.required?'<span class="req-star">*</span>':'<span class="opt-tag">(optional)</span>'}</label>
+      <input type="text" id="uni-fld-${pl.id}" ${isNum?'inputmode="numeric"':''} maxlength="${max}" placeholder="${ph}" autocomplete="off"
+        oninput="panelUniformInput('${pl.id}','${isNum?'num':'name'}',this)" style="text-transform:${isNum?'none':'uppercase'};letter-spacing:.5px;">
+    </div>`;
+  }).join('');
+  document.getElementById('perr-uniform')?.classList.remove('show');
+  panelRenderJersey();
+}
+function panelUniformInput(plId,kind,el){
+  let v=el.value;
+  if(kind==='num')v=v.replace(/[^0-9]/g,'').slice(0,3);
+  else v=v.toUpperCase().slice(0,14);
+  el.value=v;
+  if(v)panelUniformVals[plId]=v;else delete panelUniformVals[plId];
+  // personalization price applies per shirt once any field is filled in
+  panelUniformPrice=(panelUniform&&Object.keys(panelUniformVals).length)?(Number(panelUniform.price)||0):0;
+  document.getElementById('perr-uniform')?.classList.remove('show');
+  panelRenderJersey();
+  panelUpdatePrice();
+}
+function panelRenderJersey(){
+  const wrap=document.getElementById('jersey-svg');
+  if(!wrap)return;
+  if(!panelUniform){wrap.innerHTML='';return;}
+  const v=panelUniformVals;
+  const name=v.name_back||v.name_front||'';
+  const num=v.num_back||v.num_front||'';
+  const nameOut=name?esc(name):'NAME';
+  const numOut=num?esc(num):'00';
+  const faded=(s)=>s?'var(--yellow)':'rgba(245,200,66,0.32)';
+  wrap.innerHTML=`<svg viewBox="0 0 140 150" width="118" height="126" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Jersey preview">
+    <path d="M58,17 Q70,27 82,17 L104,27 L120,45 L104,60 L96,52 L96,131 Q96,136 91,136 L49,136 Q44,136 44,131 L44,52 L36,60 L20,45 L36,27 Z"
+      fill="var(--navy)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+    <path d="M58,17 Q70,27 82,17" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+    <text x="70" y="50" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="800"
+      letter-spacing="1" fill="${faded(name)}">${nameOut}</text>
+    <text x="70" y="108" text-anchor="middle" font-family="system-ui,sans-serif" font-size="42" font-weight="800"
+      fill="${faded(num)}">${numOut}</text>
+  </svg>`;
 }
 function panelSelColor(name,el){panelColor=name;document.querySelectorAll('#panel-color-swatches .color-swatch').forEach(s=>s.classList.remove('sel-color'));el.classList.add('sel-color');document.getElementById('perr-color')?.classList.remove('show');}
 function panelSelectSize(btn){document.querySelectorAll('#add-shirt-panel .size-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');panelSize=btn.dataset.size;panelCat=btn.dataset.cat;document.getElementById('perr-size')?.classList.remove('show');}
@@ -2024,15 +2219,19 @@ function panelUpdatePrice(){
   if(!opt){box.style.display='none';return;}
   const base=Number(opt.basePrice)||0;
   const decoPrice=Number(panelDecoPrice)||0;
-  const unit=base+decoPrice;
+  const uniPrice=Number(panelUniformPrice)||0;
+  const unit=base+decoPrice+uniPrice;
   // only show pricing if this order actually has prices set
-  const hasPrices=(opt.basePrice>0)||(opt.decos||[]).some(d=>d.price>0);
+  const hasPrices=(opt.basePrice>0)||(opt.decos||[]).some(d=>d.price>0)||(panelUniform&&(Number(panelUniform.price)||0)>0);
   if(!hasPrices){box.style.display='none';return;}
   box.style.display='block';
   document.getElementById('pp-base').textContent=fmtPrice(base);
   const decoLine=document.getElementById('pp-deco-line');
   if(panelDeco&&decoPrice>0){decoLine.style.display='flex';document.getElementById('pp-deco-label').textContent='Decoration';document.getElementById('pp-deco').textContent='+'+fmtPrice(decoPrice);}
   else decoLine.style.display='none';
+  const uniLine=document.getElementById('pp-uni-line');
+  if(panelUniform&&uniPrice>0){uniLine.style.display='flex';document.getElementById('pp-uni').textContent='+'+fmtPrice(uniPrice);}
+  else uniLine.style.display='none';
   document.getElementById('pp-unit').textContent=fmtPrice(unit);
   document.getElementById('pp-qty').textContent=panelQty;
   document.getElementById('pp-total').textContent=fmtPrice(unit*panelQty);
@@ -2046,12 +2245,26 @@ function addToCart(){
     const opt=(order.shirtOptions||[]).find(s=>s.id===panelShirtId);
     if(!panelShirtId){document.getElementById('perr-shirt').classList.add('show');valid=false;}else document.getElementById('perr-shirt').classList.remove('show');
     if(opt&&opt.colors&&opt.colors.length&&!panelColor){document.getElementById('perr-color').classList.add('show');valid=false;}else document.getElementById('perr-color')?.classList.remove('show');
+    // required uniform personalization fields must be filled
+    if(panelUniform){
+      const missing=(panelUniform.places||[]).some(pl=>pl.required&&!(panelUniformVals[pl.id]&&String(panelUniformVals[pl.id]).trim()));
+      if(missing){document.getElementById('perr-uniform')?.classList.add('show');valid=false;}else document.getElementById('perr-uniform')?.classList.remove('show');
+    }
   }
   if(!panelSize){document.getElementById('perr-size').classList.add('show');valid=false;}else document.getElementById('perr-size').classList.remove('show');
   if(!valid)return;
   const opt=hasOpts?(order.shirtOptions||[]).find(s=>s.id===panelShirtId):null;
-  const unitPrice=(Number(opt?.basePrice)||0)+(Number(panelDecoPrice)||0);
-  cart.push({shirtOptionId:panelShirtId,shirtLabel:opt?.styleName||null,color:panelColor,deco:panelDeco,size:panelSize,cat:panelCat,qty:panelQty,notes:document.getElementById('panel-item-notes').value.trim(),unitPrice});
+  const unitPrice=(Number(opt?.basePrice)||0)+(Number(panelDecoPrice)||0)+(Number(panelUniformPrice)||0);
+  // build a readable personalization string + keep raw values
+  let personalization=null,uniformVals=null;
+  if(panelUniform&&Object.keys(panelUniformVals).length){
+    uniformVals={...panelUniformVals};
+    personalization=(panelUniform.places||[])
+      .filter(pl=>panelUniformVals[pl.id])
+      .map(pl=>pl.label.replace(/\s*\u2014\s*/,' ')+': '+(pl.kind==='num'?'#':'')+panelUniformVals[pl.id])
+      .join(' \u00b7 ');
+  }
+  cart.push({shirtOptionId:panelShirtId,shirtLabel:opt?.styleName||null,color:panelColor,deco:panelDeco,size:panelSize,cat:panelCat,qty:panelQty,notes:document.getElementById('panel-item-notes').value.trim(),personalization,uniformVals,unitPrice});
   document.getElementById('err-cart')?.classList.remove('show');
   renderCart();
   closeAddShirtPanel();
@@ -2081,7 +2294,7 @@ function renderCart(){
           <div class="cart-item-title">${esc(item.shirtLabel||'Shirt')} &mdash; ${esc(item.size)}</div>
           ${anyPrice?`<span class="cart-item-price">${fmtPrice(lineTotal)}</span>`:''}
         </div>
-        <div class="cart-item-detail">${detail}${anyPrice&&item.unitPrice>0?' &middot; '+fmtPrice(item.unitPrice)+' ea':''}${item.notes?'<br>&#128203; '+esc(item.notes):''}</div>
+        <div class="cart-item-detail">${detail}${anyPrice&&item.unitPrice>0?' &middot; '+fmtPrice(item.unitPrice)+' ea':''}${item.personalization?'<br>&#127944; '+esc(item.personalization):''}${item.notes?'<br>&#128203; '+esc(item.notes):''}</div>
         <div class="cart-item-qty">
           <button class="cq-btn" onclick="cartChangeQty(${idx},-1)" ${item.qty<=1?'disabled':''}>&#8722;</button>
           <span class="cq-num">${item.qty}</span>
@@ -2150,7 +2363,7 @@ async function submitOrder(){
         ${cart.map(item=>{
           const lt=(Number(item.unitPrice)||0)*item.qty;
           const d=[item.qty+'x '+esc(item.shirtLabel||'shirt'),esc(item.color||''),esc(item.size)+(item.cat!=='adult'?' ('+item.cat+')':'')].filter(Boolean).join(' &middot; ');
-          return `<span style="font-size:12px;display:block;">${d}${anySuccessPrice?' &mdash; <strong>'+fmtPrice(lt)+'</strong>':''}${item.notes?'<br><span style=\"color:var(--muted);\">&#128203; '+esc(item.notes)+'</span>':''}</span>`;
+          return `<span style="font-size:12px;display:block;">${d}${anySuccessPrice?' &mdash; <strong>'+fmtPrice(lt)+'</strong>':''}${item.personalization?'<br><span style=\"color:var(--muted);\">&#127944; '+esc(item.personalization)+'</span>':''}${item.notes?'<br><span style=\"color:var(--muted);\">&#128203; '+esc(item.notes)+'</span>':''}</span>`;
         }).join('')}
         <span style="font-size:12px;color:var(--muted);display:block;margin-top:4px;">${totalShirts} shirt${totalShirts!==1?'s':''}${anySuccessPrice?' &middot; <strong style=\"color:var(--success);\">Total '+fmtPrice(grandTotal)+'</strong>':''}</span>
       </div>
@@ -2183,11 +2396,15 @@ function checkRoute(){
 }
 
 /* ════════════ INIT ════════════ */
-cleanupLegacyCodeAccess();
-seedDemo();
-switchLoginTab('leader');
-showLeaderView('signin');
-checkRoute();
+async function initApp(){
+  cleanupLegacyCodeAccess();
+  seedDemo();
+  switchLoginTab('leader');
+  showLeaderView('signin');
+  await restoreLeaderSession();
+  checkRoute();
+}
+initApp();
 </script>
 </body>
 </html>
