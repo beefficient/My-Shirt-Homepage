@@ -986,7 +986,7 @@ footer a{color:var(--yellow);text-decoration:none}
 <div class="modal-overlay" id="create-modal" onclick="if(event.target===this)closeCreateModal()">
 <div class="modal">
   <button class="modal-close" onclick="closeCreateModal()">&#215;</button>
-  <h2>New Group Order</h2>
+  <h2 id="create-modal-title">New Group Order</h2>
   <div class="form-group"><label for="new-order-name">Order name *</label><input type="text" id="new-order-name" placeholder="e.g. Little League Spring 2025"><div class="field-error" id="err-new-name">Required.</div></div>
   <div class="form-row">
     <div class="form-group"><label for="new-order-deadline">Response deadline *</label><input type="date" id="new-order-deadline"><div class="field-error" id="err-new-deadline">Required.</div></div>
@@ -1013,7 +1013,7 @@ footer a{color:var(--yellow);text-decoration:none}
   <div class="field-error" id="err-shirt-options">Add at least one shirt option.</div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
     <button class="btn btn-outline" onclick="closeCreateModal()">Cancel</button>
-    <button class="btn btn-yellow" onclick="createOrder()">Create Order</button>
+    <button class="btn btn-yellow" id="create-order-btn" onclick="createOrder()">Create Order</button>
   </div>
 </div>
 </div>
@@ -1226,6 +1226,29 @@ async function insertOrderRow(order){
       const {show_pricing,...legacyPayload}=payload;
       console.warn('orders.show_pricing column not found — saving without member-pricing preference. Add it with: alter table orders add column show_pricing boolean default true;');
       ({error}=await SB.from('orders').insert(legacyPayload));
+    }
+    if(error)return {ok:false,error};
+    return {ok:true};
+  }catch(e){return {ok:false,error:e};}
+}
+
+async function updateOrderRow(order){
+  if(!sbReady())return {ok:false,error:new Error('Supabase is not connected.')};
+  try{
+    const payload={
+      name:order.name,
+      deadline:order.deadline,
+      purge_date:order.purgeDate,
+      description:order.desc,
+      shirt_options:order.shirtOptions,
+      show_pricing:order.showPricing!==false
+    };
+    let {error}=await SB.from('orders').update(payload).eq('id',order.id);
+    if(error&&/show_pricing/i.test(error.message||'')){
+      // Older databases may not have the show_pricing column yet — update without it.
+      const {show_pricing,...legacyPayload}=payload;
+      console.warn('orders.show_pricing column not found — updating without member-pricing preference. Add it with: alter table orders add column show_pricing boolean default true;');
+      ({error}=await SB.from('orders').update(legacyPayload).eq('id',order.id));
     }
     if(error)return {ok:false,error};
     return {ok:true};
@@ -1626,7 +1649,8 @@ function renderOrderCard(order,compact){
       </div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
         <button class="btn btn-outline btn-sm" onclick="viewSubmissions('${order.id}')">Submissions</button>
-        ${canManage(order)?`<button class="btn btn-outline btn-sm" onclick="toggleStatus('${order.id}')">${isOpen?'Close':'Reopen'}</button>
+        ${canManage(order)?`<button class="btn btn-outline btn-sm" onclick="editOrder('${order.id}')">Edit</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleStatus('${order.id}')">${isOpen?'Close':'Reopen'}</button>
         <button class="btn btn-danger btn-sm" onclick="deleteOrder('${order.id}')">Delete</button>`:''}
       </div>
     </div>
@@ -1784,18 +1808,24 @@ function deleteResponse(orderId,responseId){
 
 /* ════════════ CREATE ORDER MODAL ════════════ */
 let optCounter=0;
+let editingOrderId=null;
 const optImages={},optColors={},optStyleSel={},optUniform={};
 
 function openCreateModal(){
+  editingOrderId=null;
+  const titleEl=document.getElementById('create-modal-title');if(titleEl)titleEl.textContent='New Group Order';
+  const btnEl=document.getElementById('create-order-btn');if(btnEl)btnEl.textContent='Create Order';
   ['new-order-name','new-order-desc'].forEach(id=>document.getElementById(id).value='');
   const spc=document.getElementById('new-order-show-pricing');if(spc)spc.checked=true;
   ['err-new-name','err-new-deadline','err-shirt-options'].forEach(id=>document.getElementById(id).classList.remove('show'));
   const d=new Date();d.setDate(d.getDate()+14);
   document.getElementById('new-order-deadline').value=d.toISOString().split('T')[0];
+  const pg=document.getElementById('new-order-purge');if(pg)pg.value='';
   optCounter=0;
   Object.keys(optImages).forEach(k=>delete optImages[k]);
   Object.keys(optColors).forEach(k=>delete optColors[k]);
   Object.keys(optStyleSel).forEach(k=>delete optStyleSel[k]);
+  Object.keys(optUniform).forEach(k=>delete optUniform[k]);
   document.getElementById('shirt-options-builder').innerHTML='';
   addShirtOption();
   document.getElementById('create-modal').classList.add('open');
@@ -1803,7 +1833,33 @@ function openCreateModal(){
 }
 function closeCreateModal(){document.getElementById('create-modal').classList.remove('open');}
 
-function addShirtOption(){
+function editOrder(id){
+  const order=getOrder(id);
+  if(!order){showToast('Order not found.');return;}
+  if(!canManage(order)){showToast('You can only edit your own orders.');return;}
+  editingOrderId=id;
+  const titleEl=document.getElementById('create-modal-title');if(titleEl)titleEl.textContent='Edit Group Order';
+  const btnEl=document.getElementById('create-order-btn');if(btnEl)btnEl.textContent='Save Changes';
+  document.getElementById('new-order-name').value=order.name||'';
+  document.getElementById('new-order-deadline').value=order.deadline||'';
+  const pg=document.getElementById('new-order-purge');if(pg)pg.value=order.purgeDate||'';
+  document.getElementById('new-order-desc').value=order.desc||'';
+  const spc=document.getElementById('new-order-show-pricing');if(spc)spc.checked=order.showPricing!==false;
+  ['err-new-name','err-new-deadline','err-shirt-options'].forEach(x=>document.getElementById(x).classList.remove('show'));
+  optCounter=0;
+  Object.keys(optImages).forEach(k=>delete optImages[k]);
+  Object.keys(optColors).forEach(k=>delete optColors[k]);
+  Object.keys(optStyleSel).forEach(k=>delete optStyleSel[k]);
+  Object.keys(optUniform).forEach(k=>delete optUniform[k]);
+  document.getElementById('shirt-options-builder').innerHTML='';
+  const opts=order.shirtOptions||[];
+  if(opts.length)opts.forEach(so=>addShirtOption(so));
+  else addShirtOption();
+  document.getElementById('create-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('new-order-name').focus(),120);
+}
+
+function addShirtOption(prefill){
   optCounter++;const tid='opt'+optCounter;
   optImages[tid]=[];optColors[tid]=[{hex:'#FFFFFF',name:'White'},{hex:'#000000',name:'Black'},{hex:'#1B2A4A',name:'Navy'}];optStyleSel[tid]=null;optUniform[tid]={on:false,places:{},price:5};
   const div=document.createElement('div');div.className='shirt-option-builder';div.id='builder-'+tid;
@@ -1871,6 +1927,28 @@ function addShirtOption(){
     </div>`;
   document.getElementById('shirt-options-builder').appendChild(div);
   renderCB(tid);
+  if(prefill){
+    if(prefill.styleId){const sName=(SHIRT_STYLES.find(s=>s.id===prefill.styleId)||{}).label||prefill.styleName||'Custom';selStyle(tid,prefill.styleId,sName);}
+    const bd=document.getElementById('bdesc-'+tid);if(bd)bd.value=prefill.desc||'';
+    const bp=document.getElementById('bprice-'+tid);if(bp)bp.value=(Number(prefill.basePrice)||0).toFixed(2);
+    if(Array.isArray(prefill.colors)&&prefill.colors.length){optColors[tid]=prefill.colors.map(c=>({hex:c.hex,name:c.name}));renderCB(tid);}
+    const tags=document.querySelectorAll('#db-'+tid+' .deco-tag');
+    (prefill.decos||[]).forEach(d=>{
+      const di=DECO_OPTIONS.indexOf(d.name);if(di<0)return;
+      if(tags[di])tags[di].classList.add('sel');
+      const wrap=document.getElementById('dpwrap-'+tid+'-'+di);if(wrap)wrap.style.display='inline-block';
+      const pin=document.getElementById('dprice-'+tid+'-'+di);if(pin)pin.value=(Number(d.price)||0).toFixed(2);
+    });
+    if(Array.isArray(prefill.images)&&prefill.images.length){optImages[tid]=prefill.images.slice();renderPV(tid);}
+    if(prefill.uniform&&Array.isArray(prefill.uniform.places)&&prefill.uniform.places.length){
+      const chk=document.getElementById('uni-'+tid);if(chk)chk.checked=true;
+      toggleUniform(tid,true);
+      optUniform[tid].places={};
+      prefill.uniform.places.forEach(pl=>{optUniform[tid].places[pl.id]={required:!!pl.required};setPlacementUI(tid,pl.id,true,!!pl.required);});
+      const up=document.getElementById('uniprice-'+tid);if(up)up.value=(Number(prefill.uniform.price)||0).toFixed(2);
+      optUniform[tid].price=Number(prefill.uniform.price)||0;
+    }
+  }
 }
 function removeShirtOption(tid){const el=document.getElementById('builder-'+tid);if(el)el.remove();delete optImages[tid];delete optColors[tid];delete optStyleSel[tid];delete optUniform[tid];}
 function selStyle(tid,sid,name){document.querySelectorAll(`#sg-${tid} .style-btn`).forEach(b=>b.classList.remove('sel'));document.getElementById(`sb-${tid}-${sid}`)?.classList.add('sel');optStyleSel[tid]={id:sid,name};}
@@ -1976,11 +2054,34 @@ async function createOrder(){
   if(!shirtOptions.length){document.getElementById('err-shirt-options').classList.add('show');valid=false;}else document.getElementById('err-shirt-options').classList.remove('show');
   if(!valid)return;
   const purgeDate=document.getElementById('new-order-purge').value||null;
+  const showPricing=document.getElementById('new-order-show-pricing')?document.getElementById('new-order-show-pricing').checked:true;
+
+  // ── EDIT MODE: update the existing order in place ──
+  if(editingOrderId){
+    const existing=getOrder(editingOrderId);
+    if(!existing){showToast('Order not found.');editingOrderId=null;closeCreateModal();return;}
+    const updated={...existing,name,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),showPricing,shirtOptions};
+    if(sbReady()){
+      const result=await updateOrderRow(updated);
+      if(!result.ok){console.warn('Could not update order in Supabase.',result.error);showToast('Could not save changes. Try again.');return;}
+      await refreshOrdersFromSupabase();
+    }else{
+      const orders=loadOrders();const idx=orders.findIndex(o=>o.id===editingOrderId);
+      if(idx>=0){orders[idx]=updated;saveOrders(orders);}
+    }
+    const savedName=name;
+    editingOrderId=null;
+    closeCreateModal();
+    addLog('Order edited: '+savedName,'warn');
+    showToast('\u2713 Changes saved.');
+    showAdminPage(currentAdminPage);
+    return;
+  }
+
   // ownership: if a logged-in leader created it, they own it; admin-created orders have no leader owner
   const ownerAcct=currentLeaderId?getAccountById(currentLeaderId):null;
   const ownerId=currentLeaderId||null;
   const ownerName=currentLeaderName||(ownerAcct?ownerAcct.name:'Shop Admin');
-  const showPricing=document.getElementById('new-order-show-pricing')?document.getElementById('new-order-show-pricing').checked:true;
   const newOrder={id:'order-'+Date.now(),name,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),ownerId,ownerName,status:'open',created:Date.now(),showPricing,shirtOptions,responses:[]};
   if(sbReady()){
     const result=await insertOrderRow(newOrder);
