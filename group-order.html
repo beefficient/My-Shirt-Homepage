@@ -1235,12 +1235,32 @@ async function refreshOrdersFromSupabase(){
   if(!sbReady())return {ok:true,orders:loadOrders()};
   const result=await fetchMyOrders();
   if(result.ok){
+    // Hydrate each order with its responses so the dashboard stat cards and
+    // order cards reflect real submission counts. Without this, dbOrderToApp
+    // leaves responses empty and the dashboard always shows zero.
+    await hydrateOrderResponses(result.orders);
     saveOrders(result.orders);
     return result;
   }
   console.warn('Could not refresh orders from Supabase.',result.error);
   showToast('Could not refresh your orders.');
   return result;
+}
+
+/* Fetch responses for a batch of orders in one query and attach them. */
+async function hydrateOrderResponses(orders){
+  if(!sbReady()||!orders||!orders.length)return;
+  const ids=orders.map(o=>o.id);
+  try{
+    const {data,error}=await SB.from('responses').select('*')
+      .in('order_id',ids).order('created_at',{ascending:true});
+    if(error){console.warn('Could not load responses for dashboard.',error);return;}
+    const byOrder={};
+    (data||[]).forEach(row=>{
+      (byOrder[row.order_id]=byOrder[row.order_id]||[]).push(dbResponseToApp(row));
+    });
+    orders.forEach(o=>{o.responses=byOrder[o.id]||[];});
+  }catch(e){console.warn('Could not load responses for dashboard.',e);}
 }
 
 async function insertResponseRow(payload){
