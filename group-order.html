@@ -1197,7 +1197,17 @@ function loadOrders(){
     return orders;
   }catch(e){return[];}
 }
-function saveOrders(o){localStorage.setItem(STORE_KEY,JSON.stringify(o));}
+function saveOrders(o){
+  try{
+    localStorage.setItem(STORE_KEY,JSON.stringify(o));
+    return true;
+  }catch(e){
+    if(e&&(e.name==='QuotaExceededError'||/quota/i.test(e.message||'')))
+      showToast('Storage full \u2014 use smaller or fewer images.');
+    console.error('Could not save orders:',e);
+    return false;
+  }
+}
 function getOrder(id){return loadOrders().find(o=>o.id===id);}
 function getPass(){return localStorage.getItem(PASS_KEY)||DEFAULT_PASS;}
 function setPass(p){localStorage.setItem(PASS_KEY,p);}
@@ -2404,8 +2414,51 @@ function renderCB(tid){
 function updHex(tid,i,v){if(optColors[tid]&&optColors[tid][i]){optColors[tid][i].hex=v;const s=document.querySelector(`#cb-${tid} .color-row-item:nth-child(${i+1}) .color-input-swatch`);if(s)s.style.background=v;}}
 function updName(tid,i,v){if(optColors[tid]&&optColors[tid][i])optColors[tid][i].name=v;}
 function rmColor(tid,i){optColors[tid].splice(i,1);renderCB(tid);}
-function handleImgUpload(e,tid){Array.from(e.target.files).forEach(f=>{if(f.size>5*1024*1024){showToast('Max 5MB');return;}const r=new FileReader();r.onload=ev=>{optImages[tid].push(ev.target.result);renderPV(tid);};r.readAsDataURL(f);});e.target.value='';}
-function handleDrop(e,tid){e.preventDefault();document.getElementById('zone-'+tid)?.classList.remove('dragover');Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')).forEach(f=>{const r=new FileReader();r.onload=ev=>{optImages[tid].push(ev.target.result);renderPV(tid);};r.readAsDataURL(f);});}
+function compressImage(file,maxDim,quality){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error('read failed'));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error('decode failed'));
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>maxDim||h>maxDim){
+          if(w>=h){h=Math.round(h*maxDim/w);w=maxDim;}
+          else{w=Math.round(w*maxDim/h);h=maxDim;}
+        }
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        try{resolve(canvas.toDataURL('image/jpeg',quality));}
+        catch(err){resolve(reader.result);} // fall back to original if canvas export fails
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function handleImgUpload(e,tid){
+  const files=Array.from(e.target.files);
+  e.target.value='';
+  files.forEach(f=>{
+    if(!f.type.startsWith('image/'))return;
+    if(f.size>15*1024*1024){showToast('Image too large (max 15MB)');return;}
+    compressImage(f,1000,0.72)
+      .then(d=>{optImages[tid].push(d);renderPV(tid);})
+      .catch(()=>showToast('Could not process that image.'));
+  });
+}
+function handleDrop(e,tid){
+  e.preventDefault();
+  document.getElementById('zone-'+tid)?.classList.remove('dragover');
+  Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')).forEach(f=>{
+    if(f.size>15*1024*1024){showToast('Image too large (max 15MB)');return;}
+    compressImage(f,1000,0.72)
+      .then(d=>{optImages[tid].push(d);renderPV(tid);})
+      .catch(()=>showToast('Could not process that image.'));
+  });
+}
 function renderPV(tid){const w=document.getElementById('pv-'+tid);if(!w)return;w.innerHTML=(optImages[tid]||[]).map((s,i)=>`<div class="thumb-wrap"><img src="${s}" class="upload-thumb" alt=""><button type="button" class="thumb-remove" onclick="rmImg('${tid}',${i})">&times;</button></div>`).join('');}
 function rmImg(tid,i){optImages[tid].splice(i,1);renderPV(tid);}
 
