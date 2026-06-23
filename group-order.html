@@ -1083,9 +1083,9 @@ footer a{color:var(--yellow);text-decoration:none}
     <div class="form-group"><label for="new-order-deadline">Response deadline *</label><input type="date" id="new-order-deadline"><div class="field-error" id="err-new-deadline">Required.</div></div>
   </div>
   <div class="form-group">
-    <label for="new-order-purge">Auto-delete data on <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional &mdash; Supabase removes all order data on this date)</span></label>
+    <label for="new-order-purge">Keep data until <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional override)</span></label>
     <input type="date" id="new-order-purge">
-    <div class="deadline-info">&#128465;&#65039; Leave blank to keep data indefinitely. With Supabase connected, a daily job purges orders past this date.</div>
+    <div class="deadline-info">&#128465;&#65039; By default the order and its photos auto-delete the day after the deadline. Set a later date here only if you need to keep the data longer.</div>
   </div>
   <div class="form-group"><label for="new-order-desc">Instructions for group <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label><textarea id="new-order-desc" placeholder="Any info your group needs&#8230;" style="min-height:52px;"></textarea></div>
   <div class="uniform-toggle-row" style="margin-top:4px;">
@@ -1185,7 +1185,19 @@ const DECO_OPTIONS=[
 ];
 
 /* ════════════ DATA LAYER ════════════ */
+/* When Supabase is connected it is the source of truth. We keep the full data
+   (including embedded photos) in memory only, and write just a slim, image-free
+   copy to localStorage so a page reload has something to show before the next
+   refresh. This keeps large photos out of the ~5MB localStorage cache. */
+let MEM_ORDERS=null;
+function stripImagesForCache(orders){
+  return (orders||[]).map(o=>({
+    ...o,
+    shirtOptions:(o.shirtOptions||[]).map(so=>({...so,images:[]}))
+  }));
+}
 function loadOrders(){
+  if(sbReady()&&MEM_ORDERS!==null)return MEM_ORDERS;
   try{
     const stored=JSON.parse(localStorage.getItem(STORE_KEY))||[];
     const orders=stored.map(order=>{
@@ -1198,6 +1210,13 @@ function loadOrders(){
   }catch(e){return[];}
 }
 function saveOrders(o){
+  if(sbReady()){
+    // Supabase mode: full data stays in memory; cache only an image-free copy.
+    MEM_ORDERS=o;
+    try{localStorage.setItem(STORE_KEY,JSON.stringify(stripImagesForCache(o)));}
+    catch(e){/* a failed reload-cache write is harmless — Supabase has the data */}
+    return true;
+  }
   try{
     localStorage.setItem(STORE_KEY,JSON.stringify(o));
     return true;
@@ -2518,7 +2537,7 @@ async function createOrder(){
       await refreshOrdersFromSupabase();
     }else{
       const orders=loadOrders();const idx=orders.findIndex(o=>o.id===editingOrderId);
-      if(idx>=0){orders[idx]=updated;saveOrders(orders);}
+      if(idx>=0){orders[idx]=updated;if(!saveOrders(orders)){showToast('Could not save changes \u2014 device storage is full.');return;}}
     }
     const savedName=name;
     editingOrderId=null;
@@ -2541,10 +2560,24 @@ async function createOrder(){
       showToast('Could not save order. Try again.');
       return;
     }
-    await refreshOrdersFromSupabase();
-  }else{
-    const orders=loadOrders();
-    orders.unshift(newOrder);saveOrders(orders);
+    // Optimistically add to the local cache so the order appears on the dashboard
+    // immediately — without waiting on (or depending on) the slower re-fetch below.
+    const cached=loadOrders();
+    if(!cached.some(o=>o.id===newOrder.id)){cached.unshift(newOrder);saveOrders(cached);}
+    closeCreateModal();
+    addLog('Order created by '+ownerName+': '+name,'new');
+    showToast('\u2713 "'+name+'" created! Share the order link with your group.');
+    showAdminPage(currentAdminPage);
+    // Reconcile with the server in the background; re-render when it returns.
+    refreshOrdersFromSupabase().then(()=>showAdminPage(currentAdminPage,{skipHistory:true})).catch(()=>{});
+    return;
+  }
+  // Local-storage mode: only claim success if the write actually succeeded.
+  const orders=loadOrders();
+  orders.unshift(newOrder);
+  if(!saveOrders(orders)){
+    showToast('Could not save order \u2014 device storage is full. Clear old test orders in Settings, then try again.');
+    return;
   }
   closeCreateModal();
   addLog('Order created by '+ownerName+': '+name,'new');
@@ -2553,8 +2586,39 @@ async function createOrder(){
 }
 
 /* ════════════ ORDER ACTIONS ════════════ */
-function toggleStatus(id){const orders=loadOrders();const o=orders.find(x=>x.id===id);if(o){const was=o.status;o.status=was==='open'?'closed':'open';saveOrders(orders);addLog('Order '+(o.status==='closed'?'closed':'reopened')+': '+o.name);showAdminPage(currentAdminPage);}}
-function deleteOrder(id){const o=getOrder(id);if(!o||!confirm('Delete "'+o.name+'"?'))return;saveOrders(loadOrders().filter(x=>x.id!==id));addLog('Order deleted: '+o.name,'warn');showAdminPage(currentAdminPage);showToast('Order deleted.');}
+async function toggleStatus(id){
+  const o=getOrder(id);if(!o)return;
+  if(!canManage(o)){showToast('You can only change your own orders.');return;}
+  const next=o.status==='open'?'closed':'open';
+  if(sbReady()){
+    try{
+      const {error}=await SB.from('orders').update({status:next}).eq('id',id);
+      if(error){console.warn('Could not update status in Supabase.',error);showToast('Could not update. Try again.');return;}
+    }catch(e){console.warn('Status update failed.',e);showToast('Could not update. Try again.');return;}
+  }
+  const orders=loadOrders();const lo=orders.find(x=>x.id===id);
+  if(lo){lo.status=next;saveOrders(orders);}
+  addLog('Order '+(next==='closed'?'closed':'reopened')+': '+o.name);
+  showAdminPage(currentAdminPage);
+}
+async function deleteOrder(id){
+  const o=getOrder(id);
+  if(!o){showToast('Order not found.');return;}
+  if(!canManage(o)){showToast('You can only delete your own orders.');return;}
+  if(!confirm('Delete "'+o.name+'"? This permanently removes the order, its photos, and all member responses.'))return;
+  if(sbReady()){
+    try{
+      // ON DELETE CASCADE removes the responses; the embedded photos live in this
+      // row, so deleting it removes them too.
+      const {error}=await SB.from('orders').delete().eq('id',id);
+      if(error){console.warn('Could not delete order in Supabase.',error);showToast('Could not delete order. Try again.');return;}
+    }catch(e){console.warn('Delete failed.',e);showToast('Could not delete order. Try again.');return;}
+  }
+  saveOrders(loadOrders().filter(x=>x.id!==id));
+  addLog('Order deleted: '+o.name,'warn');
+  showAdminPage(currentAdminPage);
+  showToast('Order deleted.');
+}
 function copyLink(id){const inp=document.getElementById('share-'+id);if(!inp)return;inp.select();inp.setSelectionRange(0,9999);try{document.execCommand('copy');}catch(e){}const btn=inp.nextElementSibling;btn.textContent='\u2713 Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2e3);showToast('Link copied!');}
 function previewForm(id){loadOrderForm(id);}
 
