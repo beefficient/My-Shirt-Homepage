@@ -358,6 +358,7 @@
         <input id="loadWONumber" placeholder="Enter Work Order #" aria-label="Load work order number" style="max-width:190px">
         <button class="btn secondary" id="loadWO">Load</button>
         <button class="btn secondary" id="createVendorWO">Create Vendor Work Order</button>
+        <button class="btn secondary" id="duplicateWO">Duplicate Work Order</button>
         <button class="btn secondary" id="newWO">New Work Order</button>
         <button class="btn secondary" id="previewCustomer">Preview Customer View</button>
         <button class="btn" id="printBtn">Print / Save PDF</button>
@@ -2656,6 +2657,156 @@
     toast("Vendor work order created and opened.");
   }
 
+  // Clone the work order currently open in the editor into a brand-new record
+  // with its own freshly-assigned work order number. All content (customer,
+  // items, sizes, artwork, notes) is copied; identity, approval, and vendor
+  // links are reset so the duplicate is independent of the original.
+  async function duplicateWorkOrderFromCurrent_(){
+    if (!wo) wo = newWO();
+
+    const source = hydrateWorkOrderState_(wo);
+    const sourceNo = normalizeWorkOrderNo_(source.woNumber || "");
+    const isVendor = isVendorWorkOrder_(source);
+
+    if (!Array.isArray(source.items) || source.items.length === 0) {
+      toast("Nothing to duplicate — add at least one line item first.", "error", 3500);
+      return;
+    }
+
+    // Assign a fresh number. Customer duplicates get the next canonical number;
+    // vendor duplicates get the next vendor number under the same parent.
+    let newNo;
+    if (isVendor) {
+      const parentNo = normalizeWorkOrderNo_(source.parentWorkOrderNo || sourceNo);
+      newNo = await getNextVendorWorkOrderNumber_(parentNo);
+    } else {
+      newNo = await getNextCanonicalWorkOrderNumber_();
+    }
+
+    // Deep-clone line items with brand-new item ids. Artwork ids are preserved
+    // so each item's artworkIds keep pointing at the cloned artwork records.
+    const items = source.items.map((src) => {
+      const cloned = deepClone_(src) || {};
+      return {
+        ...cloned,
+        id: crypto.randomUUID(),
+        sizeBreakdown: Array.isArray(src.sizeBreakdown)
+          ? src.sizeBreakdown.map((row, idx) => ({
+              size: row?.size || DEFAULT_SIZES[idx] || `Size ${idx+1}`,
+              enabled: !!row?.enabled,
+              qty: Number(row?.qty || 0)
+            }))
+          : newSizeBreakdown(),
+        artworkIds: Array.isArray(src.artworkIds) ? src.artworkIds.slice() : []
+      };
+    });
+    const artworks = (Array.isArray(source.artworks) ? source.artworks : [])
+      .map(a => deepClone_(a))
+      .filter(Boolean);
+
+    const duplicateState = hydrateWorkOrderState_({
+      ...newWO(),
+      woNumber: newNo,
+      workOrderType: source.workOrderType || "customer",
+      // Preserve the parent link only for vendor duplicates; a customer
+      // duplicate stands on its own with no parent.
+      parentWorkOrderId: isVendor ? (source.parentWorkOrderId || null) : null,
+      parentWorkOrderNo: isVendor ? (source.parentWorkOrderNo || "") : "",
+      createdDate: todayISO(),
+      dueDate: source.dueDate || "",
+      customerName: source.customerName || "",
+      company: source.company || "",
+      email: source.email || "",
+      phone: source.phone || "",
+      billingAddress: source.billingAddress || "",
+      shippingAddress: source.shippingAddress || "",
+      notesCustomer: source.notesCustomer || "",
+      notesInternal: source.notesInternal || "",
+      vendorName: source.vendorName || "",
+      vendorContact: source.vendorContact || "",
+      vendorEmail: source.vendorEmail || "",
+      vendorPhone: source.vendorPhone || "",
+      vendorType: source.vendorType || "",
+      vendorMethod: source.vendorMethod || source.vendorType || "",
+      vendorStatus: "draft",
+      internalVendorNotes: source.internalVendorNotes || "",
+      vendorNotes: source.vendorNotes || "",
+      // Reset transient / original-only state on the copy.
+      vendorItemIds: [],
+      relatedVendorWorkorders: [],
+      items,
+      artworks,
+      approval: { approved:false, approvedName:"", approvedDate:"", termsAccepted:false }
+    });
+
+    // This is a NEW record. Detach from the original so the insert below
+    // (and any later Save) does not overwrite the source work order.
+    window.CURRENT_WORKORDER_ID = null;
+    window.CURRENT_WORKORDER_SOURCE = null;
+    window.CURRENT_WORKORDER_MODE = "new";
+
+    // Make the duplicate the active state and build its save payload.
+    wo = duplicateState;
+    const draft = getWorkOrderDraftObject();
+
+    let savedId = null;
+    try {
+      if (sb) {
+        const safeRow = buildSupabaseSafeWorkOrderRow_(draft);
+        const { data, error } = await sb.from("work_orders").insert(safeRow).select("*").maybeSingle();
+        if (error) throw error;
+        savedId = data?.id || null;
+      }
+    } catch (error) {
+      console.error("Duplicate work order Supabase insert failed:", error);
+      setLoadMsg("Duplicate saved locally (Supabase unavailable).", true);
+    }
+
+    const localRecord = {
+      id: savedId,
+      work_order_no: draft.wo_number,
+      wo_number: draft.wo_number,
+      work_order_type: draft.work_order_type,
+      parent_work_order_id: draft.parent_work_order_id,
+      parent_work_order_no: draft.parent_work_order_no,
+      vendor_name: draft.vendor_name,
+      vendor_contact: draft.vendor_contact,
+      vendor_email: draft.vendor_email,
+      vendor_phone: draft.vendor_phone,
+      vendor_type: draft.vendor_type,
+      vendor_method: draft.vendor_method,
+      vendor_status: draft.vendor_status,
+      internal_vendor_notes: draft.internal_vendor_notes,
+      vendor_notes: draft.vendor_notes,
+      vendor_item_ids: draft.vendor_item_ids,
+      related_vendor_workorders: draft.related_vendor_workorders,
+      payload: draft.payload,
+      customer_name: draft.customer_name,
+      due_date: draft.due_date,
+      status: draft.status,
+      source: savedId ? "supabase" : "local"
+    };
+    saveWorkOrderRecordLocally_(localRecord);
+
+    // Open the duplicate in edit mode so further changes update the copy,
+    // not the original.
+    window.CURRENT_WORKORDER_ID = savedId;
+    window.CURRENT_WORKORDER_SOURCE = savedId ? "supabase" : "local";
+    window.CURRENT_WORKORDER_MODE = "edit";
+    setSessionMode_("edit");
+
+    if ($("loadWONumber")) $("loadWONumber").value = duplicateState.woNumber || "";
+    syncWorkOrderUrl_(duplicateState.woNumber || "", savedId || "");
+
+    saveDraft();
+    renderAll();
+
+    const sourceLabel = sourceNo ? ` of ${sourceNo}` : "";
+    console.log("WO duplicated", { from: sourceNo || null, to: duplicateState.woNumber, id: savedId });
+    setLoadMsg(`Duplicate${sourceLabel} created as ${duplicateState.woNumber}. Make any changes, then click "Save Work Order".`);
+    toast(`Duplicate created: ${duplicateState.woNumber}`);
+  }
+
   async function searchWorkOrdersByCustomerName(nameRaw){
     const query = String(nameRaw || "").trim().toLowerCase();
     if (!query) return [];
@@ -3745,6 +3896,16 @@
         console.error(error);
         setLoadMsg(error?.message || "Could not create vendor work order.", true);
         toast(error?.message || "Could not create vendor work order.", "error", 4200);
+      }
+    });
+
+    $("duplicateWO").addEventListener("click", async ()=>{
+      try {
+        await duplicateWorkOrderFromCurrent_();
+      } catch (error) {
+        console.error(error);
+        setLoadMsg(error?.message || "Could not duplicate work order.", true);
+        toast(error?.message || "Could not duplicate work order.", "error", 4200);
       }
     });
 
