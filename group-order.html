@@ -2274,6 +2274,7 @@ async function viewSubmissions(id){
         <td style="font-size:12px;white-space:nowrap;">${esc(item.shirtLabel||'')}</td>
         <td><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:50%;background:${colorHex(item.color)};border:1px solid rgba(0,0,0,0.15);flex-shrink:0;display:inline-block;"></span>${esc(item.color||'')}</span></td>
         <td style="font-size:11px;color:var(--muted);white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;" title="${esc(item.deco||'')}">${esc(item.deco||'--')}</td>
+        <td style="font-size:11px;color:var(--navy);font-weight:600;max-width:180px;" title="${esc(uniformParts(item).readable)}">${uniformParts(item).readable?esc(uniformParts(item).readable):'<span style=\'color:var(--muted);font-weight:400;\'>--</span>'}</td>
         <td><span class="chip ${item.cat}">${esc(item.size)}</span></td>
         <td style="font-weight:700;">${item.qty}</td>
         ${anyPrice?`<td style="font-weight:700;color:var(--success);white-space:nowrap;">${fmtPrice((Number(item.unitPrice)||0)*item.qty)}</td>`:''}
@@ -2283,14 +2284,14 @@ async function viewSubmissions(id){
       </tr>`).join('');
     return itemRows;
   }).join('')
-  :`<tr><td colspan="${anyPrice?10:9}" style="text-align:center;color:var(--muted);padding:20px;">No responses yet.</td></tr>`;
+  :`<tr><td colspan="${anyPrice?11:10}" style="text-align:center;color:var(--muted);padding:20px;">No responses yet.</td></tr>`;
 
   document.getElementById('detail-modal-content').innerHTML=`
     <h2 style="margin-bottom:4px;">${esc(order.name)}</h2>
     <p class="muted" style="margin-bottom:18px;">Deadline: ${dl} &middot; ${order.responses.length} response${order.responses.length!==1?'s':''} &middot; ${totalShirts} shirt${totalShirts!==1?'s':''} total</p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Name</th><th>Style</th><th>Color</th><th>Decoration</th><th>Size</th><th>Qty</th>${anyPrice?'<th>Price</th>':''}<th>Item Notes</th><th>Date</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Style</th><th>Color</th><th>Decoration</th><th>Jersey (Name / No.)</th><th>Size</th><th>Qty</th>${anyPrice?'<th>Price</th>':''}<th>Item Notes</th><th>Date</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       ${totalShirts>0?`<div class="total-bar"><div class="total-bar-label">Total shirts</div><div style="display:flex;gap:16px;align-items:center;"><div class="total-bar-value">${totalShirts}</div>${anyPrice?`<div style="color:rgba(255,255,255,0.4);">|</div><div class="total-bar-label">Revenue</div><div class="total-bar-value">${fmtPrice(grandRevenue)}</div>`:''}</div></div>`:''}
@@ -2795,26 +2796,56 @@ async function deleteOrder(id){
 function copyLink(id){const inp=document.getElementById('share-'+id);if(!inp)return;inp.select();inp.setSelectionRange(0,9999);try{document.execCommand('copy');}catch(e){}const btn=inp.nextElementSibling;btn.textContent='\u2713 Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2e3);showToast('Link copied!');}
 function previewForm(id){loadOrderForm(id);}
 
+/* ════════════ JERSEY / UNIFORM PERSONALIZATION HELPER ════════════ */
+/* Pulls the name-on-back / numbers off an item. Items store this two ways:
+   a structured uniformVals object ({name_back:'JOHNSON', num_back:'12'}) and a
+   ready-made readable string (item.personalization). We prefer the structured
+   values and rebuild the readable string if it's ever missing. */
+function uniformParts(item){
+  const v=(item&&item.uniformVals)?item.uniformVals:{};
+  const nameBack=v.name_back||'';
+  const numBack=v.num_back||'';
+  const nameFront=v.name_front||'';
+  const numFront=v.num_front||'';
+  let readable=(item&&item.personalization)?item.personalization:'';
+  if(!readable){
+    const parts=[];
+    if(nameFront)parts.push('Name front: '+nameFront);
+    if(nameBack)parts.push('Name back: '+nameBack);
+    if(numFront)parts.push('Number front: #'+numFront);
+    if(numBack)parts.push('Number back: #'+numBack);
+    readable=parts.join(' \u00b7 ');
+  }
+  return {nameBack,numBack,nameFront,numFront,readable};
+}
+
 /* ════════════ EXPORT CSV ════════════ */
 async function exportCSV(id){
   const order=getOrder(id);if(!order)return;
   const rr=await fetchResponsesByOrder(id);
   order.responses=rr.ok?rr.responses:(order.responses||[]);
-  const header='Name,Shirt Style,Color,Decoration,Size,Category,Quantity,Unit Price,Line Total,Item Notes,Order Notes,Date';
+  const header='Name,Shirt Style,Color,Decoration,Name on Back,Number on Back,Name on Front,Number on Front,Size,Category,Quantity,Unit Price,Line Total,Item Notes,Order Notes,Date';
   const rows=[];
   order.responses.forEach(r=>r.items.forEach(i=>{
     const unit=Number(i.unitPrice)||0;
+    const u=uniformParts(i);
     rows.push([
       '"'+r.name.replace(/"/g,'""')+'"',i.shirtLabel||'',i.color||'',i.deco||'',
+      '"'+u.nameBack.replace(/"/g,'""')+'"','"'+u.numBack.replace(/"/g,'""')+'"',
+      '"'+u.nameFront.replace(/"/g,'""')+'"','"'+u.numFront.replace(/"/g,'""')+'"',
       i.size,i.cat.charAt(0).toUpperCase()+i.cat.slice(1),i.qty,
       unit.toFixed(2),(unit*i.qty).toFixed(2),
       '"'+(i.notes||'').replace(/"/g,'""')+'"','"'+(r.notes||'').replace(/"/g,'""')+'"',
       new Date(r.date).toLocaleDateString()
     ].join(','));
   }));
-  // grand total row
+  // grand total row (16 columns; total sits under the Line Total column)
   const grand=order.responses.reduce((s,r)=>s+r.items.reduce((a,i)=>a+(Number(i.unitPrice)||0)*i.qty,0),0);
-  if(grand>0)rows.push(['','','','','','','','','GRAND TOTAL: '+grand.toFixed(2),'','',''].join(','));
+  if(grand>0){
+    const totalRow=new Array(16).fill('');
+    totalRow[12]='GRAND TOTAL: '+grand.toFixed(2);
+    rows.push(totalRow.join(','));
+  }
   const blob=new Blob([[header,...rows].join('\n')],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=order.name.replace(/[^a-z0-9]/gi,'_')+'_orders.csv';a.click();
@@ -2968,8 +2999,12 @@ function panelSelectShirt(orderId,optionId){
   const decoSec=document.getElementById('panel-deco-sec');
   if(opt.colors&&opt.colors.length){
     colorSec.style.display='block';
+    const singleColor=opt.colors.length===1;
+    // With only one color there's nothing to choose — auto-select it so it's still recorded.
+    if(singleColor)panelColor=opt.colors[0].name;
+    const colorLabel=colorSec.querySelector('label');if(colorLabel)colorLabel.textContent=singleColor?'Shirt color':'Shirt color *';
     document.getElementById('panel-color-swatches').innerHTML=opt.colors.map(c=>`
-      <span class="color-swatch color-swatch-lg" style="background:${c.hex};" title="${esc(c.name)}" onclick="panelSelColor('${esc(c.name)}',this)"></span>`).join('');
+      <span class="color-swatch color-swatch-lg${singleColor&&c.name===panelColor?' sel-color':''}" style="background:${c.hex};" title="${esc(c.name)}" onclick="panelSelColor('${esc(c.name)}',this)"></span>`).join('');
   }else colorSec.style.display='none';
   // Read-only decoration display (no picker) — shows what's included with this shirt
   if(opt.decos&&opt.decos.length){
@@ -3082,7 +3117,7 @@ function addToCart(){
   if(hasOpts){
     const opt=(order.shirtOptions||[]).find(s=>s.id===panelShirtId);
     if(!panelShirtId){document.getElementById('perr-shirt').classList.add('show');valid=false;}else document.getElementById('perr-shirt').classList.remove('show');
-    if(opt&&opt.colors&&opt.colors.length&&!panelColor){document.getElementById('perr-color').classList.add('show');valid=false;}else document.getElementById('perr-color')?.classList.remove('show');
+    if(opt&&opt.colors&&opt.colors.length>1&&!panelColor){document.getElementById('perr-color').classList.add('show');valid=false;}else document.getElementById('perr-color')?.classList.remove('show');
     // required uniform personalization fields must be filled
     if(panelUniform){
       const missing=(panelUniform.places||[]).some(pl=>pl.required&&!(panelUniformVals[pl.id]&&String(panelUniformVals[pl.id]).trim()));
