@@ -843,6 +843,19 @@ footer a{color:var(--yellow);text-decoration:none}
     <div class="card-header"><h3>Leader Accounts</h3></div>
     <div class="card-body">
       <p class="muted" style="margin-bottom:12px;">People who registered their own leader accounts to create and manage their own group orders. You can see all their orders from your dashboard.</p>
+      <div id="sb-leader-admin" style="display:none;">
+        <div class="form-group" style="margin-bottom:10px;">
+          <label for="admin-key-input">Admin action key</label>
+          <div class="password-wrap">
+            <input type="password" id="admin-key-input" placeholder="Required to load &amp; delete accounts" autocomplete="off">
+            <button type="button" class="password-toggle" onclick="togglePassword('admin-key-input',this)" aria-label="Show key">Show</button>
+          </div>
+          <p class="muted" style="font-size:12px;margin-top:5px;">Matches the <code>ADMIN_API_KEY</code> secret set on your Supabase project. Stored only in this browser, never in the page.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <button class="btn btn-outline btn-sm" onclick="loadSupabaseLeaders()">Load leader accounts</button>
+        </div>
+      </div>
       <div id="leader-accounts-list"></div>
     </div>
   </div>
@@ -1277,6 +1290,14 @@ function addLog(msg,type){
 
 function cleanupLegacyCodeAccess(){
   localStorage.removeItem('myshirt_leaders');
+  // Remove any auth session that an earlier version saved to this device, so
+  // anyone who was previously kept signed in now starts fresh on this visit.
+  try{
+    localStorage.removeItem(SESSION_KEY);
+    Object.keys(localStorage).forEach(function(k){
+      if(/^sb-.*-auth-token/.test(k))localStorage.removeItem(k);
+    });
+  }catch(e){/* harmless if storage is unavailable */}
 }
 
 let SB=null;
@@ -1287,7 +1308,15 @@ let SB=null;
     const configured=cfg&&cfg.url&&cfg.anonKey
       &&!/YOUR-PROJECT-REF|YOUR-ANON/.test(cfg.url+cfg.anonKey);
     if(hasLib&&configured){
-      SB=window.supabase.createClient(cfg.url,cfg.anonKey);
+      SB=window.supabase.createClient(cfg.url,cfg.anonKey,{
+        auth:{
+          // Don't keep anyone logged in across visits. The session lives only
+          // in memory for the current page, so leaving the site (closing the
+          // tab or reloading) returns to the login screen.
+          persistSession:false,
+          autoRefreshToken:true // keep the in-memory session alive while the tab is open
+        }
+      });
       console.info('Supabase connected.');
     }else{
       console.info('Supabase not configured — using local storage. '
@@ -1731,9 +1760,23 @@ async function enterAsLeader(acct){
   document.getElementById('nav-orders').style.display='';
   document.getElementById('nav-log').style.display='none';
   document.getElementById('nav-settings').style.display='none';
+  recordLeader(acct); // add/refresh this person on the group-order leader allowlist
   await refreshOrdersFromSupabase();
   showAdminPage('dashboard',{skipHistory:true});
   addLog('Leader signed in: '+currentLeaderName);
+}
+
+/* Records a leader in the `leaders` allowlist table so the admin delete tool
+   can only ever see and delete people who signed in through THIS app — never
+   other logins that share the Supabase project. Non-fatal if it fails. */
+async function recordLeader(acct){
+  if(!sbReady()||!acct||acct.source!=='supabase'||!acct.id)return;
+  try{
+    await SB.from('leaders').upsert(
+      {id:acct.id,email:acct.email||'',name:acct.name||''},
+      {onConflict:'id'}
+    );
+  }catch(e){console.warn('Could not record leader allowlist entry.',e);}
 }
 
 async function restoreLeaderSession(){
@@ -2022,22 +2065,110 @@ function renderLog(){
 }
 
 function renderSettings(){
-  // Leader accounts list
+  const sbAdmin=document.getElementById('sb-leader-admin');
+  if(sbAdmin)sbAdmin.style.display=sbReady()?'block':'none';
+  const keyInput=document.getElementById('admin-key-input');
+  if(keyInput&&!keyInput.value)keyInput.value=getAdminKey();
+
+  if(sbReady()){
+    // Real leader accounts live in Supabase Auth — manage them via the server function.
+    if(getAdminKey()){
+      loadSupabaseLeaders();
+    }else{
+      const el=document.getElementById('leader-accounts-list');
+      if(el)el.innerHTML='<p class="muted" style="font-size:13px;">Enter your admin action key above, then choose <strong>Load leader accounts</strong> to view and delete them.</p>';
+    }
+    return;
+  }
+  renderLocalLeaderAccounts();
+}
+
+/* Legacy device-local accounts (only used when Supabase is not connected). */
+function renderLocalLeaderAccounts(){
   const accts=getAccounts();
   const allOrders=loadOrders();
   const accEl=document.getElementById('leader-accounts-list');
-  if(accEl){
-    const legacyNote=sbReady()?'<div class="notice" style="margin-bottom:10px;">Leader sign-ins are managed in Supabase Auth when connected. Any accounts listed here are older device-local accounts only.</div>':'';
-    accEl.innerHTML=accts.length?legacyNote+accts.map(a=>{
-      const cnt=allOrders.filter(o=>o.ownerId===a.id).length;
+  if(!accEl)return;
+  accEl.innerHTML=accts.length?accts.map(a=>{
+    const cnt=allOrders.filter(o=>o.ownerId===a.id).length;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--bg);border-radius:7px;margin-bottom:6px;font-size:13px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;color:var(--navy);">${esc(a.name)}</div>
+        <div class="muted" style="font-size:12px;">${esc(a.email)} &middot; ${cnt} order${cnt!==1?'s':''}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removeLeaderAccount('${a.id}')">Remove</button>
+    </div>`;
+  }).join(''):'<p class="muted" style="font-size:13px;">No leader accounts have registered yet.</p>';
+}
+
+/* ── Supabase leader accounts (managed via the admin-leaders Edge Function) ── */
+const ADMIN_KEY_STORE='myshirt_admin_key';
+let _sbLeaders=[];
+function getAdminKey(){try{return localStorage.getItem(ADMIN_KEY_STORE)||'';}catch(e){return'';}}
+function setAdminKey(k){try{localStorage.setItem(ADMIN_KEY_STORE,k||'');}catch(e){}}
+
+function friendlyFnError(msg){
+  const m=String(msg||'');
+  if(/not authorized|401/i.test(m))return 'Admin action key is incorrect.';
+  if(/ADMIN_API_KEY|not configured/i.test(m))return 'The server is missing its ADMIN_API_KEY secret. Set it in Supabase, then retry.';
+  if(/failed to (fetch|send)|networkerror|not found|404|non-2xx/i.test(m))return 'Couldn’t reach the delete function. Make sure the admin-leaders Edge Function is deployed.';
+  return m;
+}
+
+async function loadSupabaseLeaders(){
+  const el=document.getElementById('leader-accounts-list');
+  const keyInput=document.getElementById('admin-key-input');
+  const key=((keyInput&&keyInput.value)||getAdminKey()).trim();
+  if(!key){if(el)el.innerHTML='<p class="muted" style="font-size:13px;">Enter your admin action key first.</p>';return;}
+  setAdminKey(key);
+  if(el)el.innerHTML='<p class="muted" style="font-size:13px;">Loading leader accounts…</p>';
+  try{
+    const {data,error}=await SB.functions.invoke('admin-leaders',{body:{action:'list',adminKey:key}});
+    if(error||!data||!data.ok){
+      const msg=(data&&data.error)||(error&&error.message)||'Could not load accounts.';
+      if(el)el.innerHTML='<div class="notice" style="margin:0;">'+esc(friendlyFnError(msg))+'</div>';
+      return;
+    }
+    _sbLeaders=data.leaders||[];
+    if(!_sbLeaders.length){if(el)el.innerHTML='<p class="muted" style="font-size:13px;">No leader accounts have registered yet.</p>';return;}
+    el.innerHTML=_sbLeaders.map(a=>{
+      const nm=a.name||leaderNameFromEmail(a.email);
       return `<div style="display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--bg);border-radius:7px;margin-bottom:6px;font-size:13px;">
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;color:var(--navy);">${esc(a.name)}</div>
-          <div class="muted" style="font-size:12px;">${esc(a.email)} &middot; ${cnt} order${cnt!==1?'s':''}</div>
+          <div style="font-weight:700;color:var(--navy);">${esc(nm)}</div>
+          <div class="muted" style="font-size:12px;">${esc(a.email)} &middot; ${a.orderCount} order${a.orderCount!==1?'s':''}</div>
         </div>
-        <button class="btn btn-danger btn-sm" onclick="removeLeaderAccount('${a.id}')">Remove</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSupabaseLeader('${esc(a.id)}')">Delete</button>
       </div>`;
-    }).join(''):sbReady()?'<p class="muted" style="font-size:13px;">Leader accounts now live in Supabase Auth. No legacy device-local accounts were found on this browser.</p>':'<p class="muted" style="font-size:13px;">No leader accounts have registered yet.</p>';
+    }).join('');
+  }catch(e){
+    if(el)el.innerHTML='<div class="notice" style="margin:0;">'+esc(friendlyFnError(String(e&&e.message||e)))+'</div>';
+  }
+}
+
+async function deleteSupabaseLeader(id){
+  const a=_sbLeaders.find(x=>x.id===id);if(!a)return;
+  const name=a.name||leaderNameFromEmail(a.email);
+  const oc=Number(a.orderCount)||0;
+  const warn='Permanently delete leader "'+name+'"?\n\nThis removes their login'
+    +(oc?' and deletes their '+oc+' order'+(oc!==1?'s':'')+' (plus all member responses on them)':'')
+    +'. This cannot be undone.';
+  if(!confirm(warn))return;
+  const key=getAdminKey();
+  if(!key){showToast('Enter your admin action key first.');return;}
+  showToast('Deleting…');
+  try{
+    const {data,error}=await SB.functions.invoke('admin-leaders',{body:{action:'delete',adminKey:key,userId:id}});
+    if(error||!data||!data.ok){
+      const msg=(data&&data.error)||(error&&error.message)||'Delete failed.';
+      showToast(friendlyFnError(msg));return;
+    }
+    addLog('Leader account deleted by Shop Admin: '+name+(data.deletedOrders?(' ('+data.deletedOrders+' order'+(data.deletedOrders!==1?'s':'')+' removed)'):''),'warn');
+    await refreshOrdersFromSupabase();
+    await loadSupabaseLeaders();
+    showToast('\u2713 Leader account deleted.');
+  }catch(e){
+    showToast(friendlyFnError(String(e&&e.message||e)));
   }
 }
 
