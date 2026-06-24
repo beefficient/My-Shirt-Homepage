@@ -1380,9 +1380,16 @@ async function fetchOrderById(id){
 async function insertOrderRow(order){
   if(!sbReady())return {ok:false,error:new Error('Supabase is not connected.')};
   try{
-    const {data:userData,error:userError}=await SB.auth.getUser();
-    if(userError)return {ok:false,error:userError};
-    if(!userData||!userData.user)return {ok:false,error:new Error('No signed-in leader found.')};
+    // Group leaders sign in through Supabase Auth and own their orders. The Shop
+    // Admin signs in with a local password only and has NO Supabase session, so
+    // SB.auth.getUser() would throw "Auth session missing". getSession() never
+    // throws — when there's no session we save the order with no owner (an
+    // admin-created order), matching dbOrderToApp's "Shop Admin" fallback.
+    let ownerId=null;
+    const {data:sessionData}=await SB.auth.getSession();
+    if(sessionData&&sessionData.session&&sessionData.session.user){
+      ownerId=sessionData.session.user.id;
+    }
     const payload={
       id:order.id,
       name:order.name,
@@ -1392,7 +1399,7 @@ async function insertOrderRow(order){
       status:order.status,
       shirt_options:order.shirtOptions,
       show_pricing:order.showPricing!==false,
-      owner_id:userData.user.id
+      owner_id:ownerId
     };
     let {error}=await SB.from('orders').insert(payload);
     if(error&&/show_pricing/i.test(error.message||'')){
@@ -1432,12 +1439,18 @@ async function updateOrderRow(order){
 async function fetchMyOrders(){
   if(!sbReady())return {ok:true,orders:loadOrders()};
   try{
-    const {data:userData,error:userError}=await SB.auth.getUser();
-    if(userError)return {ok:false,error:userError};
-    if(!userData||!userData.user)return {ok:false,error:new Error('No signed-in leader found.')};
-    const {data,error}=await SB.from('orders').select('*')
-      .eq('owner_id',userData.user.id)
-      .order('created_at',{ascending:false});
+    // Leaders have a Supabase session and should see only their own orders. The
+    // Shop Admin has no session (local password) and should see every order, so
+    // we skip the owner filter when there's no signed-in user. Using getSession()
+    // here avoids the "Auth session missing" throw from getUser().
+    let ownerId=null;
+    const {data:sessionData}=await SB.auth.getSession();
+    if(sessionData&&sessionData.session&&sessionData.session.user){
+      ownerId=sessionData.session.user.id;
+    }
+    let query=SB.from('orders').select('*').order('created_at',{ascending:false});
+    if(ownerId)query=query.eq('owner_id',ownerId);
+    const {data,error}=await query;
     if(error)return {ok:false,error};
     return {ok:true,orders:(data||[]).map(dbOrderToApp)};
   }catch(e){return {ok:false,error:e};}
