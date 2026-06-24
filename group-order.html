@@ -1243,6 +1243,10 @@ function saveOrders(o){
 function getOrder(id){return loadOrders().find(o=>o.id===id);}
 function getPass(){return localStorage.getItem(PASS_KEY)||DEFAULT_PASS;}
 function setPass(p){localStorage.setItem(PASS_KEY,p);}
+/* The Shop Admin signs in to Supabase as this account so admin actions count as
+   "authenticated" and pass the orders table's row-level security policies. This
+   must match the user you created under Authentication → Users in Supabase. */
+const ADMIN_EMAIL='myshirtcustomerservice@gmail.com';
 /* Leader accounts: [{id,name,email,pass,created}] */
 function getAccounts(){try{return JSON.parse(localStorage.getItem(ACCOUNTS_KEY))||[];}catch(e){return[];}}
 function saveAccounts(a){localStorage.setItem(ACCOUNTS_KEY,JSON.stringify(a));}
@@ -1439,17 +1443,19 @@ async function updateOrderRow(order){
 async function fetchMyOrders(){
   if(!sbReady())return {ok:true,orders:loadOrders()};
   try{
-    // Leaders have a Supabase session and should see only their own orders. The
-    // Shop Admin has no session (local password) and should see every order, so
-    // we skip the owner filter when there's no signed-in user. Using getSession()
-    // here avoids the "Auth session missing" throw from getUser().
-    let ownerId=null;
-    const {data:sessionData}=await SB.auth.getSession();
-    if(sessionData&&sessionData.session&&sessionData.session.user){
-      ownerId=sessionData.session.user.id;
-    }
+    // The Shop Admin sees every order; a group leader sees only the orders they
+    // own. We branch on the app role rather than on session presence, because the
+    // admin now also has a Supabase session (so a session check alone can't tell
+    // the two apart).
     let query=SB.from('orders').select('*').order('created_at',{ascending:false});
-    if(ownerId)query=query.eq('owner_id',ownerId);
+    if(currentRole==='leader'){
+      let ownerId=currentLeaderId;
+      const {data:sessionData}=await SB.auth.getSession();
+      if(sessionData&&sessionData.session&&sessionData.session.user){
+        ownerId=sessionData.session.user.id;
+      }
+      query=query.eq('owner_id',ownerId);
+    }
     const {data,error}=await query;
     if(error)return {ok:false,error};
     return {ok:true,orders:(data||[]).map(dbOrderToApp)};
@@ -1805,27 +1811,50 @@ async function restoreLeaderSession(){
   }
 }
 
-function doAdminLogin(){
+async function doAdminLogin(){
   const pass=document.getElementById('login-pass').value;
+  // When Supabase is connected, sign the admin in as a real auth user so their
+  // inserts/updates/deletes satisfy the orders table's "authenticated" policies.
+  // The password typed here is the password of the ADMIN_EMAIL account in
+  // Supabase (Authentication → Users), not the old local-only admin password.
+  if(sbReady()){
+    try{
+      const {data,error}=await SB.auth.signInWithPassword({email:ADMIN_EMAIL,password:pass});
+      if(error||!data||!data.user){
+        document.getElementById('login-err').classList.add('show');
+        return;
+      }
+    }catch(e){
+      document.getElementById('login-err').classList.add('show');
+      return;
+    }
+    enterAsAdmin();
+    return;
+  }
+  // Local-only fallback (no Supabase connected): keep the original local password.
   if(pass===getPass()){
-    currentRole='admin';
-    currentLeaderId=null;
-    currentLeaderName=null;
-    currentLeaderOrderId=null;
-    adminPageHistory=[];
-    document.getElementById('login-pass').value='';
-    document.getElementById('login-err').classList.remove('show');
-    document.getElementById('page-login').classList.remove('active');
-    document.getElementById('app-shell').style.display='block';
-    document.getElementById('nav-role-label').textContent='Shop Admin';
-    document.getElementById('nav-orders').style.display='';
-    document.getElementById('nav-log').style.display='';
-    document.getElementById('nav-settings').style.display='';
-    showAdminPage('dashboard',{skipHistory:true});
-    addLog('Admin logged in');
+    enterAsAdmin();
     return;
   }
   document.getElementById('login-err').classList.add('show');
+}
+
+function enterAsAdmin(){
+  currentRole='admin';
+  currentLeaderId=null;
+  currentLeaderName=null;
+  currentLeaderOrderId=null;
+  adminPageHistory=[];
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-err').classList.remove('show');
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById('app-shell').style.display='block';
+  document.getElementById('nav-role-label').textContent='Shop Admin';
+  document.getElementById('nav-orders').style.display='';
+  document.getElementById('nav-log').style.display='';
+  document.getElementById('nav-settings').style.display='';
+  showAdminPage('dashboard',{skipHistory:true});
+  addLog('Admin logged in');
 }
 
 /* Which orders can the current session see? */
@@ -1859,7 +1888,7 @@ function openMemberLink(){
 }
 
 async function doLogout(){
-  if(currentRole==='leader'&&sbReady()){
+  if((currentRole==='leader'||currentRole==='admin')&&sbReady()){
     try{await SB.auth.signOut();}catch(e){console.warn('Supabase sign-out failed.',e);}
   }
   currentRole=null; currentLeaderOrderId=null; currentLeaderId=null; currentLeaderName=null;
