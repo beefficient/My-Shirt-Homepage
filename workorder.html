@@ -1371,7 +1371,8 @@
       .map(a => ({
         id: a.id || crypto.randomUUID(),
         name: a.name || "artwork",
-        dataUrl: a.dataUrl
+        dataUrl: a.dataUrl,
+        label: typeof a.label === "string" ? a.label : ""
       }));
 
     const items = Array.isArray(parsed.items) && parsed.items.length ? parsed.items : next.items;
@@ -1397,7 +1398,7 @@
         if(!im?.dataUrl) continue;
         let existing = next.artworks.find(a => a.dataUrl === im.dataUrl);
         if(!existing){
-          existing = { id: crypto.randomUUID(), name: im.name || "artwork", dataUrl: im.dataUrl };
+          existing = { id: crypto.randomUUID(), name: im.name || "artwork", dataUrl: im.dataUrl, label: im.label || "" };
           next.artworks.push(existing);
         }
         if(!item.artworkIds.includes(existing.id)) item.artworkIds.push(existing.id);
@@ -3290,6 +3291,8 @@
               <div style="border:1px solid var(--border);border-radius:14px;padding:10px;background:#fff">
                 <img class="imgPreview" src="${im.dataUrl}" alt="${esc(im.name||"mockup")}">
                 <div class="help" style="margin-top:6px">${esc(im.name||"")}</div>
+                <input type="text" data-action="artworkLabel" data-artid="${im.id}" value="${esc(im.label||"")}" placeholder="Custom label (optional — overrides auto)" style="margin-top:8px">
+                <div class="help" style="margin-top:4px">Leave blank to auto-label from Print Location.</div>
                 <div class="btnRow" style="margin-top:8px">
                   <button class="btn secondary" data-action="removeArtworkRef" data-id="${it.id}" data-idx="${imIdx}">Remove</button>
                 </div>
@@ -3346,15 +3349,45 @@
     return esc(item?.itemSize || "-");
   }
 
-  function printableArtworkLabels_(item, panelCount){
-    const raw = String(item?.location || "").trim();
-    const parts = raw
-      ? raw.split(/\s*\/\s*|\s*,\s*|\s*&\s*|\s+and\s+/i).map(s => String(s || "").trim()).filter(Boolean)
+    function printableArtworkLabels_(item, imagesOrCount){
+    // Uses the exact Print Location / Finish text from the item.
+    // Example: if Print Location says "Front and Back", the artwork header will say "Front and Back"
+    // instead of "FRONT ARTWORK".
+
+    const images = Array.isArray(imagesOrCount) ? imagesOrCount : [];
+    const panelCount = Array.isArray(imagesOrCount)
+      ? imagesOrCount.length
+      : Number(imagesOrCount || 0);
+
+    const rawLocation = String(item?.location || "").trim();
+
+    // Split only when there are multiple artwork images, so each image can have its own label.
+    // For one uploaded image, keep the full Print Location exactly as typed.
+    const parts = rawLocation
+      ? rawLocation
+          .split(/\s*\/\s*|\s*,\s*|\s*&\s*|\s+and\s+/i)
+          .map(s => String(s || "").trim())
+          .filter(Boolean)
       : [];
+
     const labels = [];
+
     for (let i = 0; i < panelCount; i++) {
-      labels.push(parts[i] ? parts[i].toUpperCase() + " ARTWORK" : `ARTWORK ${i + 1}`);
+      const custom = String(images[i]?.label || "").trim();
+
+      if (custom) {
+        labels.push(custom);
+      } else if (panelCount === 1 && rawLocation) {
+        labels.push(rawLocation);
+      } else if (parts[i]) {
+        labels.push(parts[i]);
+      } else if (rawLocation) {
+        labels.push(rawLocation);
+      } else {
+        labels.push(`Artwork ${i + 1}`);
+      }
     }
+
     return labels;
   }
 
@@ -3364,7 +3397,7 @@
       : [];
     if (!imgs.length) return "";
 
-    const labels = printableArtworkLabels_(item, imgs.length);
+    const labels = printableArtworkLabels_(item, imgs);
     return imgs.map((img, idx) => {
       const src = String(img.dataUrl || img.src || img.url || img.imageUrl || img.previewUrl || "").trim();
       if (!src) return "";
@@ -3523,11 +3556,10 @@
   }
 
   function buildPrintView(){
-    const existingPreview = $("modalBody")?.querySelector(".wo-print-preview");
-    if (existingPreview) {
-      $("printView").innerHTML = `<div class="printPreviewFrame"><div class="modalBody">${existingPreview.outerHTML}</div></div>`;
-      return;
-    }
+    // Always rebuild from the live work-order state so the printout reflects
+    // the latest edits (including custom artwork labels). Previously this
+    // reused an existing preview snapshot from the modal, which meant any edit
+    // made after opening the preview once was silently ignored on print.
     $("printView").innerHTML = `<div class="printPreviewFrame"><div class="modalBody">${renderPrintableWorkOrderMarkup_("wo-print-preview")}</div></div>`;
   }
 
@@ -3724,6 +3756,16 @@
     wrap.addEventListener("change", async (e)=>{
       const el = e.target;
 
+      if(el.matches('input[data-action="artworkLabel"]')){
+        const artId = el.dataset.artid;
+        const art = (Array.isArray(wo.artworks) ? wo.artworks : []).find(a => a.id === artId);
+        if(art){
+          art.label = el.value;
+          saveDraft();
+        }
+        return;
+      }
+
       if(el.matches('[data-action="uploadArtwork"]')){
         const id = el.dataset.id;
         const files = Array.from(el.files || []);
@@ -3751,7 +3793,7 @@
 
           let existing = wo.artworks.find(a => a.dataUrl === dataUrl);
           if(!existing){
-            existing = { id: crypto.randomUUID(), name: file.name, dataUrl };
+            existing = { id: crypto.randomUUID(), name: file.name, dataUrl, label: "" };
             wo.artworks.push(existing);
           }
 
@@ -3826,6 +3868,17 @@
 
     wrap.addEventListener("input",(e)=>{
       const el = e.target;
+
+      if(el.matches('input[data-action="artworkLabel"]')){
+        const artId = el.dataset.artid;
+        const art = (Array.isArray(wo.artworks) ? wo.artworks : []).find(a => a.id === artId);
+        if(art){
+          art.label = el.value;
+          saveDraft();
+        }
+        return;
+      }
+
       const field = el.dataset.field;
       const id = el.dataset.id;
       if(field && id){
