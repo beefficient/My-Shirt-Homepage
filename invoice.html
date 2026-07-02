@@ -3650,6 +3650,7 @@
 
         const res = await fetch(EMAIL_WEBAPP_URL, { method: "POST", body });
         const text = await res.text();
+        console.log("[sendInvoiceEmailNow] raw response:", res.status, text); // TEMP DEBUG — remove once fixed
 
         let data = null;
         try {
@@ -3662,7 +3663,7 @@
           throw new Error(`HTTP ${res.status}: ${text || res.statusText || "Email send failed"}`);
         }
         if (!data || data.success !== true) {
-          throw new Error(data?.error || "Email failed.");
+          throw new Error(data?.error || `Email failed. Raw response: ${text.slice(0, 300)}`);
         }
 
         const confirmedRecipient = String(data.recipient || data.recipientEmail || data.to || to || "").trim();
