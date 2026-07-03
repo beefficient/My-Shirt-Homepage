@@ -3643,6 +3643,7 @@
 
         const body = new URLSearchParams({
           secret: EMAIL_WEBAPP_SECRET,
+          action: "email",
           to,
           subject,
           html
@@ -3650,7 +3651,6 @@
 
         const res = await fetch(EMAIL_WEBAPP_URL, { method: "POST", body });
         const text = await res.text();
-        console.log("[sendInvoiceEmailNow] raw response:", res.status, text); // TEMP DEBUG — remove once fixed
 
         let data = null;
         try {
@@ -3662,12 +3662,11 @@
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${text || res.statusText || "Email send failed"}`);
         }
-        if (!data || data.success !== true) {
+        if (!data || data.ok !== true || data.sent !== true) {
           throw new Error(data?.error || `Email failed. Raw response: ${text.slice(0, 300)}`);
         }
 
-        const confirmedRecipient = String(data.recipient || data.recipientEmail || data.to || to || "").trim();
-        return { success: true, recipient: confirmedRecipient || to };
+        return { success: true, recipient: to };
       }
 
       document.addEventListener("DOMContentLoaded", () => {
