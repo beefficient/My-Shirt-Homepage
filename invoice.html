@@ -530,8 +530,10 @@
       .printNotesBlock + .printNotesBlock{ margin-top:10px; }
       .printNotesBody{ white-space:pre-wrap; word-break:break-word; }
       .printTotals{ border:1px solid #cfd7e2; padding:10px 12px; }
-      .printTotalRow{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:4px 0; }
-      .printBalanceDue{ margin-top:8px; padding-top:8px; border-top:1px solid #aeb8c5; font-size:15px; font-weight:900; }
+      .printTotalsTable{ width:100%; border-collapse:collapse; }
+      .printTotalsTable td{ padding:4px 0; vertical-align:top; }
+      .printTotalsTable td.num{ text-align:right; white-space:nowrap; font-weight:800; }
+      .printTotalsTable tr.printBalanceDue td{ padding-top:8px; border-top:1px solid #aeb8c5; font-size:15px; font-weight:900; }
       .printMuted{ color:#5a6470; }
       .bottomgrid{
         display:flex !important;
@@ -622,8 +624,10 @@
     .pdfExportRoot .printNotesBlock + .printNotesBlock{ margin-top:10px; }
     .pdfExportRoot .printNotesBody{ white-space:pre-wrap; word-break:break-word; }
     .pdfExportRoot .printTotals{ border:1px solid #cfd7e2; padding:10px 12px; }
-    .pdfExportRoot .printTotalRow{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:4px 0; }
-    .pdfExportRoot .printBalanceDue{ margin-top:8px; padding-top:8px; border-top:1px solid #aeb8c5; font-size:15px; font-weight:900; }
+    .pdfExportRoot .printTotalsTable{ width:100%; border-collapse:collapse; }
+    .pdfExportRoot .printTotalsTable td{ padding:4px 0; vertical-align:top; }
+    .pdfExportRoot .printTotalsTable td.num{ text-align:right; white-space:nowrap; font-weight:800; }
+    .pdfExportRoot .printTotalsTable tr.printBalanceDue td{ padding-top:8px; border-top:1px solid #aeb8c5; font-size:15px; font-weight:900; }
     .pdfExportRoot .printMuted{ color:#5a6470; }
     .pdfExportRoot .printOnly{ display:inline !important; }
 
@@ -1028,6 +1032,7 @@
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <script>
@@ -2662,13 +2667,17 @@
             <div class="printBottom" style="grid-template-columns:${notesHtml ? "minmax(0, 1.2fr) minmax(260px, .8fr)" : "1fr"};">
               ${notesHtml ? `<div class="printNotesWrap">${notesHtml}</div>` : ""}
               <div class="printTotals">
-                <div class="printTotalRow"><span>Total Products</span><strong>${esc(totalProductsText)}</strong></div>
-                <div class="printTotalRow"><span>Subtotal</span><strong>${esc(subtotalText)}</strong></div>
-                <div class="printTotalRow"><span>Tax (${esc(String(taxRateValue))}%)</span><strong>${esc(taxText)}</strong></div>
-                ${ccFeeEnabled && ccFeeValue > 0 ? `<div class="printTotalRow"><span>CC Fee 3.5%</span><strong>${esc(ccFeeText)}</strong></div>` : ""}
-                <div class="printTotalRow"><span>Amount Paid</span><strong>${esc(amountPaidText)}</strong></div>
-                <div class="printTotalRow"><span>Total</span><strong>${esc(totalText)}</strong></div>
-                <div class="printTotalRow printBalanceDue"><span>Balance Due</span><strong>${esc(balanceText)}</strong></div>
+                <table class="printTotalsTable" aria-label="Printed invoice totals">
+                  <tbody>
+                    <tr><td>Total Products</td><td class="num"><strong>${esc(totalProductsText)}</strong></td></tr>
+                    <tr><td>Subtotal</td><td class="num"><strong>${esc(subtotalText)}</strong></td></tr>
+                    <tr><td>Tax (${esc(String(taxRateValue))}%)</td><td class="num"><strong>${esc(taxText)}</strong></td></tr>
+                    ${ccFeeEnabled && ccFeeValue > 0 ? `<tr><td>CC Fee 3.5%</td><td class="num"><strong>${esc(ccFeeText)}</strong></td></tr>` : ""}
+                    <tr><td>Amount Paid</td><td class="num"><strong>${esc(amountPaidText)}</strong></td></tr>
+                    <tr><td>Total</td><td class="num"><strong>${esc(totalText)}</strong></td></tr>
+                    <tr class="printBalanceDue"><td>Balance Due</td><td class="num"><strong>${esc(balanceText)}</strong></td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -3668,65 +3677,255 @@
       }
 
       async function generateInvoicePdfBase64_() {
-        if (typeof html2pdf === "undefined") {
+        const JsPdf = window.jspdf && window.jspdf.jsPDF;
+        if (!JsPdf) {
           throw new Error("PDF library did not load (check your internet connection and try again).");
         }
 
         recalcTotals();
-        buildPrintInvoice();
 
-        const host = $("printInvoice");
-        if (!host) throw new Error("Could not build invoice for PDF.");
+        const businessName = String($("bizName")?.value || "").trim();
+        const businessAddr = String($("bizAddr")?.value || "").trim();
+        const businessCity = String($("bizCity")?.value || "").trim();
+        const businessPhone = String($("bizPhone")?.value || "").trim();
+        const businessEmail = String($("bizEmail")?.value || "").trim();
 
-        // Render into a detached, visible-sized clone so html2canvas can capture it
-        // even though #printInvoice is hidden on screen (display:none outside print).
-        const clone = host.cloneNode(true);
-        clone.removeAttribute("aria-hidden");
-        clone.classList.add("pdfExportRoot");
-        clone.style.display = "block";
-        clone.style.position = "fixed";
-        clone.style.left = "0";
-        clone.style.top = "0";
-        clone.style.zIndex = "-9999";
-        clone.style.width = "8.5in";
-        clone.style.background = "#fff";
-        clone.style.pointerEvents = "none";
-        document.body.appendChild(clone);
+        const invoiceNo = String($("invNo")?.value || "").trim();
+        const invoiceDate = String($("invDate")?.value || "").trim();
+        const quoteNo = String(window.CURRENT_QUOTE?.quote_no || $("quoteNoInput")?.value || "").trim();
 
-        // Give the browser a moment to lay out/paint the clone before capturing it.
-        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const clientName = String($("clientName")?.value || "").trim();
+        const clientEmail = String($("clientEmail")?.value || "").trim();
+        const clientPhone = String($("clientPhone")?.value || "").trim();
+        const clientAddr = String($("clientAddr")?.value || "").trim();
+        const clientContact = String($("clientContact")?.value || "").trim();
+        const notes = String($("notes")?.value || "").trim();
+        const terms = String($("terms")?.value || "").trim();
 
-        try {
-          const worker = html2pdf()
-            .set({
-              margin: 10,
-              filename: "invoice.pdf",
-              image: { type: "jpeg", quality: 0.98 },
-              html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-              jsPDF: { unit: "mm", format: "letter", orientation: "portrait" }
-            })
-            .from(clone);
+        const subtotalText = String($("subtotal")?.textContent || "").trim();
+        const totalProductsText = String($("totalProducts")?.textContent || "0").trim();
+        const taxText = String($("taxAmount")?.textContent || "").trim();
+        const ccFeeText = String($("ccFeeAmount")?.textContent || "").trim();
+        const totalText = String($("total")?.textContent || "").trim();
+        const balanceText = String($("balance")?.textContent || "").trim();
+        const amountPaidValue = toNum($("amountPaid")?.value || 0);
+        const amountPaidText = moneyUSD(amountPaidValue);
+        const taxRateValue = toNum($("taxRate")?.value || 0);
+        const ccFeeEnabled = $("ccFeeEnabled")?.checked === true;
+        const ccFeeValue = toNum(ccFeeText);
+        const balanceValue = toNum(balanceText);
 
-          const pdfBlob = await worker.toPdf().outputPdf("blob");
-          if (!pdfBlob || !(pdfBlob.size > 0)) {
-            throw new Error("Generated PDF was empty.");
-          }
+        let paymentStatus = "Unpaid";
+        if (balanceValue <= 0 && toNum(totalText) > 0) paymentStatus = "Paid in full";
+        else if (amountPaidValue > 0) paymentStatus = "Partial payment";
 
-          const base64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
-            reader.onerror = () => reject(new Error("Could not encode PDF."));
-            reader.readAsDataURL(pdfBlob);
+        const billToLines = [clientName, clientEmail, clientPhone, clientAddr].filter(Boolean);
+        const businessLines = [businessAddr, businessCity, businessPhone, businessEmail].filter(Boolean);
+        const infoLines = [
+          clientContact ? `Contact: ${clientContact}` : "",
+          `Status: ${paymentStatus}`,
+          amountPaidValue > 0 ? `Paid: ${amountPaidText}` : "",
+          balanceValue > 0 ? "Due upon receipt" : ""
+        ].filter(Boolean);
+
+        const items = Array.from(document.querySelectorAll("#itemsTbody tr")).map((tr) => {
+          const sizes = parseSizesDataset_(tr.dataset.sizes);
+          const metaParts = [];
+          if (tr.dataset.color) metaParts.push(`Color: ${String(tr.dataset.color).trim()}`);
+          const sizeText = buildSizeText_(sizes || {});
+          if (sizeText) metaParts.push(`Sizes: ${sizeText}`);
+          return {
+            description: String(tr.dataset.product || "").trim(),
+            meta: metaParts.join(" • "),
+            qty: String(Math.max(1, asNum(tr.dataset.qty || 1))),
+            unitPrice: moneyUSD(asNum(tr.dataset.unitPrice || 0)),
+            amount: moneyUSD(asNum(tr.dataset.amount || 0))
+          };
+        });
+
+        const totalsRows = [
+          ["Total Products", totalProductsText],
+          ["Subtotal", subtotalText],
+          [`Tax (${String(taxRateValue)}%)`, taxText],
+          ...(ccFeeEnabled && ccFeeValue > 0 ? [["CC Fee 3.5%", ccFeeText]] : []),
+          ["Amount Paid", amountPaidText],
+          ["Total", totalText],
+          ["Balance Due", balanceText]
+        ];
+
+        const doc = new JsPdf({ unit: "mm", format: "letter", orientation: "portrait" });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 10;
+        const contentWidth = pageWidth - margin * 2;
+        const lineColor = [207, 215, 226];
+        const textColor = [17, 17, 17];
+        const mutedColor = [90, 100, 112];
+        const labelColor = [73, 84, 95];
+
+        const setText = (size, style = "normal", color = textColor) => {
+          doc.setFont("helvetica", style);
+          doc.setFontSize(size);
+          doc.setTextColor(color[0], color[1], color[2]);
+        };
+
+        const drawRule = (y) => {
+          doc.setDrawColor(lineColor[0], lineColor[1], lineColor[2]);
+          doc.line(margin, y, pageWidth - margin, y);
+        };
+
+        const drawBox = (x, y, w, h) => {
+          doc.setDrawColor(lineColor[0], lineColor[1], lineColor[2]);
+          doc.rect(x, y, w, h);
+        };
+
+        const drawWrappedLines = (lines, x, y, width, lineHeight, size, color = textColor) => {
+          let cursorY = y;
+          setText(size, "normal", color);
+          lines.forEach((line) => {
+            const wrapped = doc.splitTextToSize(String(line || ""), width);
+            wrapped.forEach((part) => {
+              doc.text(part, x, cursorY);
+              cursorY += lineHeight;
+            });
           });
+          return cursorY;
+        };
 
-          if (!base64) {
-            throw new Error("Generated PDF could not be encoded.");
+        let y = 18;
+        setText(18, "bold");
+        doc.text(businessName || "My Shirt Printing", margin, y);
+
+        y += 6;
+        setText(10, "normal", textColor);
+        businessLines.forEach((line) => {
+          doc.text(String(line), margin, y);
+          y += 4.4;
+        });
+
+        const rightX = pageWidth - margin;
+        setText(22, "bold");
+        doc.text("INV", rightX, 18, { align: "right" });
+        setText(10, "bold");
+        if (invoiceNo) doc.text(`Invoice #: ${invoiceNo}`, rightX, 30, { align: "right" });
+        if (invoiceDate) doc.text(`Invoice Date: ${invoiceDate}`, rightX, 35, { align: "right" });
+        if (quoteNo) doc.text(`Quote #: ${quoteNo}`, rightX, 40, { align: "right" });
+
+        y = Math.max(y, quoteNo ? 45 : invoiceDate ? 40 : 35) + 2;
+        drawRule(y);
+        y += 5;
+
+        const boxGap = 4;
+        const boxWidth = (contentWidth - boxGap) / 2;
+        const estimateBoxHeight = (lines) => 8 + Math.max(lines.length, 1) * 5;
+        const billToHeight = estimateBoxHeight(billToLines);
+        const infoHeight = estimateBoxHeight(infoLines);
+        const boxHeight = Math.max(20, billToHeight, infoHeight);
+
+        drawBox(margin, y, boxWidth, boxHeight);
+        drawBox(margin + boxWidth + boxGap, y, boxWidth, boxHeight);
+        setText(9, "bold", labelColor);
+        doc.text("BILL TO", margin + 3, y + 6);
+        doc.text("CONTACT / INVOICE INFO", margin + boxWidth + boxGap + 3, y + 6);
+        drawWrappedLines(billToLines, margin + 3, y + 11, boxWidth - 6, 4.5, 10);
+        drawWrappedLines(infoLines, margin + boxWidth + boxGap + 3, y + 11, boxWidth - 6, 4.5, 10);
+        y += boxHeight + 8;
+
+        setText(9, "bold", labelColor);
+        doc.text("DESCRIPTION", margin, y);
+        doc.text("QTY", pageWidth - margin - 50, y, { align: "right" });
+        doc.text("UNIT PRICE", pageWidth - margin - 25, y, { align: "right" });
+        doc.text("AMOUNT", pageWidth - margin, y, { align: "right" });
+        y += 4;
+        drawRule(y);
+        y += 6;
+
+        const descWidth = contentWidth - 75;
+        items.forEach((item) => {
+          setText(10, "bold");
+          const descLines = doc.splitTextToSize(item.description || "", descWidth);
+          doc.text(descLines, margin, y);
+          const firstLineY = y;
+          setText(10, "normal");
+          doc.text(item.qty, pageWidth - margin - 50, firstLineY, { align: "right" });
+          doc.text(item.unitPrice, pageWidth - margin - 25, firstLineY, { align: "right" });
+          doc.text(item.amount, pageWidth - margin, firstLineY, { align: "right" });
+          y += descLines.length * 4.6;
+
+          if (item.meta) {
+            setText(9, "normal", mutedColor);
+            const metaLines = doc.splitTextToSize(item.meta, descWidth);
+            doc.text(metaLines, margin, y);
+            y += metaLines.length * 4.2;
           }
 
-          return base64;
-        } finally {
-          clone.remove();
+          y += 2;
+          drawRule(y);
+          y += 6;
+        });
+
+        const notesBlocks = [];
+        if (notes) notesBlocks.push(["Notes", notes]);
+        if (terms) notesBlocks.push(["Terms", terms]);
+        if (notesBlocks.length) {
+          notesBlocks.forEach(([label, body]) => {
+            setText(9, "bold", labelColor);
+            doc.text(label.toUpperCase(), margin, y);
+            y += 5;
+            setText(10, "normal");
+            const bodyLines = doc.splitTextToSize(body, contentWidth);
+            doc.text(bodyLines, margin, y);
+            y += bodyLines.length * 4.4 + 4;
+          });
         }
+
+        if (y > pageHeight - 55) {
+          doc.addPage();
+          y = margin + 8;
+        }
+
+        const totalsBoxWidth = 86;
+        const totalsX = pageWidth - margin - totalsBoxWidth;
+        let totalsY = y;
+        const totalsRowHeight = 6;
+        const totalsHeight = totalsRows.length * totalsRowHeight + 6;
+        drawBox(totalsX, totalsY, totalsBoxWidth, totalsHeight);
+        totalsY += 6;
+
+        totalsRows.forEach(([label, value], index) => {
+          if (index === totalsRows.length - 1) {
+            doc.setDrawColor(174, 184, 197);
+            doc.line(totalsX + 2, totalsY - 1.5, totalsX + totalsBoxWidth - 2, totalsY - 1.5);
+            setText(11, "bold");
+          } else {
+            setText(10, index === totalsRows.length - 2 ? "bold" : "normal");
+          }
+          doc.text(String(label), totalsX + 3, totalsY + 1.5);
+          doc.text(String(value || ""), totalsX + totalsBoxWidth - 3, totalsY + 1.5, { align: "right" });
+          if (index < totalsRows.length - 1) {
+            doc.setDrawColor(lineColor[0], lineColor[1], lineColor[2]);
+            doc.line(totalsX + 2, totalsY + 3, totalsX + totalsBoxWidth - 2, totalsY + 3);
+          }
+          totalsY += totalsRowHeight;
+        });
+
+        const pdfBlob = doc.output("blob");
+        if (!pdfBlob || !(pdfBlob.size > 0)) {
+          throw new Error("Generated PDF was empty.");
+        }
+
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+          reader.onerror = () => reject(new Error("Could not encode PDF."));
+          reader.readAsDataURL(pdfBlob);
+        });
+
+        if (!base64) {
+          throw new Error("Generated PDF could not be encoded.");
+        }
+
+        return base64;
       }
 
       async function sendInvoiceEmailNow(customMessage, includePdf) {
@@ -3737,8 +3936,17 @@
         if (itemCount <= 0) throw new Error("No invoice content to send (no line items).");
 
         const invNo = $("invNo")?.value?.trim() || "";
+        const bizName = $("bizName")?.value?.trim() || "My Shirt Printing";
+        const bizEmail = $("bizEmail")?.value?.trim() || "";
         const subject = invNo ? `Invoice ${invNo} — My Shirt Printing` : "Invoice — My Shirt Printing";
         const message = String(customMessage || "").trim();
+        const textBody = [
+          subject,
+          "",
+          message || "Your invoice is ready.",
+          "",
+          `Invoice #: ${invNo || "(not set)"}`
+        ].join("\n");
 
         const html = `
           <div style="font-family:Arial,sans-serif;line-height:1.4">
@@ -3753,7 +3961,10 @@
           action: "email",
           to,
           subject,
-          html
+          html,
+          body_text: textBody,
+          sender_name: bizName,
+          reply_to: bizEmail
         };
 
         if (includePdf) {
