@@ -584,6 +584,49 @@
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
+    /* Mirrors the @media print rules above, but applied unconditionally so
+       html2canvas (used for PDF export) captures a correctly styled invoice
+       even though it isn't inside an actual print context. */
+    .pdfExportRoot.printInvoice{
+      display:block !important;
+      padding:0;
+      margin:0;
+      font-size:12px;
+      line-height:1.32;
+    }
+    .pdfExportRoot.printInvoice *{ box-shadow:none !important; border-radius:0 !important; }
+    .pdfExportRoot .printInvoiceInner{ width:100%; max-width:none; margin:0; }
+    .pdfExportRoot .printHeader{
+      display:grid;
+      grid-template-columns:1.3fr .9fr;
+      gap:18px;
+      align-items:start;
+      padding-bottom:10px;
+      border-bottom:1px solid #bfc8d2;
+    }
+    .pdfExportRoot .printBizName{ font-size:20px; font-weight:800; line-height:1.15; margin-bottom:6px; }
+    .pdfExportRoot .printMetaTitle{ font-size:28px; line-height:1; font-weight:900; letter-spacing:.08em; text-align:right; margin-bottom:8px; }
+    .pdfExportRoot .printInfoGrid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:12px; }
+    .pdfExportRoot .printInfoBox{ border:1px solid #cfd7e2; padding:10px 12px; }
+    .pdfExportRoot .printSectionLabel{ font-size:10px; letter-spacing:.08em; text-transform:uppercase; font-weight:800; color:#49545f; margin-bottom:5px; }
+    .pdfExportRoot .printItems{ width:100%; border-collapse:collapse; margin-top:12px; }
+    .pdfExportRoot .printItems th,
+    .pdfExportRoot .printItems td{ border-bottom:1px solid #d7dde5; padding:6px 8px; vertical-align:top; }
+    .pdfExportRoot .printItems th{ background:transparent; color:#222; font-size:10px; text-transform:uppercase; letter-spacing:.08em; font-weight:800; }
+    .pdfExportRoot .printItems th.num,
+    .pdfExportRoot .printItems td.num{ text-align:right; white-space:nowrap; }
+    .pdfExportRoot .printItemMain{ font-weight:700; color:#111; }
+    .pdfExportRoot .printItemMeta{ margin-top:2px; font-size:10px; color:#5a6470; }
+    .pdfExportRoot .printBottom{ display:grid; gap:16px; margin-top:12px; align-items:start; }
+    .pdfExportRoot .printNotesWrap{ min-width:0; }
+    .pdfExportRoot .printNotesBlock + .printNotesBlock{ margin-top:10px; }
+    .pdfExportRoot .printNotesBody{ white-space:pre-wrap; word-break:break-word; }
+    .pdfExportRoot .printTotals{ border:1px solid #cfd7e2; padding:10px 12px; }
+    .pdfExportRoot .printTotalRow{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:4px 0; }
+    .pdfExportRoot .printBalanceDue{ margin-top:8px; padding-top:8px; border-top:1px solid #aeb8c5; font-size:15px; font-weight:900; }
+    .pdfExportRoot .printMuted{ color:#5a6470; }
+    .pdfExportRoot .printOnly{ display:inline !important; }
+
     .sizeModalBackdrop{
       position: fixed; inset: 0;
       background: rgba(0,0,0,.35);
@@ -985,6 +1028,7 @@
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -3623,7 +3667,69 @@
         }
       }
 
-      async function sendInvoiceEmailNow() {
+      async function generateInvoicePdfBase64_() {
+        if (typeof html2pdf === "undefined") {
+          throw new Error("PDF library did not load (check your internet connection and try again).");
+        }
+
+        recalcTotals();
+        buildPrintInvoice();
+
+        const host = $("printInvoice");
+        if (!host) throw new Error("Could not build invoice for PDF.");
+
+        // Render into a detached, visible-sized clone so html2canvas can capture it
+        // even though #printInvoice is hidden on screen (display:none outside print).
+        const clone = host.cloneNode(true);
+        clone.removeAttribute("aria-hidden");
+        clone.classList.add("pdfExportRoot");
+        clone.style.display = "block";
+        clone.style.position = "fixed";
+        clone.style.left = "0";
+        clone.style.top = "0";
+        clone.style.zIndex = "-9999";
+        clone.style.width = "8.5in";
+        clone.style.background = "#fff";
+        clone.style.pointerEvents = "none";
+        document.body.appendChild(clone);
+
+        // Give the browser a moment to lay out/paint the clone before capturing it.
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+        try {
+          const worker = html2pdf()
+            .set({
+              margin: 10,
+              filename: "invoice.pdf",
+              image: { type: "jpeg", quality: 0.98 },
+              html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+              jsPDF: { unit: "mm", format: "letter", orientation: "portrait" }
+            })
+            .from(clone);
+
+          const pdfBlob = await worker.toPdf().outputPdf("blob");
+          if (!pdfBlob || !(pdfBlob.size > 0)) {
+            throw new Error("Generated PDF was empty.");
+          }
+
+          const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+            reader.onerror = () => reject(new Error("Could not encode PDF."));
+            reader.readAsDataURL(pdfBlob);
+          });
+
+          if (!base64) {
+            throw new Error("Generated PDF could not be encoded.");
+          }
+
+          return base64;
+        } finally {
+          clone.remove();
+        }
+      }
+
+      async function sendInvoiceEmailNow(customMessage, includePdf) {
         const to = $("clientEmail")?.value?.trim() || "";
         if (!to) throw new Error("Client email is empty.");
 
@@ -3632,22 +3738,34 @@
 
         const invNo = $("invNo")?.value?.trim() || "";
         const subject = invNo ? `Invoice ${invNo} — My Shirt Printing` : "Invoice — My Shirt Printing";
+        const message = String(customMessage || "").trim();
 
         const html = `
           <div style="font-family:Arial,sans-serif;line-height:1.4">
             <h2>${subject}</h2>
-            <p>Your invoice is ready.</p>
+            ${message ? `<p>${esc(message).replace(/\n/g, "<br>")}</p>` : `<p>Your invoice is ready.</p>`}
             <p><b>Invoice #:</b> ${esc(invNo || "(not set)")}</p>
           </div>
         `;
 
-        const body = new URLSearchParams({
+        const payload = {
           secret: EMAIL_WEBAPP_SECRET,
           action: "email",
           to,
           subject,
           html
-        });
+        };
+
+        if (includePdf) {
+          setLoadMsg("Generating PDF...");
+          const pdfBase64 = await generateInvoicePdfBase64_();
+          payload.attachment_base64 = pdfBase64;
+          payload.attachment_name = invNo ? `Invoice-${invNo}.pdf` : "Invoice.pdf";
+          payload.attachment_mime = "application/pdf";
+          setLoadMsg("Sending email...");
+        }
+
+        const body = new URLSearchParams(payload);
 
         const res = await fetch(EMAIL_WEBAPP_URL, { method: "POST", body });
         const text = await res.text();
@@ -3818,22 +3936,84 @@
           }
         });
 
-        $("btnSend")?.addEventListener("click", async (e) => {
+        function setSendEmailModalMsg_(msg, isErr = false) {
+          const el = $("sendEmailModalMsg");
+          if (!el) return;
+          const text = (msg || "").trim();
+          el.textContent = text;
+          if (!text) {
+            el.style.display = "none";
+            el.classList.remove("error");
+            return;
+          }
+          el.style.display = "block";
+          el.classList.toggle("error", !!isErr);
+        }
+
+        function openSendEmailModal_() {
+          const backdrop = $("sendEmailModalBackdrop");
+          if (!backdrop) return;
+          if ($("sendEmailTo")) $("sendEmailTo").value = $("clientEmail")?.value?.trim() || "";
+          if ($("sendEmailMessage")) $("sendEmailMessage").value = "";
+          if ($("sendEmailAttachPdf")) $("sendEmailAttachPdf").checked = true;
+          setSendEmailModalMsg_("");
+          const confirmBtn = $("sendEmailConfirmBtn");
+          if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = "Send Email"; }
+          backdrop.style.display = "flex";
+          $("sendEmailMessage")?.focus();
+        }
+
+        function closeSendEmailModal_() {
+          const backdrop = $("sendEmailModalBackdrop");
+          if (backdrop) backdrop.style.display = "none";
+        }
+
+        $("sendEmailCloseBtn")?.addEventListener("click", closeSendEmailModal_);
+        $("sendEmailCancelBtn")?.addEventListener("click", closeSendEmailModal_);
+        $("sendEmailModalBackdrop")?.addEventListener("click", (e) => {
+          if (e.target === $("sendEmailModalBackdrop")) closeSendEmailModal_();
+        });
+
+        $("btnSend")?.addEventListener("click", (e) => {
           e.preventDefault();
           const to = $("clientEmail")?.value?.trim() || "";
           if (!to) {
             setLoadMsg("Email failed: Client email is empty.", true);
             return;
           }
+          const itemCount = document.querySelectorAll("#itemsTbody tr").length;
+          if (itemCount <= 0) {
+            setLoadMsg("Email failed: No invoice content to send (no line items).", true);
+            return;
+          }
+          openSendEmailModal_();
+        });
 
-          setLoadMsg("Sending email...");
+        $("sendEmailConfirmBtn")?.addEventListener("click", async () => {
+          const to = $("sendEmailTo")?.value?.trim() || "";
+          if (!to || !to.includes("@")) {
+            setSendEmailModalMsg_("Enter a valid recipient email.", true);
+            return;
+          }
+          if ($("clientEmail")) $("clientEmail").value = to;
+
+          const message = $("sendEmailMessage")?.value || "";
+          const includePdf = $("sendEmailAttachPdf")?.checked !== false;
+
+          const confirmBtn = $("sendEmailConfirmBtn");
+          if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = "Sending..."; }
+          setSendEmailModalMsg_(includePdf ? "Generating PDF..." : "Sending email...");
+
           try {
-            const result = await sendInvoiceEmailNow();
+            const result = await sendInvoiceEmailNow(message, includePdf);
             const toMsg = result?.recipient ? `Email sent to ${result.recipient}.` : "Email sent.";
             setLoadMsg(toMsg);
+            closeSendEmailModal_();
           } catch (err) {
             console.error("Send error:", err);
-            setLoadMsg("Email failed: " + (err?.message || err), true);
+            setSendEmailModalMsg_(err?.message || "Email failed.", true);
+          } finally {
+            if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = "Send Email"; }
           }
         });
 
@@ -3873,6 +4053,37 @@
   </script>
 
   <section id="printInvoice" class="printInvoice" aria-hidden="true"></section>
+
+  <div id="sendEmailModalBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+    <div style="width:min(560px, calc(100% - 40px)); background:#fff; border:1px solid #d7e7f7; border-radius:16px; padding:16px; box-shadow:0 10px 24px rgba(10,35,45,.12);">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <h3 style="margin:0; color:#0b3f5b;">Send Invoice</h3>
+        <button type="button" class="iconbtn" id="sendEmailCloseBtn" aria-label="Close">✕</button>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label class="label" for="sendEmailTo">To</label>
+        <input class="field" id="sendEmailTo" type="email" />
+      </div>
+
+      <div style="margin-top:12px;">
+        <label class="label" for="sendEmailMessage">Message to customer (optional)</label>
+        <textarea class="field" id="sendEmailMessage" style="min-height:120px;" placeholder="Add a personal note here. It will appear above the invoice details in the email."></textarea>
+      </div>
+
+      <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="sendEmailAttachPdf" checked />
+        <label for="sendEmailAttachPdf" style="font-weight:700; color:var(--muted); font-size:14px;">Attach invoice as PDF</label>
+      </div>
+
+      <div id="sendEmailModalMsg" class="loadMsg" style="margin-top:10px;"></div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+        <button type="button" class="btn ghost" id="sendEmailCancelBtn">Cancel</button>
+        <button type="button" class="btn primary" id="sendEmailConfirmBtn">Send Email</button>
+      </div>
+    </div>
+  </div>
 
   <div id="newCustomerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:99999; align-items:center; justify-content:center; padding:20px;">
     <div style="width:min(560px, calc(100% - 40px)); background:#fff; border:1px solid #d7e7f7; border-radius:16px; padding:16px; box-shadow:0 10px 24px rgba(10,35,45,.12);">
