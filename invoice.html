@@ -2790,6 +2790,7 @@
           client_name: draft.client_name || null,
           client_email: draft.client_email || null,
           client_phone: draft.client_phone || null,
+          tax_rate: draft.tax_rate,
           payment_link: window.CURRENT_PAYMENT_LINK || null,
           notes: draft.notes || null,
           items_json: buildStoredItemsPayload_(draft.items_json, draft.payments, draft.cc_fee_enabled, buildInvoiceStorageMeta_(draft)),
@@ -2883,6 +2884,7 @@
           client_name: draft.client_name || null,
           client_email: draft.client_email || null,
           client_phone: draft.client_phone || null,
+          tax_rate: draft.tax_rate,
           payment_link: null,
           notes: draft.notes || null,
           items_json: buildStoredItemsPayload_(draft.items_json, [], draft.cc_fee_enabled, buildInvoiceStorageMeta_(draft)),
@@ -3642,6 +3644,7 @@
             client_name: customer.client_name || null,
             client_email: customer.client_email || null,
             client_phone: customer.client_phone || null,
+            tax_rate: toNum($("taxRate")?.value || 9.75),
             payment_link: null,
             items_json: buildStoredItemsPayload_(items, [], false, buildInvoiceStorageMeta_({
               client_addr: customer.client_addr,
