@@ -1052,8 +1052,9 @@
       const EMAIL_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwCH648WscPI-obyqhOPSq0jiqwXzzWI2v9ZBv1UCejr5X6L5Y3FLHROOA_0x43aMN8/exec";
       const EMAIL_WEBAPP_SECRET = "inv_sync_2026_03_01__L0ndonbrides!2vR9pX7aL1nY4zW";
 
-      const NEW_CUSTOMERS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzeCDuKCpxYfS_Eefrn4Skf6G0XasekzgsJxn1cVZhu2wbrokqc9zIwApr4MWcNDALI/exec";
-      const CONTACTS_SECRET = "msp-invoice-contacts-2026-m@g0wie!!!";
+      // Customer saves use the same Apps Script attached to the master spreadsheet.
+      const NEW_CUSTOMERS_WEBAPP_URL = INVOICE_SYNC_WEBAPP_URL;
+      const CONTACTS_SECRET = INVOICE_SYNC_SECRET;
 
       const SUPABASE_URL = "https://tvtyjmeedapbsaopeebh.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHlqbWVlZGFwYnNhb3BlZWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzQ3MzUsImV4cCI6MjA4NzIxMDczNX0.VKNQc9G18OgJndoN3eiv5wcLWaAmqOcQ9qA4ve2tNsQ";
