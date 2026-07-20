@@ -1412,331 +1412,513 @@
         setClientContactUI_(n.client_contact);
       }
 
-      (function(){
-        const API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
-        const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
-        const RANGE_A1 = "contacts!A1:J5000";
+(function () {
+  const API_KEY = "AIzaSyDj8ShpNncVN1mn3VtMZxt4UzEDYgyH-NY";
+  const SPREADSHEET_ID = "1qkYwqASNdPOrINQC6KZJ3XRpy31VzCoWG7fF6YpXd18";
+  const RANGE_A1 = "contacts!A1:J5000";
 
-        const COL = {
-          company: "Company Name",
-          first: "First Name",
-          last: "Last Name",
-          contact: "Contact Name",
-          phone: "Phone",
-          email1: "Email 1",
-          email2: "Email 2",
-          address: "Address"
-        };
+  // These names match the live master-customer sheet. Legacy aliases are kept
+  // so older rows or a future header cleanup will not break customer lookup.
+  const HEADERS = {
+    company: ["Organization Name", "Company Name", "Company", "Business Name", "Business"],
+    first: ["First Name"],
+    last: ["Last Name"],
+    contact: ["Contact Name"],
+    phone: ["Phone"],
+    email1: ["Email 1", "Email1", "Primary Email"],
+    email2: ["Email 2", "Email2", "Secondary Email"],
+    address: ["Address"],
+    notes: ["Notes/ Preferred Payment", "Notes / Preferred Payment", "Notes"],
+    organizationTitle: ["Organization Title", "Company Title"]
+  };
 
-        const COMPANY_HEADERS = [COL.company, "Company", "Business Name", "Business"];
+  const $ = (id) => document.getElementById(id);
 
-        const $ = (id) => document.getElementById(id);
+  function escLocal(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
 
-        function escLocal(s){
-          return String(s ?? "")
-            .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-            .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-        }
+  function normalizeHeader_(value) {
+    return String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
 
-        function fullName(c){
-          return [c[COL.first], c[COL.last]].filter(Boolean).join(" ").trim();
-        }
+  function fieldValue_(contact, fieldName) {
+    const aliases = HEADERS[fieldName] || [];
 
-        function firstNonEmptyField_(obj, keys) {
-          for (const key of keys) {
-            const value = String(obj?.[key] || "").trim();
-            if (value) return value;
-          }
-          return "";
-        }
+    for (const header of aliases) {
+      const value = String(contact?.[header] ?? "").trim();
+      if (value) return value;
+    }
 
-        function companyName(c) {
-          return firstNonEmptyField_(c, COMPANY_HEADERS);
-        }
+    const normalizedAliases = new Set(aliases.map(normalizeHeader_));
+    for (const [header, rawValue] of Object.entries(contact || {})) {
+      if (!normalizedAliases.has(normalizeHeader_(header))) continue;
+      const value = String(rawValue ?? "").trim();
+      if (value) return value;
+    }
 
-        function contactPersonName(c) {
-          return String(c?.[COL.contact] || "").trim() || fullName(c);
-        }
+    return "";
+  }
 
-        function primaryContactLabel(c) {
-          return companyName(c) || contactPersonName(c) || "Unnamed";
-        }
+  function fullName(contact) {
+    return [fieldValue_(contact, "first"), fieldValue_(contact, "last")]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+  }
 
-        function secondaryContactLabel(c) {
-          const company = companyName(c);
-          const person = contactPersonName(c);
-          if (company && person && person !== company) return person;
-          return "";
-        }
+  function companyName(contact) {
+    return fieldValue_(contact, "company");
+  }
 
-        function contactSortKey(c) {
-          return [companyName(c), String(c?.[COL.first] || "").trim(), String(c?.[COL.last] || "").trim(), String(c?.[COL.contact] || "").trim()]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-        }
+  function contactPersonName(contact) {
+    return fieldValue_(contact, "contact") || fullName(contact);
+  }
 
-        function sortContacts(list) {
-          return [...(list || [])].sort((a, b) => contactSortKey(a).localeCompare(contactSortKey(b), undefined, { sensitivity: "base" }));
-        }
+  function primaryContactLabel(contact) {
+    return companyName(contact) || contactPersonName(contact) || "Unnamed";
+  }
 
-        function hideResults(resultsEl){
-          resultsEl.style.display = "none";
-          resultsEl.innerHTML = "";
-        }
+  function secondaryContactLabel(contact) {
+    const company = companyName(contact);
+    const person = contactPersonName(contact);
+    return company && person && person !== company ? person : "";
+  }
 
-        function pickContact(c){
-          const clientDisplay = companyName(c) || contactPersonName(c);
-          $("clientName").value  = clientDisplay;
-          $("clientEmail").value = ((c[COL.email1] || "").trim() || (c[COL.email2] || "").trim());
-          $("clientAddr").value  = (c[COL.address] || "").trim();
-          $("clientPhone").value = (c[COL.phone] || "").trim();
+  function contactSortKey(contact) {
+    return [
+      companyName(contact),
+      fieldValue_(contact, "first"),
+      fieldValue_(contact, "last"),
+      fieldValue_(contact, "contact")
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+  }
 
-          const wrap = $("clientContactWrap");
-          const contactEl = $("clientContact");
-          const contactName = companyName(c) ? contactPersonName(c) : String(c[COL.contact] || "").trim();
-          if (wrap && contactEl) {
-            if (contactName && contactName !== clientDisplay) { wrap.style.display = "block"; contactEl.value = contactName; }
-            else { wrap.style.display = "none"; contactEl.value = ""; }
-          }
-        }
+  function sortContacts(list) {
+    return [...(list || [])].sort((a, b) =>
+      contactSortKey(a).localeCompare(contactSortKey(b), undefined, { sensitivity: "base" })
+    );
+  }
 
-        async function loadContacts(){
-          const url =
-            `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SPREADSHEET_ID)}` +
-            `/values/${encodeURIComponent(RANGE_A1)}?key=${encodeURIComponent(API_KEY)}`;
+  function hideResults(resultsEl) {
+    resultsEl.style.display = "none";
+    resultsEl.innerHTML = "";
+  }
 
-          const res = await fetch(url, { cache: "no-store" });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data?.error?.message || `Sheets error ${res.status}`);
+  function pickContact(contact) {
+    const clientDisplay = companyName(contact) || contactPersonName(contact);
+    $("clientName").value = clientDisplay;
+    $("clientEmail").value = fieldValue_(contact, "email1") || fieldValue_(contact, "email2");
+    $("clientAddr").value = fieldValue_(contact, "address");
+    $("clientPhone").value = fieldValue_(contact, "phone");
 
-          const values = data.values || [];
-          if (values.length < 2) return [];
+    const wrap = $("clientContactWrap");
+    const contactEl = $("clientContact");
+    const contactName = companyName(contact)
+      ? contactPersonName(contact)
+      : fieldValue_(contact, "contact");
 
-          const headers = values[0].map(h => String(h || "").trim());
-          return sortContacts(values.slice(1).map(row => {
-            const obj = {};
-            headers.forEach((h, i) => obj[h] = String(row[i] ?? "").trim());
-            return obj;
-          }));
-        }
+    if (wrap && contactEl) {
+      if (contactName && contactName !== clientDisplay) {
+        wrap.style.display = "block";
+        contactEl.value = contactName;
+      } else {
+        wrap.style.display = "none";
+        contactEl.value = "";
+      }
+    }
+  }
 
-        document.addEventListener("DOMContentLoaded", async () => {
-          const searchEl  = $("contactSearch");
-          const resultsEl = $("contactResults");
-          const addCustomerBtn = $("btnAddNewCustomer");
-          const modalEl = $("newCustomerModal");
-          const modalCompanyEl = $("ncCompany");
-          const modalFirstEl = $("ncFirst");
-          const modalLastEl = $("ncLast");
-          const modalContactEl = $("ncContact");
-          const modalPhoneEl = $("ncPhone");
-          const modalEmail1El = $("ncEmail1");
-          const modalEmail2El = $("ncEmail2");
-          const modalAddressEl = $("ncAddress");
-          const modalCancelBtn = $("ncCancel");
-          const modalSaveBtn = $("ncSave");
-          if (!searchEl || !resultsEl || !addCustomerBtn || !modalEl) return;
+  async function loadContacts() {
+    const url =
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(SPREADSHEET_ID)}` +
+      `/values/${encodeURIComponent(RANGE_A1)}?key=${encodeURIComponent(API_KEY)}`;
 
-          let CONTACTS = [];
-          let CONTACTS_ERROR = "";
+    const res = await fetch(url, { cache: "no-store" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || `Sheets error ${res.status}`);
 
-          try { CONTACTS = await loadContacts(); CONTACTS_ERROR = ""; }
-          catch (e){ CONTACTS = []; CONTACTS_ERROR = e?.message || "Could not load contacts."; console.error(CONTACTS_ERROR); }
+    const values = Array.isArray(data.values) ? data.values : [];
+    if (values.length < 2) return [];
 
-          function showMessage(msg){
-            resultsEl.innerHTML = `<div style="padding:10px 12px; font-weight:800; color:var(--muted);">${escLocal(msg)}</div>`;
-            resultsEl.style.display = "block";
-          }
+    const headers = values[0].map((header) => String(header || "").trim());
+    const contacts = values.slice(1).map((row) => {
+      const contact = {};
+      headers.forEach((header, index) => {
+        if (header) contact[header] = String(row[index] ?? "").trim();
+      });
+      return contact;
+    });
 
-          function showResults(list){
-            resultsEl.innerHTML = "";
-            list.slice(0, 12).forEach(c => {
-              const top = primaryContactLabel(c);
-              const sub = [secondaryContactLabel(c), c[COL.email1] || c[COL.email2] || "", c[COL.phone] || ""].filter(Boolean).join(" • ");
+    return sortContacts(
+      contacts.filter((contact) => Object.values(contact).some((value) => String(value).trim()))
+    );
+  }
 
-              const btn = document.createElement("button");
-              btn.type = "button";
-              btn.style.width = "100%";
-              btn.style.textAlign = "left";
-              btn.style.border = "0";
-              btn.style.background = "transparent";
-              btn.style.padding = "10px 12px";
-              btn.style.borderRadius = "12px";
-              btn.style.cursor = "pointer";
-              btn.innerHTML = `
-                <div style="font-weight:900; color:var(--primary-2);">${escLocal(top)}</div>
-                <div style="font-size:12px; font-weight:800; color:var(--muted); margin-top:2px;">${escLocal(sub)}</div>
-              `;
-              btn.addEventListener("mouseenter", () => btn.style.background = "var(--sky)");
-              btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
-              btn.addEventListener("click", () => { pickContact(c); hideResults(resultsEl); });
-              resultsEl.appendChild(btn);
-            });
+  function normalizeText_(value) {
+    return String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+  }
 
-            resultsEl.style.display = list.length ? "block" : "none";
-          }
+  function normalizePhone_(value) {
+    return String(value ?? "").replace(/\D/g, "");
+  }
 
-          function matches(c, q){
-            const query = q.trim().toLowerCase();
-            if (!query) return false;
-            const hay = [
-              ...COMPANY_HEADERS.map((key) => c[key]),
-              c[COL.first], c[COL.last], c[COL.contact],
-              c[COL.email1], c[COL.email2], c[COL.phone], c[COL.address]
-            ].join(" ").toLowerCase();
-            return hay.includes(query);
-          }
+  function savedContactMatchesDraft_(contact, draft) {
+    const checks = [];
 
-            function openNewCustomerModal() {
-              if (modalCompanyEl) modalCompanyEl.value = String($("clientName")?.value || "").trim();
-              if (modalFirstEl) modalFirstEl.value = "";
-              if (modalLastEl) modalLastEl.value = "";
-              if (modalContactEl) modalContactEl.value = String($("clientContact")?.value || "").trim();
-              if (modalPhoneEl) modalPhoneEl.value = String($("clientPhone")?.value || "").trim();
-              if (modalEmail1El) modalEmail1El.value = String($("clientEmail")?.value || "").trim();
-              if (modalEmail2El) modalEmail2El.value = "";
-              if (modalAddressEl) modalAddressEl.value = String($("clientAddr")?.value || "").trim();
-              modalEl.style.display = "flex";
-              modalCompanyEl?.focus();
-            }
+    if (draft.company) {
+      checks.push(normalizeText_(companyName(contact)) === normalizeText_(draft.company));
+    }
+    if (draft.first) {
+      checks.push(normalizeText_(fieldValue_(contact, "first")) === normalizeText_(draft.first));
+    }
+    if (draft.last) {
+      checks.push(normalizeText_(fieldValue_(contact, "last")) === normalizeText_(draft.last));
+    }
+    if (draft.contact) {
+      checks.push(normalizeText_(fieldValue_(contact, "contact")) === normalizeText_(draft.contact));
+    }
+    if (draft.phone) {
+      checks.push(normalizePhone_(fieldValue_(contact, "phone")) === normalizePhone_(draft.phone));
+    }
+    if (draft.email1) {
+      checks.push(normalizeText_(fieldValue_(contact, "email1")) === normalizeText_(draft.email1));
+    }
+    if (draft.email2) {
+      checks.push(normalizeText_(fieldValue_(contact, "email2")) === normalizeText_(draft.email2));
+    }
+    if (draft.address) {
+      checks.push(normalizeText_(fieldValue_(contact, "address")) === normalizeText_(draft.address));
+    }
 
-            function closeNewCustomerModal() {
-              modalEl.style.display = "none";
-            }
+    return checks.length > 0 && checks.every(Boolean);
+  }
 
-            function buildNewContactRecord_(draft) {
-              return {
-                [COL.company]: draft.company,
-                [COL.first]: draft.first,
-                [COL.last]: draft.last,
-                [COL.contact]: draft.contact,
-                [COL.phone]: draft.phone,
-                [COL.email1]: draft.email1,
-                [COL.email2]: draft.email2,
-                [COL.address]: draft.address
-              };
-            }
+  function wait_(milliseconds) {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  }
 
-            async function saveNewCustomer_(draft) {
-              if (!NEW_CUSTOMERS_WEBAPP_URL) throw new Error("New customer web app is not configured.");
+  async function reloadAndConfirmCustomer_(draft) {
+    const retryDelays = [0, 700, 1400, 2400];
+    let latestContacts = [];
+    let lastReadError = null;
 
-              const basePayload = {
-                secret: CONTACTS_SECRET,
-                company_name: draft.company,
-                company: draft.company,
-                business_name: draft.company,
-                first_name: draft.first,
-                last_name: draft.last,
-                contact_name: draft.contact,
-                phone: draft.phone,
-                email1: draft.email1,
-                email_1: draft.email1,
-                email2: draft.email2,
-                email_2: draft.email2,
-                address: draft.address
-              };
+    for (const delay of retryDelays) {
+      if (delay) await wait_(delay);
 
-              const actions = ["add_contact", "save_contact", "create_contact", "add_customer", "save_customer", "create_customer", ""];
-              let lastError = null;
+      try {
+        latestContacts = await loadContacts();
+        lastReadError = null;
+        const savedContact = latestContacts.find((contact) => savedContactMatchesDraft_(contact, draft));
+        if (savedContact) return { contacts: latestContacts, savedContact };
+      } catch (error) {
+        lastReadError = error;
+      }
+    }
 
-              for (const action of actions) {
-                const payload = action ? { ...basePayload, action } : { ...basePayload };
-                const body = new URLSearchParams();
-                Object.entries(payload).forEach(([key, value]) => body.append(key, value == null ? "" : String(value)));
-                body.set("payload_json", JSON.stringify(payload));
+    if (lastReadError) {
+      throw new Error(`Customer was sent to the master list, but the list could not be reloaded: ${lastReadError.message}`);
+    }
 
-                const res = await fetch(NEW_CUSTOMERS_WEBAPP_URL, {
-                  method: "POST",
-                  body,
-                  cache: "no-store"
-                });
-                const rawText = await res.text();
+    throw new Error(
+      "The customer web app replied, but the customer was not found in the master customer list. Nothing was added to the local-only list."
+    );
+  }
 
-                let data = null;
-                try {
-                  data = rawText ? JSON.parse(rawText) : null;
-                } catch {
-                  data = null;
-                }
+  async function postNewCustomer_(draft, action) {
+    const payload = {
+      secret: CONTACTS_SECRET,
+      ...(action ? { action } : {}),
 
-                if (res.ok && data && (data.ok === true || data.success === true)) return data;
+      // Exact live-sheet field names.
+      "First Name": draft.first,
+      "Last Name": draft.last,
+      "Phone": draft.phone,
+      "Contact Name": draft.contact,
+      "Email 1": draft.email1,
+      "Email 2": draft.email2,
+      "Address": draft.address,
+      "Organization Name": draft.company,
 
-                const message = String(data?.error || data?.message || rawText || `HTTP ${res.status}`).trim();
-                lastError = message || `HTTP ${res.status}`;
-                if (/unknown action/i.test(lastError)) continue;
-              }
+      // Apps Script / legacy field aliases.
+      first_name: draft.first,
+      last_name: draft.last,
+      phone: draft.phone,
+      contact_name: draft.contact,
+      email1: draft.email1,
+      email_1: draft.email1,
+      email2: draft.email2,
+      email_2: draft.email2,
+      address: draft.address,
+      organization_name: draft.company,
+      company_name: draft.company,
+      company: draft.company,
+      business_name: draft.company
+    };
 
-              throw new Error(lastError || "Could not save new contact.");
-            }
+    const body = new URLSearchParams();
+    Object.entries(payload).forEach(([key, value]) => {
+      body.append(key, value == null ? "" : String(value));
+    });
+    body.set("payload_json", JSON.stringify(payload));
 
-          let t = null;
-          searchEl.addEventListener("input", () => {
-            const q = searchEl.value.trim();
-            clearTimeout(t);
-            t = setTimeout(() => {
-              if (!q) return hideResults(resultsEl);
-              if (CONTACTS_ERROR) return showMessage("Contacts not available (check API key + sheet sharing).");
+    const res = await fetch(NEW_CUSTOMERS_WEBAPP_URL, {
+      method: "POST",
+      body,
+      cache: "no-store"
+    });
 
-                const list = sortContacts(CONTACTS.filter(c => matches(c, q)));
-              if (!list.length) return showMessage(`No matches for "${q}"`);
-              showResults(list);
-            }, 70);
-          });
+    const rawText = await res.text();
+    let data = null;
+    try {
+      data = rawText ? JSON.parse(rawText) : null;
+    } catch {
+      data = null;
+    }
 
-            addCustomerBtn.addEventListener("click", openNewCustomerModal);
-            modalCancelBtn?.addEventListener("click", closeNewCustomerModal);
-            modalEl.addEventListener("click", (e) => {
-              if (e.target === modalEl) closeNewCustomerModal();
-            });
-            modalSaveBtn?.addEventListener("click", async () => {
-              const draft = {
-                company: String(modalCompanyEl?.value || "").trim(),
-                first: String(modalFirstEl?.value || "").trim(),
-                last: String(modalLastEl?.value || "").trim(),
-                contact: String(modalContactEl?.value || "").trim(),
-                phone: String(modalPhoneEl?.value || "").trim(),
-                email1: String(modalEmail1El?.value || "").trim(),
-                email2: String(modalEmail2El?.value || "").trim(),
-                address: String(modalAddressEl?.value || "").trim()
-              };
+    const succeeded =
+      res.ok &&
+      data &&
+      (data.ok === true || data.success === true || String(data.status || "").toLowerCase() === "success");
 
-              if (!draft.company && !draft.first && !draft.last && !draft.contact) {
-                alert("Enter a company name or at least one contact name field.");
-                return;
-              }
+    if (succeeded) return data;
 
-              const personName = [draft.first, draft.last].filter(Boolean).join(" ").trim();
-              if (!draft.contact && draft.company && personName) draft.contact = personName;
+    const message = String(data?.error || data?.message || rawText || `HTTP ${res.status}`).trim();
+    const error = new Error(message || `HTTP ${res.status}`);
+    error.isUnknownAction = /unknown action|unsupported action|invalid action|missing action/i.test(error.message);
+    throw error;
+  }
 
-              const originalLabel = modalSaveBtn.textContent;
-              modalSaveBtn.disabled = true;
-              modalSaveBtn.textContent = "Saving...";
-              try {
-                await saveNewCustomer_(draft);
-                const newContact = buildNewContactRecord_(draft);
-                CONTACTS = sortContacts([...CONTACTS, newContact]);
-                CONTACTS_ERROR = "";
-                pickContact(newContact);
-                searchEl.value = primaryContactLabel(newContact);
-                hideResults(resultsEl);
-                closeNewCustomerModal();
-                setLoadMsg(`Customer saved: ${primaryContactLabel(newContact)}`);
-              } catch (err) {
-                console.error(err);
-                setLoadMsg(err?.message || "Could not save new customer.", true);
-              } finally {
-                modalSaveBtn.disabled = false;
-                modalSaveBtn.textContent = originalLabel;
-              }
-            });
+  async function saveNewCustomer_(draft) {
+    if (!NEW_CUSTOMERS_WEBAPP_URL) {
+      throw new Error("New customer web app is not configured.");
+    }
 
-          window.addEventListener("click", (e) => {
-              const within = resultsEl.contains(e.target) || searchEl.contains(e.target) || addCustomerBtn.contains(e.target) || modalEl.contains(e.target);
-            if (!within) hideResults(resultsEl);
-          });
+    // Only try another action when the server explicitly rejects the action.
+    // This avoids accidentally adding the same customer several times.
+    const actions = [
+      "add_contact",
+      "save_contact",
+      "create_contact",
+      "add_customer",
+      "save_customer",
+      "create_customer",
+      ""
+    ];
+
+    let lastError = null;
+    for (const action of actions) {
+      try {
+        return await postNewCustomer_(draft, action);
+      } catch (error) {
+        lastError = error;
+        if (!error?.isUnknownAction) throw error;
+      }
+    }
+
+    throw lastError || new Error("Could not save new customer.");
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    const searchEl = $("contactSearch");
+    const resultsEl = $("contactResults");
+    const addCustomerBtn = $("btnAddNewCustomer");
+    const modalEl = $("newCustomerModal");
+    const modalCompanyEl = $("ncCompany");
+    const modalFirstEl = $("ncFirst");
+    const modalLastEl = $("ncLast");
+    const modalContactEl = $("ncContact");
+    const modalPhoneEl = $("ncPhone");
+    const modalEmail1El = $("ncEmail1");
+    const modalEmail2El = $("ncEmail2");
+    const modalAddressEl = $("ncAddress");
+    const modalCancelBtn = $("ncCancel");
+    const modalSaveBtn = $("ncSave");
+
+    if (!searchEl || !resultsEl || !addCustomerBtn || !modalEl) return;
+
+    let CONTACTS = [];
+    let CONTACTS_ERROR = "";
+
+    try {
+      CONTACTS = await loadContacts();
+    } catch (error) {
+      CONTACTS_ERROR = error?.message || "Could not load contacts.";
+      console.error(CONTACTS_ERROR);
+    }
+
+    function showMessage(message) {
+      resultsEl.innerHTML =
+        `<div style="padding:10px 12px; font-weight:800; color:var(--muted);">${escLocal(message)}</div>`;
+      resultsEl.style.display = "block";
+    }
+
+    function showResults(list) {
+      resultsEl.innerHTML = "";
+
+      list.slice(0, 12).forEach((contact) => {
+        const top = primaryContactLabel(contact);
+        const sub = [
+          secondaryContactLabel(contact),
+          fieldValue_(contact, "email1") || fieldValue_(contact, "email2"),
+          fieldValue_(contact, "phone")
+        ]
+          .filter(Boolean)
+          .join(" • ");
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.style.width = "100%";
+        btn.style.textAlign = "left";
+        btn.style.border = "0";
+        btn.style.background = "transparent";
+        btn.style.padding = "10px 12px";
+        btn.style.borderRadius = "12px";
+        btn.style.cursor = "pointer";
+        btn.innerHTML = `
+          <div style="font-weight:900; color:var(--primary-2);">${escLocal(top)}</div>
+          <div style="font-size:12px; font-weight:800; color:var(--muted); margin-top:2px;">${escLocal(sub)}</div>
+        `;
+        btn.addEventListener("mouseenter", () => { btn.style.background = "var(--sky)"; });
+        btn.addEventListener("mouseleave", () => { btn.style.background = "transparent"; });
+        btn.addEventListener("click", () => {
+          pickContact(contact);
+          hideResults(resultsEl);
         });
-      })();
+        resultsEl.appendChild(btn);
+      });
+
+      resultsEl.style.display = list.length ? "block" : "none";
+    }
+
+    function matches(contact, queryText) {
+      const query = queryText.trim().toLowerCase();
+      if (!query) return false;
+
+      const haystack = [
+        companyName(contact),
+        fieldValue_(contact, "first"),
+        fieldValue_(contact, "last"),
+        fieldValue_(contact, "contact"),
+        fieldValue_(contact, "email1"),
+        fieldValue_(contact, "email2"),
+        fieldValue_(contact, "phone"),
+        fieldValue_(contact, "address")
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    }
+
+    function openNewCustomerModal() {
+      if (modalCompanyEl) modalCompanyEl.value = String($("clientName")?.value || "").trim();
+      if (modalFirstEl) modalFirstEl.value = "";
+      if (modalLastEl) modalLastEl.value = "";
+      if (modalContactEl) modalContactEl.value = String($("clientContact")?.value || "").trim();
+      if (modalPhoneEl) modalPhoneEl.value = String($("clientPhone")?.value || "").trim();
+      if (modalEmail1El) modalEmail1El.value = String($("clientEmail")?.value || "").trim();
+      if (modalEmail2El) modalEmail2El.value = "";
+      if (modalAddressEl) modalAddressEl.value = String($("clientAddr")?.value || "").trim();
+      modalEl.style.display = "flex";
+      modalCompanyEl?.focus();
+    }
+
+    function closeNewCustomerModal() {
+      modalEl.style.display = "none";
+    }
+
+    let searchTimer = null;
+    searchEl.addEventListener("input", () => {
+      const query = searchEl.value.trim();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        if (!query) return hideResults(resultsEl);
+        if (CONTACTS_ERROR) return showMessage("Contacts not available (check API key + sheet sharing).");
+
+        const list = sortContacts(CONTACTS.filter((contact) => matches(contact, query)));
+        if (!list.length) return showMessage(`No matches for "${query}"`);
+        showResults(list);
+      }, 70);
+    });
+
+    addCustomerBtn.addEventListener("click", openNewCustomerModal);
+    modalCancelBtn?.addEventListener("click", closeNewCustomerModal);
+    modalEl.addEventListener("click", (event) => {
+      if (event.target === modalEl) closeNewCustomerModal();
+    });
+
+    modalSaveBtn?.addEventListener("click", async () => {
+      const draft = {
+        company: String(modalCompanyEl?.value || "").trim(),
+        first: String(modalFirstEl?.value || "").trim(),
+        last: String(modalLastEl?.value || "").trim(),
+        contact: String(modalContactEl?.value || "").trim(),
+        phone: String(modalPhoneEl?.value || "").trim(),
+        email1: String(modalEmail1El?.value || "").trim(),
+        email2: String(modalEmail2El?.value || "").trim(),
+        address: String(modalAddressEl?.value || "").trim()
+      };
+
+      if (!draft.company && !draft.first && !draft.last && !draft.contact) {
+        alert("Enter a company name or at least one contact name field.");
+        return;
+      }
+
+      const personName = [draft.first, draft.last].filter(Boolean).join(" ").trim();
+      if (!draft.contact && draft.company && personName) draft.contact = personName;
+
+      const originalLabel = modalSaveBtn.textContent;
+      modalSaveBtn.disabled = true;
+      modalSaveBtn.textContent = "Saving to master list...";
+
+      try {
+        await saveNewCustomer_(draft);
+
+        const confirmed = await reloadAndConfirmCustomer_(draft);
+        CONTACTS = confirmed.contacts;
+        CONTACTS_ERROR = "";
+
+        pickContact(confirmed.savedContact);
+        searchEl.value = primaryContactLabel(confirmed.savedContact);
+        hideResults(resultsEl);
+        closeNewCustomerModal();
+        setLoadMsg(`Customer saved to master list: ${primaryContactLabel(confirmed.savedContact)}`);
+      } catch (error) {
+        console.error(error);
+        setLoadMsg(error?.message || "Could not save new customer to the master list.", true);
+      } finally {
+        modalSaveBtn.disabled = false;
+        modalSaveBtn.textContent = originalLabel;
+      }
+    });
+
+    window.addEventListener("click", (event) => {
+      const within =
+        resultsEl.contains(event.target) ||
+        searchEl.contains(event.target) ||
+        addCustomerBtn.contains(event.target) ||
+        modalEl.contains(event.target);
+
+      if (!within) hideResults(resultsEl);
+    });
+  });
+})();
 
       function syncBizInfoDisplay() {
         const name = $("bizName")?.value || "";
