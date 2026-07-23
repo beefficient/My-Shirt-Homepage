@@ -4651,7 +4651,7 @@
 <script>
 (function () {
   // 1) PASTE YOUR BILL APP WEB APP URL BETWEEN THE QUOTES (ends in /exec):
-  var RECORD_PAYMENT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw-cLDIjzj7RdhywtgHUwDW6H1Rz_v67HlJyJNgHz3LPpSCtd7GgNFY4SiBQX3u-ibgLQ/exec";
+  var RECORD_PAYMENT_WEBAPP_URL = "PASTE_YOUR_BILL_APP_EXEC_URL_HERE";
 
   function money_(str) {
     // "$1,234.56" -> 1234.56
@@ -4681,14 +4681,16 @@
     var totalEl = document.getElementById("total");
     var subEl = document.getElementById("subtotal");
     var custEl = document.getElementById("clientName");
+    var paidEl = document.getElementById("amountPaid");
     var dateEl = document.getElementById("invDate");
     var payload = {
       action: "record_payment",
       invoice: invoice,
       method: method,
       customer: custEl ? String(custEl.value || "").trim() : "",
-      sale: money_(subEl ? subEl.textContent : 0),   // pre-tax = Invoice Amount on Jobs
+      sale: money_(totalEl ? totalEl.textContent : 0),   // full total (incl. tax) = Invoice Amount / Column F
       tax: money_(taxEl ? taxEl.textContent : 0),
+      paidSnapshot: money_(paidEl ? paidEl.value : 0), // cumulative amount paid on the invoice
       amount: money_(totalEl ? totalEl.textContent : 0),
       date: (dateEl && dateEl.value) ? dateEl.value : ""
     };
@@ -4701,10 +4703,9 @@
         setBusy_(false);
         if (data && data.ok) {
           var made = data.created ? "Added invoice #" + invoice + " to the books" : "Invoice #" + invoice + " updated";
-          var pay = data.alreadyRecorded
-            ? " (payment already recorded as \"" + (data.method || "") + "\")"
-            : (method ? " - paid by " + method + (payload.tax ? " (tax $" + Number(payload.tax).toFixed(2) + ")" : "") : "");
-          setMsg_(made + pay + ".", false);
+          var pay = (method ? " - paid by " + method : "");
+          var paidSoFar = (data.paid ? " - paid so far $" + Number(data.paid).toFixed(2) : "");
+          setMsg_(made + pay + paidSoFar + ".", false);
         } else {
           setMsg_("Could not record: " + ((data && data.error) || "please try again."), true);
         }
