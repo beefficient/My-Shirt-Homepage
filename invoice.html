@@ -630,6 +630,7 @@
     .pdfExportRoot .printTotalsTable tr.printBalanceDue td{ padding-top:8px; border-top:1px solid #aeb8c5; font-size:15px; font-weight:900; }
     .pdfExportRoot .printMuted{ color:#5a6470; }
     .pdfExportRoot .printOnly{ display:inline !important; }
+    .pdfExportRoot .noPrint, .pdfExportRoot .noPrint *{ display:none !important; }
 
     .sizeModalBackdrop{
       position: fixed; inset: 0;
@@ -1016,6 +1017,19 @@
                     <button class="btn ghost small" type="button" id="btnAddPayment">Add Payment</button>
                   </div>
                   <div id="paymentsList"></div>
+                </div>
+              </div>
+
+              <div class="trow payments-row noPrint" aria-label="Record payment to books">
+                <div class="payments-head">Record Payment to Books</div>
+                <div class="payments-wrap">
+                  <div class="payments-fields">
+                    <select class="field" id="bookPayMethod">
+                      <option>Zelle</option><option>Check</option><option>Credit Card</option>
+                    </select>
+                    <button class="btn primary small" type="button" id="btnRecordToBooks">Record Payment</button>
+                  </div>
+                  <div id="bookPayMsg" style="font-size:12px; font-weight:700; color:var(--muted); margin-top:6px;"></div>
                 </div>
               </div>
 
@@ -4627,5 +4641,70 @@
       </div>
     </div>
   </div>
+<!-- ================= RECORD PAYMENT TO BOOKS ================= -->
+<!-- Sends the invoice's payment method + sales tax to the My Shirt Profit
+     spreadsheet (Jobs tab) through the Bill App web app. Self-contained. -->
+<script>
+(function () {
+  // 1) PASTE YOUR BILL APP WEB APP URL BETWEEN THE QUOTES (ends in /exec):
+  var RECORD_PAYMENT_WEBAPP_URL = "PASTE_YOUR_BILL_APP_EXEC_URL_HERE";
+
+  function money_(str) {
+    // "$1,234.56" -> 1234.56
+    var n = parseFloat(String(str == null ? "" : str).replace(/[^0-9.\-]/g, ""));
+    return isFinite(n) ? n : 0;
+  }
+  function setMsg_(text, isError) {
+    var el = document.getElementById("bookPayMsg");
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = isError ? "#c0392b" : "#1e7e34";
+  }
+
+  var btn = document.getElementById("btnRecordToBooks");
+  if (!btn) return;
+  btn.addEventListener("click", function () {
+    var invEl = document.getElementById("invNo");
+    var invoice = invEl ? String(invEl.value || "").trim() : "";
+    if (!invoice) { setMsg_("Enter the Invoice # first.", true); return; }
+    if (RECORD_PAYMENT_WEBAPP_URL.indexOf("PASTE_") === 0) {
+      setMsg_("Set up needed: paste your Bill App web app URL into this page's script.", true);
+      return;
+    }
+    var method = (document.getElementById("bookPayMethod") || {}).value || "";
+    var taxEl = document.getElementById("taxAmount");
+    var totalEl = document.getElementById("total");
+    var dateEl = document.getElementById("invDate");
+    var payload = {
+      action: "record_payment",
+      invoice: invoice,
+      method: method,
+      tax: money_(taxEl ? taxEl.textContent : 0),
+      amount: money_(totalEl ? totalEl.textContent : 0),
+      date: (dateEl && dateEl.value) ? dateEl.value : ""
+    };
+    btn.disabled = true;
+    setMsg_("Recording...", false);
+    fetch(RECORD_PAYMENT_WEBAPP_URL, { method: "POST", body: new URLSearchParams(payload) })
+      .then(function (r) { return r.text(); })
+      .then(function (t) {
+        var data = null; try { data = JSON.parse(t); } catch (e) { }
+        btn.disabled = false;
+        if (data && data.ok && data.alreadyRecorded) {
+          setMsg_("Already recorded as \"" + (data.method || "") + "\" - not changed.", true);
+        } else if (data && data.ok) {
+          setMsg_("Recorded: Invoice #" + invoice + " paid by " + method +
+            (payload.tax ? " (tax $" + Number(payload.tax).toFixed(2) + ")" : "") + ".", false);
+        } else {
+          setMsg_("Could not record: " + ((data && data.error) || "check the invoice number exists on Jobs."), true);
+        }
+      })
+      .catch(function (err) {
+        btn.disabled = false;
+        setMsg_("Network error: " + err.message, true);
+      });
+  });
+})();
+</script>
 </body>
 </html>
