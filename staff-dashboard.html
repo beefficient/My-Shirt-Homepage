@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Staff Dashboard — My Shirt Printing</title>
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#f6fbff; --card:#fff; --text:#0f2a33; --muted:#47606a;
+      --border:#d7e7f7; --primary:#032d44; --primary-2:#0b3f5b; --sky:#eaf4ff;
+      --radius:16px; --shadow:0 10px 24px rgba(10,35,45,.08);
+      --max:1040px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, #dfeeff 0%, #f6fbff 55%, #ffffff 100%);
+      color:var(--text);
+      min-height:100vh;
+      padding:24px 18px 48px;
+    }
+    .wrap{max-width:var(--max); margin:0 auto}
+
+    /* Header */
+    header{
+      display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+      margin-bottom:6px;
+    }
+    header img{height:52px; width:auto; display:block}
+    .titles{flex:1 1 auto; min-width:200px}
+    h1{
+      margin:0;
+      font-family:"DM Sans", Inter, sans-serif;
+      font-size:26px; color:var(--primary);
+    }
+    .sub{margin:2px 0 0; color:var(--muted); font-weight:600; font-size:14px}
+    .chip{
+      display:inline-block; margin-top:2px;
+      font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+      color:var(--primary-2); background:var(--sky);
+      border:1px solid var(--border); border-radius:999px; padding:4px 10px;
+    }
+    .header-actions{display:flex; gap:8px; align-items:center}
+    .link-btn{
+      text-decoration:none; font-weight:800; font-size:13px;
+      color:var(--primary); background:#fff; border:1px solid var(--border);
+      border-radius:999px; padding:9px 14px;
+    }
+    .link-btn:hover{background:var(--sky)}
+
+    /* Section */
+    .section-title{
+      font-family:"DM Sans", Inter, sans-serif;
+      font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+      color:var(--muted); margin:28px 4px 12px;
+    }
+
+    /* Card grid */
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    }
+    .card{
+      display:flex; flex-direction:column; gap:6px;
+      background:var(--card); border:1px solid var(--border);
+      border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:16px 16px 18px;
+      text-decoration:none; color:inherit;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 14px 30px rgba(10,35,45,.12);
+      border-color:#b9d9f7;
+    }
+    .card:focus-visible{outline:none; box-shadow:0 0 0 4px rgba(120,180,255,.28)}
+    .icon{font-size:26px; line-height:1}
+    .card h3{
+      margin:6px 0 0;
+      font-family:"DM Sans", Inter, sans-serif;
+      font-size:17px; color:var(--primary);
+    }
+    .card p{margin:0; color:var(--muted); font-size:13px; font-weight:600; line-height:1.45}
+    .card .go{
+      margin-top:8px; font-size:12px; font-weight:800; color:var(--primary-2);
+      display:flex; align-items:center; gap:6px;
+    }
+    .card .ext{
+      font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+      color:var(--primary-2); background:var(--sky);
+      border:1px solid var(--border); border-radius:999px; padding:2px 8px;
+      align-self:flex-start;
+    }
+
+    footer{margin-top:34px; text-align:center; color:var(--muted); font-size:12px; font-weight:600}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <img src="logo.png" alt="My Shirt Printing logo" />
+      <div class="titles">
+        <h1>Staff Dashboard</h1>
+        <p class="sub">My Shirt Printing — internal tools &amp; apps</p>
+        <span class="chip">Staff only</span>
+      </div>
+      <div class="header-actions">
+        <a class="link-btn" href="staff-login.html">Staff login / Log out</a>
+      </div>
+    </header>
+
+    <!-- Documents & Orders (pages on this website) -->
+    <div class="section-title">Documents &amp; Orders</div>
+    <div class="grid">
+      <a class="card" href="invoice.html">
+        <div class="icon">🧾</div>
+        <h3>Invoice Builder</h3>
+        <p>Create and record customer invoices.</p>
+        <span class="go">Open →</span>
+      </a>
+
+      <a class="card" href="workorder.html">
+        <div class="icon">🛠️</div>
+        <h3>Work Order Builder</h3>
+        <p>Build production work orders.</p>
+        <span class="go">Open →</span>
+      </a>
+
+      <a class="card" href="quote.html">
+        <div class="icon">🧮</div>
+        <h3>Quote Tool</h3>
+        <p>Price a job for a customer.</p>
+        <span class="go">Open →</span>
+      </a>
+
+      <a class="card" href="group-order.html">
+        <div class="icon">👥</div>
+        <h3>Group Ordering</h3>
+        <p>Create and review group orders.</p>
+        <span class="go">Open →</span>
+      </a>
+    </div>
+
+    <!-- Apps (open in a new tab) -->
+    <div class="section-title">Apps</div>
+    <div class="grid">
+      <a class="card" href="https://script.google.com/macros/s/AKfycbw-cLDIjzj7RdhywtgHUwDW6H1Rz_v67HlJyJNgHz3LPpSCtd7GgNFY4SiBQX3u-ibgLQ/exec" target="_blank" rel="noopener">
+        <span class="ext">Opens new tab</span>
+        <div class="icon">💵</div>
+        <h3>Bill App</h3>
+        <p>Profit &amp; operations / payments app.</p>
+        <span class="go">Open →</span>
+      </a>
+
+      <a class="card" href="https://script.google.com/macros/s/AKfycbyH9GL9ac7svHXOwjnxYv0MRM6AGixvmd0FO7EWCkpR74MUVpmaQqjMsCKWQ2-_HH3k8w/exec" target="_blank" rel="noopener">
+        <span class="ext">Opens new tab</span>
+        <div class="icon">🗓️</div>
+        <h3>Press Schedule</h3>
+        <p>Schedule and track press jobs.</p>
+        <span class="go">Open →</span>
+      </a>
+    </div>
+
+    <footer>My Shirt Printing · Staff dashboard · Keep this URL private</footer>
+  </div>
+</body>
+</html>
