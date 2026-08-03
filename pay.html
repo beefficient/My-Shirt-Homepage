@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pay an Invoice — My Shirt Printing &amp; Embroidery</title>
+  <meta name="description" content="Pay My Shirt Printing & Embroidery. Enter your invoice number and the amount you owe, then pay by Venmo, Cash App, PayPal, Zelle, or Apple Cash." />
+
+  <!-- Fonts (same as the rest of the site) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== My Shirt brand tokens (matches index.html) ===== */
+    :root{
+      --bg: #f6fbff;
+      --sky: #eaf4ff;
+      --card: #ffffff;
+      --text: #0f2a33;
+      --muted: #47606a;
+      --border: #d7e7f7;
+      --primary: #032d44;
+      --primary-2: #0b3f5b;
+      --accent: #ffd77a;      /* soft yellow used on chips/badges */
+      --accent-soft: #ffe7a6;
+      --pill: 999px;
+      --radius: 16px;
+      --shadow: 0 10px 24px rgba(10,35,45,.08);
+      --max: 1120px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: #ffffff;
+      line-height: 1.55;
+    }
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .container{max-width:var(--max);margin:0 auto;padding:0 20px}
+
+    /* ===== Top Nav (same structure as index.html) ===== */
+    header{
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,255,255,.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navwrap{
+      position: relative; display:flex; align-items:center;
+      justify-content:space-between; gap:16px; padding:14px 0;
+    }
+    .brand{display:flex; align-items:center; gap:12px; min-width: 220px;}
+    .brand img{height: 42px; width: auto; object-fit: contain;}
+    .brand .name{
+      font-family: "DM Sans", Inter, sans-serif; font-weight: 700; font-size: 16px;
+      letter-spacing: .2px; white-space: nowrap; color: var(--primary-2);
+    }
+    nav{display:flex; gap:18px; align-items:center; justify-content:center; flex-wrap: wrap;}
+    nav a{
+      font-size: 14px; color: var(--primary-2); padding: 8px 10px; border-radius: 10px;
+      font-weight: 600; display:inline-flex; align-items:center; gap:6px;
+    }
+    nav a:hover{background: var(--sky)}
+    nav a.active{border-bottom: 2px solid var(--primary); border-radius: 0; padding-bottom: 6px}
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; padding: 11px 16px;
+      border-radius: var(--pill); font-weight: 700; border: 1px solid transparent;
+      cursor:pointer; user-select:none; white-space:nowrap; gap: 8px; font: inherit; font-weight:700;
+    }
+    .btn.primary{background: var(--primary); color:#fff; box-shadow: var(--shadow)}
+    .btn.primary:hover{filter: brightness(.98)}
+    .btn.ghost{background:#fff;border-color: var(--border); color: var(--primary-2)}
+    .btn.ghost:hover{background: var(--sky)}
+    .btn.small{padding:8px 12px; font-size:13px}
+
+    .mobile-menu-btn{
+      display:none; background:none; border:none; font-size:28px; cursor:pointer;
+      padding:4px 8px; color:var(--primary-2);
+    }
+
+    /* Quote dropdown (same as index.html) */
+    details.quoteDrop{position: relative; display: inline-block;}
+    details.quoteDrop > summary{
+      list-style:none; cursor:pointer; user-select:none; font-size: 14px; color: var(--primary-2);
+      padding: 8px 10px; border-radius: 10px; font-weight: 600;
+      display:inline-flex; align-items:center; gap: 6px;
+    }
+    details.quoteDrop > summary:hover{ background: var(--sky); }
+    details.quoteDrop > summary::-webkit-details-marker{ display:none; }
+    .qMenu{
+      position: absolute; top: calc(100% + 10px); left: 0; min-width: 240px; background: #fff;
+      border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 6px; z-index: 9999;
+    }
+    .qMenu a{
+      display:block; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--primary-2); white-space:nowrap;
+    }
+    .qMenu a:hover{ background: var(--sky); }
+
+    /* ===== Hero ===== */
+    .hero{
+      background: linear-gradient(180deg, #dfeeff 0%, #f6fbff 70%, #ffffff 100%);
+      padding: 40px 0 30px; position: relative; overflow: hidden;
+    }
+    .hero .container{max-width: 820px; text-align:center; position:relative; z-index:1}
+    .eyebrow{
+      display:inline-block; font-size: 12px; font-weight: 700; letter-spacing: 1.6px;
+      text-transform: uppercase; color: var(--primary-2); background:#fff;
+      border:1px solid var(--border); border-radius: var(--pill); padding: 6px 12px; margin-bottom: 14px;
+    }
+    .hero h1{
+      font-family: "DM Sans", Inter, sans-serif; font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.08; margin: 0 0 12px; color: var(--primary-2); letter-spacing: -.5px;
+    }
+    .hero p{margin: 0 auto; max-width: 60ch; color:#36515c; font-size: 16px; font-weight: 500;}
+
+    /* ===== Pay layout ===== */
+    .section{padding: 34px 0}
+    .pay-layout{
+      display:grid; grid-template-columns: 400px 1fr; gap: 22px; align-items:start;
+    }
+    .card{
+      background:#fff; border:1px solid var(--border); border-radius: var(--radius);
+      padding: 20px 22px; box-shadow: 0 10px 22px rgba(10,35,45,.06);
+    }
+    .card h2, .card h3{font-family:"DM Sans", Inter, sans-serif; color: var(--primary-2);}
+    .card h2{font-size: 20px; margin: 0 0 4px;}
+    .card .sub{color: var(--muted); font-size: 14px; margin: 0 0 18px; font-weight:500}
+
+    /* The amount / invoice card (sticks on desktop) */
+    .amount-card{position: sticky; top: 92px;}
+    .field{margin-bottom: 16px;}
+    .field label{display:block; font-weight:700; color: var(--primary-2); font-size: 14px; margin-bottom: 6px;}
+    .field input{
+      width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
+      font: inherit; color: var(--text); background: #fff;
+    }
+    .field input:focus{outline: 3px solid rgba(3,45,68,.15); outline-offset: 1px; border-color: var(--primary-2);}
+    .field .hint{font-size: 12px; color: var(--muted); margin-top: 6px; font-weight:500}
+    .amount-input{position: relative;}
+    .amount-input .dollar{
+      position:absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-weight: 700; pointer-events:none;
+    }
+    .amount-input input{padding-left: 28px;}
+
+    .total-row{
+      display:flex; justify-content:space-between; align-items:baseline;
+      border-top: 1px solid var(--border); padding-top: 16px; margin-top: 4px;
+    }
+    .total-row .total-label{font-weight:700; font-size: 16px; color: var(--primary-2);}
+    .total-row .total-val{font-family:"DM Sans", Inter, sans-serif; font-weight:700; font-size: 30px; color: var(--primary);}
+
+    .reference{
+      margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: var(--sky);
+      border:1px solid var(--border); font-size: 14px; color: var(--primary-2);
+      display:flex; align-items:center; justify-content:space-between; gap: 10px; flex-wrap:wrap;
+    }
+    .reference .ref-text{font-weight: 600;}
+    .reference .ref-text strong{color: var(--primary);}
+
+    /* ===== Payment method cards ===== */
+    .pay-grid{display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 6px;}
+    .pay-card{
+      display:flex; flex-direction:column; background:#fff; border:1px solid var(--border);
+      border-radius: 14px; padding: 16px; transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    a.pay-card:hover{border-color: var(--primary-2); box-shadow: var(--shadow);}
+    .pay-card.featured{border-color: var(--primary-2); box-shadow: var(--shadow);}
+    .pay-card.span-2{grid-column: 1 / -1;}
+    .pay-top{display:flex; align-items:center; gap:10px; margin-bottom: 8px;}
+    .pay-ic{
+      width: 40px; height: 40px; flex:none; border-radius: 12px; background: var(--accent-soft);
+      border:1px solid rgba(0,0,0,.06); display:flex; align-items:center; justify-content:center; font-size: 1.2rem;
+    }
+    .pay-name{font-weight: 800; color: var(--primary-2); font-size: 16px;}
+    .pay-desc{color: var(--muted); font-size: 13px; font-weight:500; margin-bottom: 10px;}
+    .pay-handle{
+      display:flex; align-items:center; gap:8px; background: var(--sky); border:1px solid var(--border);
+      border-radius: 10px; padding: 8px 10px; font-size: 13px; color: var(--primary-2); font-weight:700;
+      word-break: break-all; margin-bottom: 10px;
+    }
+    .pay-handle .lbl{color: var(--muted); font-weight:600; flex:none;}
+    .pay-hint{color: var(--primary); font-size: 13px; font-weight: 700; margin-top: auto;}
+    .copy-btn{
+      margin-left:auto; flex:none; border:1px solid var(--border); background:#fff; color:var(--primary-2);
+      border-radius: 8px; padding: 5px 10px; font: inherit; font-size: 12px; font-weight:700; cursor:pointer;
+    }
+    .copy-btn:hover{background: var(--sky)}
+    .copy-btn.copied{background: var(--accent-soft); border-color: var(--accent);}
+
+    .pay-note{
+      margin-top: 18px; padding: 14px 16px; border-radius: 12px; background: var(--sky);
+      border: 1px solid var(--border); color: var(--primary-2); font-size: 15px; font-weight: 700; text-align: center;
+    }
+    .pay-tip{
+      margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: #fff7e6;
+      border: 1px solid var(--accent); color: var(--primary-2); font-size: 14px;
+    }
+
+    /* ===== Info row ===== */
+    .section.sky{background: var(--sky); border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
+    .title{text-align:center; margin-bottom: 18px;}
+    .title h2{font-family:"DM Sans", Inter, sans-serif; font-size: 26px; margin:0 0 6px; color: var(--primary-2);}
+    .title p{margin:0; color: var(--muted); font-weight:500;}
+    .info-grid{display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px;}
+    .info-card{background:#fff; border:1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; box-shadow: 0 8px 18px rgba(10,35,45,.06);}
+    .info-card .ic{font-size: 1.5rem; margin-bottom: 8px;}
+    .info-card h3{font-family:"DM Sans", Inter, sans-serif; font-size: 16px; margin: 0 0 6px; color: var(--primary-2);}
+    .info-card p{color: var(--muted); font-size: 14px; margin:0;}
+
+    /* ===== Footer (same as index.html) ===== */
+    footer{background: #0b2e3d; color: rgba(255,255,255,.92); margin-top: 18px;}
+    .foot{padding: 26px 0; display:grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items:start;}
+    footer a{color: #cde8ff}
+    .foot h4{margin:0 0 8px; font-family:"DM Sans", Inter, sans-serif}
+    .foot p{margin:0; color: rgba(255,255,255,.76)}
+    .bottom{
+      border-top: 1px solid rgba(255,255,255,.12); padding: 14px 0; font-size: 13px;
+      color: rgba(255,255,255,.72); display:flex; justify-content:space-between; gap: 12px; flex-wrap:wrap;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 980px){
+      .mobile-menu-btn{display:block}
+      nav{
+        display:none; position:absolute; top:100%; left:0; right:0; background:#fff;
+        border-top:1px solid var(--border); flex-direction:column; align-items:stretch;
+        padding:8px; box-shadow:var(--shadow);
+      }
+      nav.show{display:flex}
+      nav a{justify-content:center;padding:12px}
+      details.quoteDrop{width:100%}
+      details.quoteDrop > summary{justify-content:center;width:100%}
+      .brand .name{display:none}
+      .pay-layout{grid-template-columns: 1fr;}
+      .amount-card{position: static;}
+      .info-grid{grid-template-columns: 1fr;}
+    }
+    @media (max-width: 560px){
+      .brand img{height: 38px}
+      .pay-grid{grid-template-columns: 1fr;}
+      .btn{width:100%}
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== NAV ===== -->
+  <header>
+    <div class="container">
+      <div class="navwrap">
+        <a class="brand" href="index.html" aria-label="Go to homepage">
+          <img src="logo.png" alt="My Shirt Printing logo" />
+          <div class="name">My Shirt Printing and Embroidery</div>
+        </a>
+
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">☰</button>
+
+        <nav aria-label="Main menu" id="mainNav">
+          <a href="index.html">Home</a>
+          <details class="quoteDrop" id="quoteNavDrop">
+            <summary>Quote <span aria-hidden="true">▾</span></summary>
+            <div class="qMenu" role="menu" aria-label="Quote menu">
+              <a href="quote.html">Garment Printing Quote</a>
+              <a href="embroidery-quote.html">Embroidery Quote</a>
+              <a href="other-printing.html">Other Services</a>
+            </div>
+          </details>
+          <a href="gallery.html">Gallery</a>
+          <a href="about-us.html">About Us</a>
+          <a href="contact.html">Contact</a>
+          <a class="active" href="pay.html">Pay Invoice</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="container">
+      <span class="eyebrow">Pay Your Invoice</span>
+      <h1>Pay My Shirt Printing &amp; Embroidery</h1>
+      <p>Enter the invoice number from your invoice and the amount you owe, then choose how you'd like to pay. Quick, secure, and matched to your order.</p>
+    </div>
+  </section>
+
+  <!-- ===== PAY SECTION ===== -->
+  <section class="section">
+    <div class="container">
+      <div class="pay-layout">
+
+        <!-- LEFT: amount + invoice number -->
+        <div class="card amount-card">
+          <h2>What are you paying?</h2>
+          <p class="sub">This helps us match your payment to the right order.</p>
+
+          <div class="field">
+            <label for="invNo">Invoice number</label>
+            <input type="text" id="invNo" inputmode="text" autocomplete="off"
+                   placeholder="e.g. INV-1042" />
+            <div class="hint">Find this at the top of the invoice we sent you.</div>
+          </div>
+
+          <div class="field">
+            <label for="amountOwed">Amount you owe</label>
+            <div class="amount-input">
+              <span class="dollar">$</span>
+              <input type="number" id="amountOwed" min="0" step="0.01" inputmode="decimal"
+                     placeholder="0.00" />
+            </div>
+            <div class="hint">Enter the total shown on your invoice.</div>
+          </div>
+
+          <div class="total-row">
+            <span class="total-label">You're paying</span>
+            <span class="total-val" id="totalVal">$0.00</span>
+          </div>
+
+          <div class="reference">
+            <span class="ref-text" id="refText">Add your invoice # and amount above.</span>
+            <button type="button" class="copy-btn" id="copyRef">Copy reference</button>
+          </div>
+          <div class="hint" style="margin-top:8px;">Copy this and paste it into your payment note (the note in Venmo, Cash App or PayPal, or the Zelle memo) so we can match your payment.</div>
+        </div>
+
+        <!-- RIGHT: payment methods -->
+        <div class="card">
+          <h2>Choose how to pay</h2>
+          <p class="sub">Pay by <strong>card</strong> with Square, or send from your favorite app. Enter your amount above first — Venmo and Cash App open pre-filled. Please include your <strong>invoice number</strong> in the payment note so we can match it to your order.</p>
+
+          <div class="pay-grid">
+
+            <!-- SQUARE (opens Square's secure hosted page — pay by debit/credit card) -->
+            <a class="pay-card featured" id="squareLink"
+               href="https://square.link/u/6aXQzrao"
+               target="_blank" rel="noopener">
+              <div class="pay-top">
+                <span class="pay-ic">💳</span>
+                <span class="pay-name">Pay by Card (Square)</span>
+              </div>
+              <div class="pay-desc">Debit or credit card. On Square's secure page, enter the amount shown above and add your invoice # in the note.</div>
+              <div class="pay-hint">Pay securely by card →</div>
+            </a>
+
+            <!-- VENMO (opens pre-filled with amount + reference) -->
+            <a class="pay-card" id="venmoLink"
+               href="https://venmo.com/oliviaroses123" target="_blank" rel="noopener">
+              <div class="pay-top">
+                <span class="pay-ic">🅥</span>
+                <span class="pay-name">Venmo</span>
+              </div>
+              <div class="pay-handle">
+                <span class="lbl">Venmo:</span>
+                <span>@oliviaroses123</span>
+              </div>
+              <div class="pay-hint">Opens with your amount filled in →</div>
+            </a>
+
+            <!-- CASH APP (opens pre-filled with amount) -->
+            <a class="pay-card" id="cashappLink"
+               href="https://cash.app/$oliveees" target="_blank" rel="noopener">
+              <div class="pay-top">
+                <span class="pay-ic">💵</span>
+                <span class="pay-name">Cash App</span>
+              </div>
+              <div class="pay-handle">
+                <span class="lbl">Cashtag:</span>
+                <span>$oliveees</span>
+              </div>
+              <div class="pay-hint">Opens with your amount filled in →</div>
+            </a>
+
+            <!-- PAYPAL (manual — send to this email in the PayPal app) -->
+            <div class="pay-card">
+              <div class="pay-top">
+                <span class="pay-ic">🅿️</span>
+                <span class="pay-name">PayPal</span>
+              </div>
+              <div class="pay-desc">Send in the PayPal app to:</div>
+              <div class="pay-handle">
+                <span class="lbl">Email:</span>
+                <span id="paypalHandle">oliviaroses1234@gmail.com</span>
+                <button type="button" class="copy-btn" data-copy="#paypalHandle">Copy</button>
+              </div>
+              <div class="pay-hint">Put your invoice # in the note</div>
+            </div>
+
+            <!-- ZELLE (manual — send from your bank app) -->
+            <div class="pay-card">
+              <div class="pay-top">
+                <span class="pay-ic">🏦</span>
+                <span class="pay-name">Zelle</span>
+              </div>
+              <div class="pay-desc">Send from your bank's app to <strong>Olivia Cain</strong>:</div>
+              <div class="pay-handle">
+                <span class="lbl">Phone:</span>
+                <span id="zelleHandle">669-231-9059</span>
+                <button type="button" class="copy-btn" data-copy="#zelleHandle">Copy</button>
+              </div>
+              <div class="pay-hint">Put your invoice # in the memo</div>
+            </div>
+
+            <!-- APPLE CASH (manual — send in Messages) -->
+            <div class="pay-card">
+              <div class="pay-top">
+                <span class="pay-ic">🍎</span>
+                <span class="pay-name">Apple Cash</span>
+              </div>
+              <div class="pay-desc">Send in Messages / Apple Wallet to:</div>
+              <div class="pay-handle">
+                <span class="lbl">Phone:</span>
+                <span id="appleCashHandle">669-231-9059</span>
+                <button type="button" class="copy-btn" data-copy="#appleCashHandle">Copy</button>
+              </div>
+              <div class="pay-hint">Put your invoice # in the message</div>
+            </div>
+
+            <!-- IN PERSON (cash / check) -->
+            <div class="pay-card span-2">
+              <div class="pay-top">
+                <span class="pay-ic">🏬</span>
+                <span class="pay-name">Pay in person</span>
+              </div>
+              <div class="pay-desc">You may also pay in person in <strong>cash</strong> or <strong>check</strong>. Please bring the exact amount if paying with cash.</div>
+              <div class="pay-hint">Visit us at 3331 Edward Avenue, Santa Clara · Mon–Fri 9am–5pm</div>
+            </div>
+
+          </div>
+
+          <div class="pay-note">
+            Thank you so much for your business — we truly appreciate it! 💙
+          </div>
+
+          <div class="pay-tip">
+            <strong>Tip:</strong> After you pay, keep your confirmation. Questions about a charge?
+            Call us at <a href="tel:+14088835518" style="color:var(--primary);font-weight:700">408-883-5518</a>
+            or email <a href="mailto:myshirtcustomerservice@gmail.com" style="color:var(--primary);font-weight:700">myshirtcustomerservice@gmail.com</a>.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER (same as index.html) ===== -->
+  <footer>
+    <div class="container">
+      <div class="foot">
+        <div>
+          <h4>My Shirt &amp; Signs</h4>
+          <p>3331 Edward Avenue</p>
+          <p>Santa Clara, CA 95054<br>Mon–Fri 9am–5pm</p>
+          <p>Email: <a href="mailto:myshirtcustomerservice@gmail.com">myshirtcustomerservice@gmail.com</a></p>
+          <p>Phone: 408-883-5518</p>
+        </div>
+      </div>
+      <div class="bottom">
+        <div>© <span id="year"></span> My Shirt Printing. All rights reserved.</div>
+        <div>Made with care.</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ---------- Footer year ----------
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // ---------- Mobile menu toggle (same as index.html) ----------
+    var mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    var mainNav = document.getElementById("mainNav");
+    if (mobileMenuBtn && mainNav) {
+      mobileMenuBtn.addEventListener("click", function () {
+        mainNav.classList.toggle("show");
+      });
+      document.addEventListener("click", function (e) {
+        if (!mainNav.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+          mainNav.classList.remove("show");
+        }
+      });
+    }
+
+    // Close the Quote dropdown when clicking outside
+    document.addEventListener("click", function (e) {
+      var el = document.getElementById("quoteNavDrop");
+      if (el && !el.contains(e.target)) el.removeAttribute("open");
+    });
+
+    // ---------- Prefill from URL ----------
+    // Supports pay.html?invoice=INV-1042&amount=125.00 so an invoice link
+    // (or email) can drop the customer straight onto a filled-in page.
+    (function prefillFromUrl(){
+      var params = new URLSearchParams(window.location.search);
+      var inv = params.get("invoice") || params.get("inv");
+      var amt = params.get("amount") || params.get("total");
+      if (inv) document.getElementById("invNo").value = inv;
+      if (amt && !isNaN(parseFloat(amt))) document.getElementById("amountOwed").value = parseFloat(amt).toFixed(2);
+    })();
+
+    // ---------- Amount + reference ----------
+    var invNo = document.getElementById("invNo");
+    var amountOwed = document.getElementById("amountOwed");
+    var totalVal = document.getElementById("totalVal");
+    var refText = document.getElementById("refText");
+    var venmoLink = document.getElementById("venmoLink");
+    var cashappLink = document.getElementById("cashappLink");
+
+    // Pay-to handles (change here if the accounts ever change)
+    var VENMO_USER = "oliviaroses123";
+    var CASHTAG = "oliveees";      // without the leading $
+
+    function currentAmount() {
+      var a = parseFloat(amountOwed.value);
+      if (isNaN(a) || a < 0) a = 0;
+      return a;
+    }
+
+    // The reference string the customer copies into their payment note.
+    function referenceString() {
+      var inv = invNo.value.trim();
+      var amt = currentAmount();
+      var parts = [];
+      if (inv) parts.push("Invoice " + inv);
+      if (amt > 0) parts.push("$" + amt.toFixed(2));
+      parts.push("My Shirt Printing");
+      return parts.join(" — ");
+    }
+
+    function updateUI() {
+      var amt = currentAmount();
+      totalVal.textContent = "$" + amt.toFixed(2);
+
+      var inv = invNo.value.trim();
+      if (!inv && amt <= 0) {
+        refText.textContent = "Add your invoice # and amount above.";
+      } else {
+        // Show the reference with the invoice number emphasised.
+        refText.innerHTML = "Reference: <strong>" + referenceString().replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</strong>";
+      }
+
+      // Pre-fill the app links with the amount (and a note where supported).
+      // When no amount is entered yet, fall back to the plain profile link.
+      var note = encodeURIComponent(referenceString());
+      venmoLink.href = amt > 0
+        ? "https://venmo.com/" + VENMO_USER + "?txn=pay&amount=" + amt.toFixed(2) + "&note=" + note
+        : "https://venmo.com/" + VENMO_USER;
+      cashappLink.href = amt > 0
+        ? "https://cash.app/$" + CASHTAG + "/" + amt.toFixed(2)
+        : "https://cash.app/$" + CASHTAG;
+    }
+
+    invNo.addEventListener("input", updateUI);
+    amountOwed.addEventListener("input", updateUI);
+    updateUI();
+
+    // ---------- Copy buttons ----------
+    function flashCopied(btn, original) {
+      btn.classList.add("copied");
+      btn.textContent = "Copied!";
+      setTimeout(function () {
+        btn.classList.remove("copied");
+        btn.textContent = original;
+      }, 1400);
+    }
+
+    function copyText(text, btn) {
+      var original = btn.textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          flashCopied(btn, original);
+        }).catch(function () {
+          fallbackCopy(text); flashCopied(btn, original);
+        });
+      } else {
+        fallbackCopy(text); flashCopied(btn, original);
+      }
+    }
+
+    // Older-browser fallback using a temporary textarea.
+    function fallbackCopy(text) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+
+    // Copy the reference (invoice # + amount)
+    document.getElementById("copyRef").addEventListener("click", function () {
+      copyText(referenceString(), this);
+    });
+
+    // Copy a handle (Zelle / PayPal) by CSS selector in data-copy
+    document.querySelectorAll(".copy-btn[data-copy]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var target = document.querySelector(btn.getAttribute("data-copy"));
+        if (target) copyText(target.textContent.trim(), btn);
+      });
+    });
+  </script>
+</body>
+</html>
