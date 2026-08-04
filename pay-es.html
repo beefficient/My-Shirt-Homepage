@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pay an Invoice — My Shirt Printing &amp; Embroidery</title>
-  <meta name="description" content="Pay My Shirt Printing & Embroidery. Enter your invoice number and the amount you owe, then pay by Venmo, Cash App, PayPal, Zelle, or Apple Cash." />
+  <title>Pague su factura — My Shirt Printing &amp; Embroidery</title>
+  <meta name="description" content="Pague a My Shirt Printing & Embroidery. Ingrese su número de factura y el monto que debe, luego pague con Venmo, Cash App, PayPal, Zelle o Apple Cash." />
 
   <!-- Fonts (same as the rest of the site) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -264,27 +264,27 @@
   <header>
     <div class="container">
       <div class="navwrap">
-        <a class="brand" href="index.html" aria-label="Go to homepage">
-          <img src="logo.png" alt="My Shirt Printing logo" />
+        <a class="brand" href="index.html" aria-label="Ir a la página principal">
+          <img src="logo.png" alt="Logotipo de My Shirt Printing" />
           <div class="name">My Shirt Printing and Embroidery</div>
         </a>
 
-        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">☰</button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">☰</button>
 
-        <nav aria-label="Main menu" id="mainNav">
-          <a href="index.html">Home</a>
+        <nav aria-label="Menú principal" id="mainNav">
+          <a href="index.html">Inicio</a>
           <details class="quoteDrop" id="quoteNavDrop">
-            <summary>Quote <span aria-hidden="true">▾</span></summary>
-            <div class="qMenu" role="menu" aria-label="Quote menu">
-              <a href="quote.html">Garment Printing Quote</a>
-              <a href="embroidery-quote.html">Embroidery Quote</a>
-              <a href="other-printing.html">Other Services</a>
+            <summary>Cotización <span aria-hidden="true">▾</span></summary>
+            <div class="qMenu" role="menu" aria-label="Menú de cotización">
+              <a href="quote.html">Cotización de estampado</a>
+              <a href="embroidery-quote.html">Cotización de bordado</a>
+              <a href="other-printing.html">Otros servicios</a>
             </div>
           </details>
-          <a href="gallery.html">Gallery</a>
-          <a href="about-us.html">About Us</a>
-          <a href="contact.html">Contact</a>
-          <a class="active" href="pay.html">Pay Invoice</a>
+          <a href="gallery.html">Galería</a>
+          <a href="about-us.html">Nosotros</a>
+          <a href="contact.html">Contacto</a>
+          <a class="active" href="pay-es.html">Pagar factura</a>
         </nav>
       </div>
     </div>
@@ -293,12 +293,12 @@
   <!-- ===== HERO ===== -->
   <section class="hero">
     <div class="container">
-      <a class="lang-switch" href="pay-es.html" aria-label="Ver esta página en español">
-        <span class="flag" aria-hidden="true">🇲🇽</span> Ver en Español
+      <a class="lang-switch" href="pay.html" aria-label="Ver esta página en inglés">
+        <span class="flag" aria-hidden="true">🇺🇸</span> View in English
       </a>
-      <span class="eyebrow">Pay Your Invoice</span>
-      <h1>Pay My Shirt Printing &amp; Embroidery</h1>
-      <p>Enter the invoice number from your invoice and the amount you owe, then choose how you'd like to pay. Quick, secure, and matched to your order.</p>
+      <span class="eyebrow">Pague su factura</span>
+      <h1>Pague a My Shirt Printing &amp; Embroidery</h1>
+      <p>Ingrese el número de factura que aparece en su factura y el monto que debe, luego elija cómo desea pagar. Rápido, seguro y vinculado a su pedido.</p>
     </div>
   </section>
 
@@ -309,42 +309,42 @@
 
         <!-- LEFT: amount + invoice number -->
         <div class="card amount-card">
-          <h2>What are you paying?</h2>
-          <p class="sub">This helps us match your payment to the right order.</p>
+          <h2>¿Qué va a pagar?</h2>
+          <p class="sub">Esto nos ayuda a vincular su pago con el pedido correcto.</p>
 
           <div class="field">
-            <label for="invNo">Invoice number</label>
+            <label for="invNo">Número de factura</label>
             <input type="text" id="invNo" inputmode="text" autocomplete="off"
-                   placeholder="e.g. INV-1042" />
-            <div class="hint">Find this at the top of the invoice we sent you.</div>
+                   placeholder="ej. INV-1042" />
+            <div class="hint">Lo encuentra en la parte superior de la factura que le enviamos.</div>
           </div>
 
           <div class="field">
-            <label for="amountOwed">Amount you owe</label>
+            <label for="amountOwed">Monto que debe</label>
             <div class="amount-input">
               <span class="dollar">$</span>
               <input type="number" id="amountOwed" min="0" step="0.01" inputmode="decimal"
                      placeholder="0.00" />
             </div>
-            <div class="hint">Enter the total shown on your invoice.</div>
+            <div class="hint">Ingrese el total que aparece en su factura.</div>
           </div>
 
           <div class="total-row">
-            <span class="total-label">You're paying</span>
+            <span class="total-label">Está pagando</span>
             <span class="total-val" id="totalVal">$0.00</span>
           </div>
 
           <div class="reference">
-            <span class="ref-text" id="refText">Add your invoice # and amount above.</span>
-            <button type="button" class="copy-btn" id="copyRef">Copy reference</button>
+            <span class="ref-text" id="refText">Agregue su número de factura y el monto arriba.</span>
+            <button type="button" class="copy-btn" id="copyRef">Copiar referencia</button>
           </div>
-          <div class="hint" style="margin-top:8px;">Copy this and paste it into your payment note (the note in Venmo, Cash App or PayPal, or the Zelle memo) so we can match your payment.</div>
+          <div class="hint" style="margin-top:8px;">Copie esto y péguelo en la nota de su pago (la nota en Venmo, Cash App o PayPal, o el memo de Zelle) para que podamos vincular su pago.</div>
         </div>
 
         <!-- RIGHT: payment methods -->
         <div class="card">
-          <h2>Choose how to pay</h2>
-          <p class="sub">Pay by <strong>card</strong> with Square, or send from your favorite app. Enter your amount above first — Venmo and Cash App open pre-filled. Please include your <strong>invoice number</strong> in the payment note so we can match it to your order.</p>
+          <h2>Elija cómo pagar</h2>
+          <p class="sub">Pague con <strong>tarjeta</strong> a través de Square, o envíe desde su aplicación favorita. Primero ingrese su monto arriba — Venmo y Cash App se abren con el monto ya cargado. Incluya su <strong>número de factura</strong> en la nota del pago para que podamos vincularlo con su pedido.</p>
 
           <div class="pay-grid">
 
@@ -354,10 +354,10 @@
                target="_blank" rel="noopener">
               <div class="pay-top">
                 <span class="pay-ic">💳</span>
-                <span class="pay-name">Pay by Card (Square)</span>
+                <span class="pay-name">Pagar con tarjeta (Square)</span>
               </div>
-              <div class="pay-desc">Debit or credit card. On Square's secure page, enter the amount shown above and add your invoice # in the note.</div>
-              <div class="pay-hint">Pay securely by card →</div>
+              <div class="pay-desc">Tarjeta de débito o crédito. En la página segura de Square, ingrese el monto que aparece arriba y agregue su número de factura en la nota.</div>
+              <div class="pay-hint">Pague de forma segura con tarjeta →</div>
             </a>
 
             <!-- VENMO (opens pre-filled with amount + reference) -->
@@ -371,7 +371,7 @@
                 <span class="lbl">Venmo:</span>
                 <span>@oliviaroses123</span>
               </div>
-              <div class="pay-hint">Opens with your amount filled in →</div>
+              <div class="pay-hint">Se abre con su monto ya cargado →</div>
             </a>
 
             <!-- CASH APP (opens pre-filled with amount) -->
@@ -385,7 +385,7 @@
                 <span class="lbl">Cashtag:</span>
                 <span>$oliveees</span>
               </div>
-              <div class="pay-hint">Opens with your amount filled in →</div>
+              <div class="pay-hint">Se abre con su monto ya cargado →</div>
             </a>
 
             <!-- PAYPAL (manual — send to this email in the PayPal app) -->
@@ -394,13 +394,13 @@
                 <span class="pay-ic">🅿️</span>
                 <span class="pay-name">PayPal</span>
               </div>
-              <div class="pay-desc">Send in the PayPal app to:</div>
+              <div class="pay-desc">Envíe en la aplicación de PayPal a:</div>
               <div class="pay-handle">
-                <span class="lbl">Email:</span>
+                <span class="lbl">Correo:</span>
                 <span id="paypalHandle">oliviaroses1234@gmail.com</span>
-                <button type="button" class="copy-btn" data-copy="#paypalHandle">Copy</button>
+                <button type="button" class="copy-btn" data-copy="#paypalHandle">Copiar</button>
               </div>
-              <div class="pay-hint">Put your invoice # in the note</div>
+              <div class="pay-hint">Ponga su número de factura en la nota</div>
             </div>
 
             <!-- ZELLE (manual — send from your bank app) -->
@@ -409,13 +409,13 @@
                 <span class="pay-ic">🏦</span>
                 <span class="pay-name">Zelle</span>
               </div>
-              <div class="pay-desc">Send from your bank's app to <strong>Olivia Cain</strong>:</div>
+              <div class="pay-desc">Envíe desde la aplicación de su banco a <strong>Olivia Cain</strong>:</div>
               <div class="pay-handle">
-                <span class="lbl">Phone:</span>
+                <span class="lbl">Teléfono:</span>
                 <span id="zelleHandle">669-231-9059</span>
-                <button type="button" class="copy-btn" data-copy="#zelleHandle">Copy</button>
+                <button type="button" class="copy-btn" data-copy="#zelleHandle">Copiar</button>
               </div>
-              <div class="pay-hint">Put your invoice # in the memo</div>
+              <div class="pay-hint">Ponga su número de factura en el memo</div>
             </div>
 
             <!-- APPLE CASH (manual — send in Messages) -->
@@ -424,35 +424,35 @@
                 <span class="pay-ic">🍎</span>
                 <span class="pay-name">Apple Cash</span>
               </div>
-              <div class="pay-desc">Send in Messages / Apple Wallet to:</div>
+              <div class="pay-desc">Envíe en Mensajes / Apple Wallet a:</div>
               <div class="pay-handle">
-                <span class="lbl">Phone:</span>
+                <span class="lbl">Teléfono:</span>
                 <span id="appleCashHandle">669-231-9059</span>
-                <button type="button" class="copy-btn" data-copy="#appleCashHandle">Copy</button>
+                <button type="button" class="copy-btn" data-copy="#appleCashHandle">Copiar</button>
               </div>
-              <div class="pay-hint">Put your invoice # in the message</div>
+              <div class="pay-hint">Ponga su número de factura en el mensaje</div>
             </div>
 
             <!-- IN PERSON (cash / check) -->
             <div class="pay-card span-2">
               <div class="pay-top">
                 <span class="pay-ic">🏬</span>
-                <span class="pay-name">Pay in person</span>
+                <span class="pay-name">Pagar en persona</span>
               </div>
-              <div class="pay-desc">You may also pay in person in <strong>cash</strong> or <strong>check</strong>. Please bring the exact amount if paying with cash.</div>
-              <div class="pay-hint">Visit us at 3331 Edward Avenue, Santa Clara · Mon–Fri 9am–5pm</div>
+              <div class="pay-desc">También puede pagar en persona en <strong>efectivo</strong> o con <strong>cheque</strong>. Si paga en efectivo, traiga el monto exacto por favor.</div>
+              <div class="pay-hint">Visítenos en 3331 Edward Avenue, Santa Clara · Lun–Vie 9am–5pm</div>
             </div>
 
           </div>
 
           <div class="pay-note">
-            Thank you so much for your business — we truly appreciate it! 💙
+            ¡Muchas gracias por su preferencia — la apreciamos de verdad! 💙
           </div>
 
           <div class="pay-tip">
-            <strong>Tip:</strong> After you pay, keep your confirmation. Questions about a charge?
-            Call us at <a href="tel:+14088835518" style="color:var(--primary);font-weight:700">408-883-5518</a>
-            or email <a href="mailto:myshirtcustomerservice@gmail.com" style="color:var(--primary);font-weight:700">myshirtcustomerservice@gmail.com</a>.
+            <strong>Consejo:</strong> Después de pagar, guarde su comprobante. ¿Preguntas sobre un cargo?
+            Llámenos al <a href="tel:+14088835518" style="color:var(--primary);font-weight:700">408-883-5518</a>
+            o escriba a <a href="mailto:myshirtcustomerservice@gmail.com" style="color:var(--primary);font-weight:700">myshirtcustomerservice@gmail.com</a>.
           </div>
         </div>
 
@@ -467,14 +467,14 @@
         <div>
           <h4>My Shirt &amp; Signs</h4>
           <p>3331 Edward Avenue</p>
-          <p>Santa Clara, CA 95054<br>Mon–Fri 9am–5pm</p>
-          <p>Email: <a href="mailto:myshirtcustomerservice@gmail.com">myshirtcustomerservice@gmail.com</a></p>
-          <p>Phone: 408-883-5518</p>
+          <p>Santa Clara, CA 95054<br>Lun–Vie 9am–5pm</p>
+          <p>Correo: <a href="mailto:myshirtcustomerservice@gmail.com">myshirtcustomerservice@gmail.com</a></p>
+          <p>Teléfono: 408-883-5518</p>
         </div>
       </div>
       <div class="bottom">
-        <div>© <span id="year"></span> My Shirt Printing. All rights reserved.</div>
-        <div>Made with care.</div>
+        <div>© <span id="year"></span> My Shirt Printing. Todos los derechos reservados.</div>
+        <div>Hecho con cariño.</div>
       </div>
     </div>
   </footer>
@@ -504,7 +504,7 @@
     });
 
     // ---------- Prefill from URL ----------
-    // Supports pay.html?invoice=INV-1042&amount=125.00 so an invoice link
+    // Supports pay-es.html?invoice=INV-1042&amount=125.00 so an invoice link
     // (or email) can drop the customer straight onto a filled-in page.
     (function prefillFromUrl(){
       var params = new URLSearchParams(window.location.search);
@@ -537,7 +537,7 @@
       var inv = invNo.value.trim();
       var amt = currentAmount();
       var parts = [];
-      if (inv) parts.push("Invoice " + inv);
+      if (inv) parts.push("Factura " + inv);
       if (amt > 0) parts.push("$" + amt.toFixed(2));
       parts.push("My Shirt Printing");
       return parts.join(" — ");
@@ -549,10 +549,10 @@
 
       var inv = invNo.value.trim();
       if (!inv && amt <= 0) {
-        refText.textContent = "Add your invoice # and amount above.";
+        refText.textContent = "Agregue su número de factura y el monto arriba.";
       } else {
         // Show the reference with the invoice number emphasised.
-        refText.innerHTML = "Reference: <strong>" + referenceString().replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</strong>";
+        refText.innerHTML = "Referencia: <strong>" + referenceString().replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</strong>";
       }
 
       // Pre-fill the app links with the amount (and a note where supported).
@@ -573,7 +573,7 @@
     // ---------- Copy buttons ----------
     function flashCopied(btn, original) {
       btn.classList.add("copied");
-      btn.textContent = "Copied!";
+      btn.textContent = "¡Copiado!";
       setTimeout(function () {
         btn.classList.remove("copied");
         btn.textContent = original;
