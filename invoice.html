@@ -979,7 +979,7 @@
                   <div style="font-size:12px; font-weight:700; color:var(--muted);">edit percent</div>
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
-                  <input class="field mono" id="taxRate" type="number" step="0.001" value="9.75" />
+                  <input class="field mono" id="taxRate" type="number" step="0.001" value="10" />
                   <div class="value" id="taxAmount">$0.00</div>
                 </div>
               </div>
@@ -987,7 +987,7 @@
               <div class="trow">
                 <div style="display:flex; align-items:center; gap:10px;">
                   <label for="ccFeeEnabled">CC fee 3.5%</label>
-                  <input type="checkbox" id="ccFeeEnabled" />
+                  <input type="checkbox" id="ccFeeEnabled" checked />
                 </div>
                 <div class="value" id="ccFeeAmount">$0.00</div>
               </div>
@@ -2155,7 +2155,10 @@
         let taxableSubtotal = 0;
 
         rows.forEach((tr) => {
-          totalProducts += Math.max(0, toNum(tr.dataset.qty));
+          // Total Products counts garments only — not services (screens, films, printing) or discounts.
+          if (tr.dataset.type === "Product") {
+            totalProducts += Math.max(0, toNum(tr.dataset.qty));
+          }
           const amt = toNum(tr.dataset.amount);
           subtotal += amt;
           if (tr.dataset.taxable === "1") taxableSubtotal += amt;
@@ -2196,7 +2199,8 @@
         window.INVOICE_PAYMENTS = [];
         if ($("paymentAmount")) $("paymentAmount").value = "";
         if ($("paymentDate")) $("paymentDate").value = todayIso_();
-        if ($("ccFeeEnabled")) $("ccFeeEnabled").checked = false;
+        if ($("ccFeeEnabled")) $("ccFeeEnabled").checked = true;
+        if ($("taxRate")) $("taxRate").value = 10;
         renderPayments_();
         recalcTotals();
         refreshDeleteInvoiceButton_();
@@ -2953,7 +2957,7 @@
         applyCustomerFieldsToForm_(d, mergedPayload);
         if ($("notes")) $("notes").value = d.notes || "";
         if ($("terms")) $("terms").value = d.terms || unpacked.terms || "";
-        if ($("taxRate")) $("taxRate").value = (d.tax_rate ?? 9.75);
+        if ($("taxRate")) $("taxRate").value = (d.tax_rate ?? 10);
 
         renderItems(unpacked.items);
         if ($("ccFeeEnabled")) $("ccFeeEnabled").checked = !!(d.cc_fee_enabled || unpacked.ccFeeEnabled);
@@ -3256,12 +3260,86 @@
         }).filter((it) => it.product || it.unit_price || it.qty);
       }
 
+      // Break combined fee lines (film / screen setup / printing) into per-unit
+      // rows, and add the garment description next to its style number, using the
+      // richer data saved in the quote payload (quote_summary + garments.lines).
+      function enrichQuoteInvoiceItems_(items, p) {
+        const summary = (p && p.quote_summary && typeof p.quote_summary === "object") ? p.quote_summary : {};
+
+        // style_number -> style_description lookup from the garment lines
+        const garmentLines = Array.isArray(p?.garments?.lines) ? p.garments.lines : [];
+        const descByStyle = {};
+        garmentLines.forEach((ln) => {
+          const key = String(ln?.style_number || "").trim().toLowerCase();
+          const desc = String(ln?.style_description || "").trim();
+          if (key && desc) descByStyle[key] = desc;
+        });
+
+        return (items || []).map((it) => {
+          const label = String(it.product || it.desc || "").trim();
+
+          // 2) Garments: show the description next to the style number.
+          if (it.type === "Product") {
+            const desc = descByStyle[label.toLowerCase()];
+            if (desc && !label.toLowerCase().includes(desc.toLowerCase())) {
+              return { ...it, product: `${label} — ${desc}` };
+            }
+            return it;
+          }
+
+          // 1) Fees: break totals down by quantity (unit price × qty).
+          if (it.type === "Services") {
+            // Film fee -> per-film row
+            if (/film/i.test(label)) {
+              let count = asNum(summary.filmCount);
+              let rate = asNum(summary.filmRate);
+              if (!(count > 0 && rate > 0)) {
+                const m = label.match(/\(\s*(\d+)\s*films?\s*@\s*\$?\s*([\d.,]+)/i);
+                if (m) { count = parseInt(m[1], 10); rate = asNum(m[2]); }
+              }
+              if (count > 0 && rate > 0) {
+                return { ...it, product: "Film", unit_price: rate, qty: count };
+              }
+            }
+
+            // Screen setup fee -> per-screen row
+            if (/setup|screen/i.test(label)) {
+              let count = asNum(summary.totalScreens);
+              let rate = asNum(summary.setupRate);
+              if (!(count > 0 && rate > 0)) {
+                const m = label.match(/\$?\s*([\d.,]+)\s*per\s*screen/i);
+                const total = asNum(it.unit_price) * Math.max(1, asNum(it.qty));
+                if (m && total > 0) {
+                  rate = asNum(m[1]);
+                  count = rate > 0 ? Math.max(1, Math.round(total / rate)) : 0;
+                  if (count > 0) rate = total / count; // keep the line total exact
+                }
+              }
+              if (count > 0 && rate > 0) {
+                return { ...it, product: "Screen setup", unit_price: rate, qty: count };
+              }
+            }
+
+            // Printing -> per-garment row
+            if (/print/i.test(label)) {
+              const count = asNum(summary.qty);
+              const per = asNum(summary.perGarmentTotalAllLocations);
+              if (count > 0 && per > 0) {
+                return { ...it, product: "Printing", unit_price: per, qty: count };
+              }
+            }
+          }
+
+          return it;
+        });
+      }
+
       function buildInvoiceItemsFromQuote(quote) {
         const p = quote?.payload || {};
 
         if (Array.isArray(p.invoice_items) && p.invoice_items.length > 0) {
           const mapped = mapQuoteArrayItemsToInvoice_(p.invoice_items);
-          if (mapped && mapped.length > 0) return mapped;
+          if (mapped && mapped.length > 0) return enrichQuoteInvoiceItems_(mapped, p);
         }
 
         const directItems = [
@@ -3845,7 +3923,7 @@
             client_name: customer.client_name || null,
             client_email: customer.client_email || null,
             client_phone: customer.client_phone || null,
-            tax_rate: toNum($("taxRate")?.value || 9.75),
+            tax_rate: toNum($("taxRate")?.value || 10),
             payment_link: null,
             items_json: buildStoredItemsPayload_(items, [], false, buildInvoiceStorageMeta_({
               client_addr: customer.client_addr,
