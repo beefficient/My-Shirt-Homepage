@@ -643,7 +643,7 @@ footer a{color:var(--yellow);text-decoration:none}
     </div>
     <div class="form-group">
       <label for="link-input">Paste your order link</label>
-      <input type="text" id="link-input" placeholder="https://myshirtsantaclara.com/?order=...">
+      <input type="text" id="link-input" placeholder="Paste the link your group leader sent…">
     </div>
     <button class="btn btn-primary btn-full" onclick="openMemberLink()">Open Order Form</button>
   </div>
@@ -877,25 +877,12 @@ footer a{color:var(--yellow);text-decoration:none}
 
 <!-- ══════ MEMBER ORDER PAGE (no login needed) ══════ -->
 <div id="page-order" class="page" style="background:var(--bg);min-height:100vh;">
-  <!-- simple nav for member -->
-  <div style="background:var(--navy);padding:0 20px;height:52px;display:flex;align-items:center;gap:10px;">
-    <button type="button" class="portal-back-btn" onclick="goBack()" aria-label="Go back">&#8592; Back</button>
-    <svg width="28" height="28" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="40" cy="46" r="11" fill="#F5C842"/><circle cx="40" cy="46" r="7.5" fill="#1B2A4A"/><circle cx="40" cy="46" r="3.5" fill="#F5C842"/>
-      <line x1="40" y1="46" x2="14" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
-      <line x1="40" y1="46" x2="40" y2="12" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
-      <line x1="40" y1="46" x2="66" y2="24" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
-      <line x1="40" y1="46" x2="68" y2="54" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
-      <line x1="40" y1="46" x2="16" y2="62" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
-      <rect x="2" y="12" width="22" height="16" rx="2.5" fill="#E84393" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-22 13 20)"/>
-      <rect x="28" y="2" width="22" height="17" rx="2.5" fill="#F5C842" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(4 39 10)"/>
-      <rect x="56" y="10" width="22" height="17" rx="2.5" fill="#5BB8F5" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(22 67 18)"/>
-      <rect x="60" y="44" width="18" height="14" rx="2.5" fill="#E8542A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(32 69 51)"/>
-      <rect x="6" y="54" width="18" height="14" rx="2.5" fill="#4CC97A" stroke="#1B2A4A" stroke-width="1.5" transform="rotate(-28 15 61)"/>
-    </svg>
+  <!-- simple nav for member (no company branding shown to the group) -->
+  <div id="order-topnav" style="background:var(--navy);padding:0 20px;height:52px;display:flex;align-items:center;gap:10px;">
+    <button type="button" class="portal-back-btn" id="order-nav-back" onclick="goBack()" aria-label="Go back">&#8592; Back</button>
     <div>
-      <div style="color:#fff;font-size:13px;font-weight:700;line-height:1.2;">My Shirt Printing</div>
-      <div style="color:rgba(255,255,255,0.5);font-size:10px;">Group Order Portal</div>
+      <div id="order-brand-name" style="color:#fff;font-size:13px;font-weight:700;line-height:1.2;">Group Order</div>
+      <div id="order-brand-sub" style="color:rgba(255,255,255,0.5);font-size:10px;">Order form</div>
     </div>
   </div>
 
@@ -1064,7 +1051,7 @@ footer a{color:var(--yellow);text-decoration:none}
         <div class="notice notice-warn" id="submit-error" style="display:none;margin-bottom:12px;"></div>
         <button class="btn btn-primary btn-full" id="submit-order-btn" onclick="submitOrder()" style="border-radius:10px;padding:13px;">Submit My Order &#8594;</button>
         <button class="btn btn-outline btn-full" id="edit-cancel-btn" onclick="cancelEdit()" style="display:none;border-radius:10px;padding:13px;margin-top:8px;">Cancel &amp; go back</button>
-        <p class="muted" style="text-align:center;margin-top:10px;font-size:12px;">Questions? <a href="tel:4088835518" style="color:var(--navy);font-weight:600;">408-883-5518</a></p>
+        <p class="muted" style="text-align:center;margin-top:10px;font-size:12px;">Questions about this order? Contact your group leader.</p>
       </div></div>
     </div>
 
@@ -1075,11 +1062,10 @@ footer a{color:var(--yellow);text-decoration:none}
       <p class="muted" style="margin-bottom:20px;">Your order has been submitted to the group leader.</p>
       <p class="muted" style="margin:-8px auto 20px;max-width:360px;">Contact your group leader if you need to make a change or cancel your order.</p>
       <div id="success-cart-summary" style="max-width:380px;margin:0 auto 20px;text-align:left;"></div>
-      <a href="https://myshirtsantaclara.com" class="btn btn-outline">Visit myshirtsantaclara.com</a>
     </div>
   </div>
 
-  <footer>
+  <footer id="order-page-footer">
     <strong style="color:rgba(255,255,255,0.8);">My Shirt &amp; Signs</strong> &nbsp;&#183;&nbsp;
     3331 Edward Avenue, Santa Clara, CA 95054 &nbsp;&#183;&nbsp;
     <a href="tel:4088835518">408-883-5518</a> &nbsp;&#183;&nbsp; Mon&#8211;Fri 9am&#8211;5pm
@@ -1092,6 +1078,7 @@ footer a{color:var(--yellow);text-decoration:none}
   <button class="modal-close" onclick="closeCreateModal()">&#215;</button>
   <h2 id="create-modal-title">New Group Order</h2>
   <div class="form-group"><label for="new-order-name">Order name *</label><input type="text" id="new-order-name" placeholder="e.g. Little League Spring 2025"><div class="field-error" id="err-new-name">Required.</div></div>
+  <div class="form-group"><label for="new-order-org">Your organization name <span style="font-weight:400;text-transform:none;letter-spacing:0;">(shown to your group — optional)</span></label><input type="text" id="new-order-org" placeholder="e.g. Riverside Little League"><div class="deadline-info">This is the only name your group sees at the top of the order form. Leave blank to show a neutral &#8220;Group Order&#8221; label.</div></div>
   <div class="form-row">
     <div class="form-group"><label for="new-order-deadline">Response deadline *</label><input type="date" id="new-order-deadline"><div class="field-error" id="err-new-deadline">Required.</div></div>
   </div>
@@ -1338,6 +1325,7 @@ function dbOrderToApp(row){
   return {
     id:row.id,
     name:row.name,
+    orgName:row.org_name||'',
     deadline:row.deadline||null,
     purgeDate:row.purge_date||null,
     desc:row.description||'',
@@ -1397,6 +1385,7 @@ async function insertOrderRow(order){
     const payload={
       id:order.id,
       name:order.name,
+      org_name:order.orgName||null,
       deadline:order.deadline,
       purge_date:order.purgeDate,
       description:order.desc,
@@ -1406,10 +1395,10 @@ async function insertOrderRow(order){
       owner_id:ownerId
     };
     let {error}=await SB.from('orders').insert(payload);
-    if(error&&/show_pricing/i.test(error.message||'')){
-      // Older databases may not have the show_pricing column yet — save without it.
-      const {show_pricing,...legacyPayload}=payload;
-      console.warn('orders.show_pricing column not found — saving without member-pricing preference. Add it with: alter table orders add column show_pricing boolean default true;');
+    if(error&&/(show_pricing|org_name)/i.test(error.message||'')){
+      // Older databases may not have the show_pricing / org_name columns yet — save without them.
+      const {show_pricing,org_name,...legacyPayload}=payload;
+      console.warn('orders is missing an optional column (show_pricing/org_name) — saving without it. Add them with: alter table orders add column show_pricing boolean default true; alter table orders add column org_name text;');
       ({error}=await SB.from('orders').insert(legacyPayload));
     }
     if(error)return {ok:false,error};
@@ -1422,6 +1411,7 @@ async function updateOrderRow(order){
   try{
     const payload={
       name:order.name,
+      org_name:order.orgName||null,
       deadline:order.deadline,
       purge_date:order.purgeDate,
       description:order.desc,
@@ -1429,10 +1419,10 @@ async function updateOrderRow(order){
       show_pricing:order.showPricing!==false
     };
     let {error}=await SB.from('orders').update(payload).eq('id',order.id);
-    if(error&&/show_pricing/i.test(error.message||'')){
-      // Older databases may not have the show_pricing column yet — update without it.
-      const {show_pricing,...legacyPayload}=payload;
-      console.warn('orders.show_pricing column not found — updating without member-pricing preference. Add it with: alter table orders add column show_pricing boolean default true;');
+    if(error&&/(show_pricing|org_name)/i.test(error.message||'')){
+      // Older databases may not have the show_pricing / org_name columns yet — update without them.
+      const {show_pricing,org_name,...legacyPayload}=payload;
+      console.warn('orders is missing an optional column (show_pricing/org_name) — updating without it. Add them with: alter table orders add column show_pricing boolean default true; alter table orders add column org_name text;');
       ({error}=await SB.from('orders').update(legacyPayload).eq('id',order.id));
     }
     if(error)return {ok:false,error};
@@ -1930,6 +1920,8 @@ function clearOrderQueryFromUrl(){
 
 function returnFromOrderPage(){
   if(editManagerMode){cancelEdit();return;}
+  const siteHeader=document.querySelector('.site-header');
+  if(siteHeader)siteHeader.style.display='';
   document.getElementById('page-order').classList.remove('active');
   if(currentRole){
     document.getElementById('app-shell').style.display='block';
@@ -2416,7 +2408,7 @@ function openCreateModal(){
   editingOrderId=null;
   const titleEl=document.getElementById('create-modal-title');if(titleEl)titleEl.textContent='New Group Order';
   const btnEl=document.getElementById('create-order-btn');if(btnEl)btnEl.textContent='Create Order';
-  ['new-order-name','new-order-desc'].forEach(id=>document.getElementById(id).value='');
+  ['new-order-name','new-order-org','new-order-desc'].forEach(id=>document.getElementById(id).value='');
   const spc=document.getElementById('new-order-show-pricing');if(spc)spc.checked=true;
   ['err-new-name','err-new-deadline','err-shirt-options'].forEach(id=>document.getElementById(id).classList.remove('show'));
   const d=new Date();d.setDate(d.getDate()+14);
@@ -2442,6 +2434,7 @@ function editOrder(id){
   const titleEl=document.getElementById('create-modal-title');if(titleEl)titleEl.textContent='Edit Group Order';
   const btnEl=document.getElementById('create-order-btn');if(btnEl)btnEl.textContent='Save Changes';
   document.getElementById('new-order-name').value=order.name||'';
+  document.getElementById('new-order-org').value=order.orgName||'';
   document.getElementById('new-order-deadline').value=order.deadline||'';
   const pg=document.getElementById('new-order-purge');if(pg)pg.value=order.purgeDate||'';
   document.getElementById('new-order-desc').value=order.desc||'';
@@ -2665,6 +2658,7 @@ function fmtPrice(n){return '$'+(Number(n)||0).toFixed(2);}
 
 async function createOrder(){
   const name=document.getElementById('new-order-name').value.trim();
+  const orgName=document.getElementById('new-order-org').value.trim();
   const deadline=document.getElementById('new-order-deadline').value;
   let valid=true;
   if(!name){document.getElementById('err-new-name').classList.add('show');valid=false;}else document.getElementById('err-new-name').classList.remove('show');
@@ -2704,7 +2698,7 @@ async function createOrder(){
   if(editingOrderId){
     const existing=getOrder(editingOrderId);
     if(!existing){showToast('Order not found.');editingOrderId=null;closeCreateModal();return;}
-    const updated={...existing,name,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),showPricing,shirtOptions};
+    const updated={...existing,name,orgName,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),showPricing,shirtOptions};
     if(sbReady()){
       const result=await updateOrderRow(updated);
       if(!result.ok){console.warn('Could not update order in Supabase.',result.error);showToast('Could not save changes. Try again.');return;}
@@ -2726,7 +2720,7 @@ async function createOrder(){
   const ownerAcct=currentLeaderId?getAccountById(currentLeaderId):null;
   const ownerId=currentLeaderId||null;
   const ownerName=currentLeaderName||(ownerAcct?ownerAcct.name:'Shop Admin');
-  const newOrder={id:'order-'+Date.now(),name,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),ownerId,ownerName,status:'open',created:Date.now(),showPricing,shirtOptions,responses:[]};
+  const newOrder={id:'order-'+Date.now(),name,orgName,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),ownerId,ownerName,status:'open',created:Date.now(),showPricing,shirtOptions,responses:[]};
   if(sbReady()){
     const result=await insertOrderRow(newOrder);
     if(!result.ok){
@@ -2873,6 +2867,21 @@ let panelUniform=null;       // {places:[...],price} from the option
 let panelUniformVals={};     // {name_back:'JOHNSON', num_back:'12', ...}
 let panelUniformPrice=0;
 
+// Fills the member top bar with the group leader's own organization name.
+// Never shows "My Shirt" — if the leader didn't set an org name, a neutral
+// "Group Order" label is used instead.
+function setOrderBrand(order){
+  const nameEl=document.getElementById('order-brand-name');
+  const subEl=document.getElementById('order-brand-sub');
+  const org=(order&&order.orgName)?String(order.orgName).trim():'';
+  if(nameEl)nameEl.textContent=org||'Group Order';
+  if(subEl){
+    subEl.textContent=org?'Group order form':'Order form';
+  }
+  // For a public group member, keep the browser tab free of company info too.
+  if(!currentRole)document.title=org?(org+' — Group Order'):'Group Order';
+}
+
 async function loadOrderForm(id,editCtx){
   editManagerMode=!!editCtx;
   editingResponseId=(editCtx&&editCtx.mode==='edit')?editCtx.responseId:null;
@@ -2880,6 +2889,18 @@ async function loadOrderForm(id,editCtx){
   document.getElementById('app-shell').style.display='none';
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-order').classList.add('active');
+  // The group never sees "My Shirt" branding. The bar shows the leader's own
+  // organization name (set per order); the Back button is only for a logged-in
+  // leader/admin previewing — a public member has nowhere to go back to.
+  const backBtn=document.getElementById('order-nav-back');
+  if(backBtn)backBtn.style.display=currentRole?'inline-flex':'none';
+  const orderFooter=document.getElementById('order-page-footer');
+  if(orderFooter)orderFooter.style.display=currentRole?'':'none';
+  // The site-wide company menu (logo + Home/Quote/Gallery/… nav) must not show
+  // to a public group member — hide it while they're on the order form.
+  const siteHeader=document.querySelector('.site-header');
+  if(siteHeader)siteHeader.style.display=currentRole?'':'none';
+  setOrderBrand(null); // neutral label until the order (and its org name) loads
   currentOrderId=id;currentOrderData=null;cart=[];orderSubmitting=false;
   panelShirtId=null;panelColor=null;panelDeco=null;panelSize=null;panelCat=null;panelQty=1;
   document.getElementById('member-name').value='';
@@ -2918,6 +2939,7 @@ async function loadOrderForm(id,editCtx){
   const order=res.order;
   currentOrderData=order;
 
+  setOrderBrand(order);
   document.getElementById('form-order-name').textContent=order.name;
   const dl=order.deadline?new Date(order.deadline+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'--';
   document.getElementById('form-order-deadline').textContent=dl;
