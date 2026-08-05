@@ -974,7 +974,7 @@ footer a{color:var(--yellow);text-decoration:none}
           <!-- Size -->
           <div class="panel-section">
             <label>Size *</label>
-            <div class="size-cat-label"><span class="size-cat-dot dot-baby"></span><span style="color:var(--baby-tx);">Baby</span></div>
+            <div class="size-cat-label" id="panel-size-label-baby"><span class="size-cat-dot dot-baby"></span><span style="color:var(--baby-tx);">Baby</span></div>
             <div class="size-grid" id="panel-sizes-baby">
               <button class="size-btn baby" data-size="0-3M" data-cat="baby" onclick="panelSelectSize(this)">0&#8211;3M</button>
               <button class="size-btn baby" data-size="3-6M" data-cat="baby" onclick="panelSelectSize(this)">3&#8211;6M</button>
@@ -982,23 +982,23 @@ footer a{color:var(--yellow);text-decoration:none}
               <button class="size-btn baby" data-size="12-18M" data-cat="baby" onclick="panelSelectSize(this)">12&#8211;18M</button>
               <button class="size-btn baby" data-size="18-24M" data-cat="baby" onclick="panelSelectSize(this)">18&#8211;24M</button>
             </div>
-            <div class="size-cat-label"><span class="size-cat-dot dot-toddler"></span><span style="color:var(--todd-tx);">Toddler</span></div>
-            <div class="size-grid">
+            <div class="size-cat-label" id="panel-size-label-toddler"><span class="size-cat-dot dot-toddler"></span><span style="color:var(--todd-tx);">Toddler</span></div>
+            <div class="size-grid" id="panel-sizes-toddler">
               <button class="size-btn toddler" data-size="2T" data-cat="toddler" onclick="panelSelectSize(this)">2T</button>
               <button class="size-btn toddler" data-size="3T" data-cat="toddler" onclick="panelSelectSize(this)">3T</button>
               <button class="size-btn toddler" data-size="4T" data-cat="toddler" onclick="panelSelectSize(this)">4T</button>
               <button class="size-btn toddler" data-size="5T" data-cat="toddler" onclick="panelSelectSize(this)">5T</button>
             </div>
-            <div class="size-cat-label"><span class="size-cat-dot dot-youth"></span><span style="color:var(--youth-tx);">Youth</span></div>
-            <div class="size-grid">
+            <div class="size-cat-label" id="panel-size-label-youth"><span class="size-cat-dot dot-youth"></span><span style="color:var(--youth-tx);">Youth</span></div>
+            <div class="size-grid" id="panel-sizes-youth">
               <button class="size-btn youth" data-size="YXS" data-cat="youth" onclick="panelSelectSize(this)">YXS</button>
               <button class="size-btn youth" data-size="YS" data-cat="youth" onclick="panelSelectSize(this)">YS</button>
               <button class="size-btn youth" data-size="YM" data-cat="youth" onclick="panelSelectSize(this)">YM</button>
               <button class="size-btn youth" data-size="YL" data-cat="youth" onclick="panelSelectSize(this)">YL</button>
               <button class="size-btn youth" data-size="YXL" data-cat="youth" onclick="panelSelectSize(this)">YXL</button>
             </div>
-            <div class="size-cat-label"><span class="size-cat-dot dot-adult"></span><span style="color:var(--navy);">Adult</span></div>
-            <div class="size-grid">
+            <div class="size-cat-label" id="panel-size-label-adult"><span class="size-cat-dot dot-adult"></span><span style="color:var(--navy);">Adult</span></div>
+            <div class="size-grid" id="panel-sizes-adult">
               <button class="size-btn" data-size="XS" data-cat="adult" onclick="panelSelectSize(this)">XS</button>
               <button class="size-btn" data-size="S" data-cat="adult" onclick="panelSelectSize(this)">S</button>
               <button class="size-btn" data-size="M" data-cat="adult" onclick="panelSelectSize(this)">M</button>
@@ -1094,6 +1094,17 @@ footer a{color:var(--yellow);text-decoration:none}
       <div style="font-weight:700;font-size:13px;color:var(--navy);">Show pricing to members</div>
       <div style="font-size:11px;color:var(--muted);line-height:1.35;">When off, members won&#8217;t see any prices or totals on the order form. You&#8217;ll still see full pricing in your submissions.</div>
     </div>
+  </div>
+  <div class="form-group" style="margin-top:16px;">
+    <div class="uniform-toggle-row">
+      <label class="uni-switch"><input type="checkbox" id="new-order-limit-sizes" onchange="toggleSizeAvailability()"><span class="uni-slider"></span></label>
+      <div>
+        <div style="font-weight:700;font-size:13px;color:var(--navy);">Limit available sizes</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.35;">Turn this on to choose exactly which sizes members can order. Leave it off to offer every size.</div>
+      </div>
+    </div>
+    <div id="new-order-size-picker" style="display:none;margin-top:12px;"></div>
+    <div class="field-error" id="err-available-sizes">Choose at least one available size.</div>
   </div>
   <hr class="divider">
   <div class="section-header" style="margin-bottom:8px;">
@@ -1328,21 +1339,35 @@ function genResponseId(){
 }
 
 function dbOrderToApp(row){
+  const shirtOptions=Array.isArray(row.shirt_options)?row.shirt_options:(row.shirt_options||[]);
   return {
     id:row.id,
     name:row.name,
-    orgName:row.org_name||'',
+    // Some existing Supabase projects predate the org_name column. Keep a
+    // copy in shirt_options as a backward-compatible fallback.
+    orgName:row.org_name||shirtOptions[0]?._orgName||'',
     deadline:row.deadline||null,
     purgeDate:row.purge_date||null,
     desc:row.description||'',
     status:row.status||'open',
-    shirtOptions:Array.isArray(row.shirt_options)?row.shirt_options:(row.shirt_options||[]),
+    shirtOptions,
+    // Stored inside the existing shirt_options JSON so this feature works with
+    // the current Supabase schema without requiring a database migration.
+    availableSizes:Array.isArray(shirtOptions[0]?._availableSizes)?shirtOptions[0]._availableSizes:[],
     showPricing:row.show_pricing!==false,
     responses:[],
     created:row.created_at?new Date(row.created_at).getTime():Date.now(),
     ownerName:row.owner_id&&row.owner_id===currentLeaderId?(currentLeaderName||'Group Leader'):'Shop Admin',ownerId:row.owner_id||null,
     _source:'supabase'
   };
+}
+function orderShirtOptionsForStorage(order){
+  const options=(order.shirtOptions||[]).map(option=>({...option}));
+  if(options.length){
+    options[0]._availableSizes=Array.isArray(order.availableSizes)?order.availableSizes:[];
+    options[0]._orgName=order.orgName||'';
+  }
+  return options;
 }
 function dbResponseToApp(row){
   return {
@@ -1396,7 +1421,7 @@ async function insertOrderRow(order){
       purge_date:order.purgeDate,
       description:order.desc,
       status:order.status,
-      shirt_options:order.shirtOptions,
+      shirt_options:orderShirtOptionsForStorage(order),
       show_pricing:order.showPricing!==false,
       owner_id:ownerId
     };
@@ -1421,7 +1446,7 @@ async function updateOrderRow(order){
       deadline:order.deadline,
       purge_date:order.purgeDate,
       description:order.desc,
-      shirt_options:order.shirtOptions,
+      shirt_options:orderShirtOptionsForStorage(order),
       show_pricing:order.showPricing!==false
     };
     let {error}=await SB.from('orders').update(payload).eq('id',order.id);
@@ -2410,6 +2435,30 @@ function applyEditModeUI(editCtx){
 let optCounter=0;
 let editingOrderId=null;
 const optImages={},optColors={},optStyleSel={},optUniform={};
+const ORDER_SIZES=[
+  ['baby','0-3M'],['baby','3-6M'],['baby','6-12M'],['baby','12-18M'],['baby','18-24M'],
+  ['toddler','2T'],['toddler','3T'],['toddler','4T'],['toddler','5T'],
+  ['youth','YXS'],['youth','YS'],['youth','YM'],['youth','YL'],['youth','YXL'],
+  ['adult','XS'],['adult','S'],['adult','M'],['adult','L'],['adult','XL'],['adult','2XL'],['adult','3XL']
+];
+let selectedAvailableSizes=[];
+function sizeKey(cat,size){return cat+'|'+size;}
+function renderSizeAvailability(){
+  const picker=document.getElementById('new-order-size-picker');if(!picker)return;
+  const labels={baby:'Baby',toddler:'Toddler',youth:'Youth',adult:'Adult'};
+  picker.innerHTML=['baby','toddler','youth','adult'].map(cat=>`<div class="size-cat-label"><span class="size-cat-dot dot-${cat}"></span><span style="color:${cat==='adult'?'var(--navy)':'var(--'+(cat==='toddler'?'todd':cat)+'-tx)'};">${labels[cat]}</span></div><div class="size-grid">${ORDER_SIZES.filter(x=>x[0]===cat).map(([,size])=>`<button type="button" class="size-btn ${cat!=='adult'?cat:''} ${selectedAvailableSizes.includes(sizeKey(cat,size))?'selected':''}" onclick="toggleAvailableSize('${cat}','${size}')">${size}</button>`).join('')}</div>`).join('');
+}
+function toggleSizeAvailability(){
+  const limited=document.getElementById('new-order-limit-sizes')?.checked;
+  document.getElementById('new-order-size-picker').style.display=limited?'block':'none';
+  if(!limited)document.getElementById('err-available-sizes')?.classList.remove('show');
+}
+function toggleAvailableSize(cat,size){
+  const key=sizeKey(cat,size),i=selectedAvailableSizes.indexOf(key);
+  if(i>=0)selectedAvailableSizes.splice(i,1);else selectedAvailableSizes.push(key);
+  document.getElementById('err-available-sizes')?.classList.remove('show');
+  renderSizeAvailability();
+}
 
 function openCreateModal(){
   editingOrderId=null;
@@ -2417,7 +2466,9 @@ function openCreateModal(){
   const btnEl=document.getElementById('create-order-btn');if(btnEl)btnEl.textContent='Create Order';
   ['new-order-name','new-order-org','new-order-desc'].forEach(id=>document.getElementById(id).value='');
   const spc=document.getElementById('new-order-show-pricing');if(spc)spc.checked=true;
-  ['err-new-name','err-new-deadline','err-shirt-options'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  const sizeLimit=document.getElementById('new-order-limit-sizes');if(sizeLimit)sizeLimit.checked=false;
+  selectedAvailableSizes=[];renderSizeAvailability();toggleSizeAvailability();
+  ['err-new-name','err-new-deadline','err-shirt-options','err-available-sizes'].forEach(id=>document.getElementById(id).classList.remove('show'));
   const d=new Date();d.setDate(d.getDate()+14);
   document.getElementById('new-order-deadline').value=d.toISOString().split('T')[0];
   const pg=document.getElementById('new-order-purge');if(pg)pg.value='';
@@ -2446,7 +2497,9 @@ function editOrder(id){
   const pg=document.getElementById('new-order-purge');if(pg)pg.value=order.purgeDate||'';
   document.getElementById('new-order-desc').value=order.desc||'';
   const spc=document.getElementById('new-order-show-pricing');if(spc)spc.checked=order.showPricing!==false;
-  ['err-new-name','err-new-deadline','err-shirt-options'].forEach(x=>document.getElementById(x).classList.remove('show'));
+  const sizeLimit=document.getElementById('new-order-limit-sizes');if(sizeLimit)sizeLimit.checked=Array.isArray(order.availableSizes)&&order.availableSizes.length>0;
+  selectedAvailableSizes=Array.isArray(order.availableSizes)?order.availableSizes.slice():[];renderSizeAvailability();toggleSizeAvailability();
+  ['err-new-name','err-new-deadline','err-shirt-options','err-available-sizes'].forEach(x=>document.getElementById(x).classList.remove('show'));
   optCounter=0;
   Object.keys(optImages).forEach(k=>delete optImages[k]);
   Object.keys(optColors).forEach(k=>delete optColors[k]);
@@ -2670,6 +2723,9 @@ async function createOrder(){
   let valid=true;
   if(!name){document.getElementById('err-new-name').classList.add('show');valid=false;}else document.getElementById('err-new-name').classList.remove('show');
   if(!deadline){document.getElementById('err-new-deadline').classList.add('show');valid=false;}else document.getElementById('err-new-deadline').classList.remove('show');
+  const limitingSizes=document.getElementById('new-order-limit-sizes')?.checked;
+  const availableSizes=limitingSizes?selectedAvailableSizes.slice():[];
+  if(limitingSizes&&!availableSizes.length){document.getElementById('err-available-sizes').classList.add('show');valid=false;}else document.getElementById('err-available-sizes').classList.remove('show');
   const builders=document.querySelectorAll('.shirt-option-builder');
   const shirtOptions=[];
   builders.forEach(el=>{
@@ -2705,7 +2761,7 @@ async function createOrder(){
   if(editingOrderId){
     const existing=getOrder(editingOrderId);
     if(!existing){showToast('Order not found.');editingOrderId=null;closeCreateModal();return;}
-    const updated={...existing,name,orgName,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),showPricing,shirtOptions};
+    const updated={...existing,name,orgName,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),showPricing,availableSizes,shirtOptions};
     if(sbReady()){
       const result=await updateOrderRow(updated);
       if(!result.ok){console.warn('Could not update order in Supabase.',result.error);showToast('Could not save changes. Try again.');return;}
@@ -2727,7 +2783,7 @@ async function createOrder(){
   const ownerAcct=currentLeaderId?getAccountById(currentLeaderId):null;
   const ownerId=currentLeaderId||null;
   const ownerName=currentLeaderName||(ownerAcct?ownerAcct.name:'Shop Admin');
-  const newOrder={id:'order-'+Date.now(),name,orgName,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),ownerId,ownerName,status:'open',created:Date.now(),showPricing,shirtOptions,responses:[]};
+  const newOrder={id:'order-'+Date.now(),name,orgName,deadline,purgeDate,desc:document.getElementById('new-order-desc').value.trim(),ownerId,ownerName,status:'open',created:Date.now(),showPricing,availableSizes,shirtOptions,responses:[]};
   if(sbReady()){
     const result=await insertOrderRow(newOrder);
     if(!result.ok){
@@ -2989,6 +3045,16 @@ async function loadOrderForm(id,editCtx){
       </div>`;
     }).join('');
   } else panelOptsEl.style.display='none';
+
+  // Older orders have no availableSizes field, which means every size remains
+  // available. New restricted orders hide all other sizes from members.
+  const allowedSizes=Array.isArray(order.availableSizes)&&order.availableSizes.length?new Set(order.availableSizes):null;
+  ['baby','toddler','youth','adult'].forEach(cat=>{
+    const buttons=[...document.querySelectorAll(`#add-shirt-panel .size-btn[data-cat="${cat}"]`)];
+    const visible=buttons.filter(btn=>!allowedSizes||allowedSizes.has(sizeKey(cat,btn.dataset.size)));
+    buttons.forEach(btn=>btn.style.display=visible.includes(btn)?'':'none');
+    document.getElementById('panel-size-label-'+cat).style.display=visible.length?'':'none';
+  });
 
   if(editManagerMode&&editCtx)applyEditModeUI(editCtx);
 }
