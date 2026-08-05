@@ -2308,7 +2308,7 @@ async function viewSubmissions(id){
         ${anyPrice?`<td style="font-weight:700;color:var(--success);white-space:nowrap;">${fmtPrice((Number(item.unitPrice)||0)*item.qty)}</td>`:''}
         <td style="font-size:11px;color:var(--muted);">${esc(item.notes||'')}</td>
         ${idx===0?`<td rowspan="${r.items.length}" style="color:var(--muted);font-size:11px;white-space:nowrap;vertical-align:top;">${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
-        <td rowspan="${r.items.length}" style="vertical-align:top;white-space:nowrap;">${canManage(order)?`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start;"><button style="background:none;border:none;color:var(--navy);cursor:pointer;font-size:11px;font-weight:700;padding:0;" onclick="editResponse('${id}','${r.id}')">&#9999;&#65039; Edit</button><button style="background:none;border:none;color:var(--error);cursor:pointer;font-size:11px;padding:0;" onclick="deleteResponse('${id}','${r.id}')">Remove</button></div>`:''}</td>`:''}
+        <td rowspan="${r.items.length}" style="vertical-align:top;white-space:nowrap;">${canManage(order)?`<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start;"><button style="background:none;border:none;color:var(--navy);cursor:pointer;font-size:11px;font-weight:700;padding:0;" onclick="editResponse('${id}','${r.id}')">&#9999;&#65039; Edit</button><button style="background:none;border:none;color:var(--error);cursor:pointer;font-size:11px;font-weight:700;padding:0;" onclick="deleteResponse('${id}','${r.id}')" title="Permanently delete this member's submission">&#128465;&#65039; Delete submission</button></div>`:''}</td>`:''}
       </tr>`).join('');
     return itemRows;
   }).join('')
@@ -2335,14 +2335,14 @@ function closeDetailModal(){document.getElementById('detail-modal').classList.re
 async function deleteResponse(orderId,responseId){
   const order=getOrder(orderId);
   if(order&&!canManage(order)){showToast('You don’t have permission to do that.');return;}
-  if(!confirm('Remove this person\'s entire order?'))return;
+  if(!confirm('Delete this member\'s entire submission? This cannot be undone.'))return;
   const res=await deleteResponseRow(orderId,responseId);
-  if(!res.ok){showToast('Could not remove. Please try again.');console.warn('Delete response failed:',res.error);return;}
+  if(!res.ok){showToast('Could not delete the submission. Please try again.');console.warn('Delete response failed:',res.error);return;}
   // keep local cache + log in sync (dashboard counts read from cache)
   const orders=loadOrders();const o=orders.find(x=>x.id===orderId);
   if(o){
     const r=(o.responses||[]).find(x=>x.id===responseId);
-    if(r)addLog('Response removed: '+r.name+' from '+o.name,'warn');
+    if(r)addLog('Submission deleted: '+r.name+' from '+o.name,'warn');
     o.responses=(o.responses||[]).filter(x=>x.id!==responseId);
     saveOrders(orders);
   }
