@@ -1354,7 +1354,9 @@ function dbOrderToApp(row){
     // Stored inside the existing shirt_options JSON so this feature works with
     // the current Supabase schema without requiring a database migration.
     availableSizes:Array.isArray(shirtOptions[0]?._availableSizes)?shirtOptions[0]._availableSizes:[],
-    showPricing:row.show_pricing!==false,
+    // Fall back to the option JSON for Supabase projects that do not yet have
+    // the show_pricing column (missing values must not default to "shown").
+    showPricing:typeof row.show_pricing==='boolean'?row.show_pricing:shirtOptions[0]?._showPricing!==false,
     responses:[],
     created:row.created_at?new Date(row.created_at).getTime():Date.now(),
     ownerName:row.owner_id&&row.owner_id===currentLeaderId?(currentLeaderName||'Group Leader'):'Shop Admin',ownerId:row.owner_id||null,
@@ -1366,6 +1368,7 @@ function orderShirtOptionsForStorage(order){
   if(options.length){
     options[0]._availableSizes=Array.isArray(order.availableSizes)?order.availableSizes:[];
     options[0]._orgName=order.orgName||'';
+    options[0]._showPricing=order.showPricing!==false;
   }
   return options;
 }
