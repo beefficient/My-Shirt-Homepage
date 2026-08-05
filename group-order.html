@@ -919,12 +919,12 @@ footer a{color:var(--yellow);text-decoration:none}
         <!-- Cart display -->
         <div id="cart-section" style="margin-bottom:14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <label style="margin-bottom:0;">Your shirts</label>
+            <label style="margin-bottom:0;">Your garments</label>
             <span id="cart-count-badge" style="font-size:11px;color:var(--muted);"></span>
           </div>
           <div class="cart-items" id="cart-items-list"></div>
           <div class="cart-total-row" id="cart-total-row" style="display:none;">
-            <div class="cart-total-label">Total shirts in order</div>
+            <div class="cart-total-label">Total garments in order</div>
             <div class="cart-total-value" id="cart-total-num">0</div>
           </div>
         </div>
@@ -932,31 +932,38 @@ footer a{color:var(--yellow);text-decoration:none}
         <!-- Add shirt button -->
         <button class="add-shirt-btn" id="add-shirt-btn" onclick="openAddShirtPanel()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add a shirt
+          Add a garment
         </button>
 
-        <!-- Add shirt panel -->
+        <!-- Add garment panel -->
         <div class="add-shirt-panel" id="add-shirt-panel">
-          <h3 style="margin-bottom:14px;font-size:14px;">Configure shirt</h3>
+          <h3 style="margin-bottom:14px;font-size:14px;">Configure garment</h3>
 
-          <!-- Shirt option -->
+          <!-- Garment option -->
           <div class="panel-section" id="panel-shirt-opts" style="display:none;">
             <label>Choose style *</label>
             <div class="shirt-options-grid" id="panel-options-grid"></div>
-            <div class="field-error" id="perr-shirt">Please select a shirt option.</div>
+            <div class="field-error" id="perr-shirt">Please select a garment option.</div>
           </div>
 
           <!-- Color -->
           <div class="panel-section" id="panel-color-sec" style="display:none;">
-            <label>Shirt color *</label>
+            <label>Garment color *</label>
             <div id="panel-color-swatches" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
             <div class="field-error" id="perr-color">Please select a color.</div>
+          </div>
+
+          <!-- Fit (Men / Women / Unisex) -->
+          <div class="panel-section" id="panel-fit-sec" style="display:none;">
+            <label>Fit *</label>
+            <div class="style-grid" id="panel-fit-btns"></div>
+            <div class="field-error" id="perr-fit">Please select a fit.</div>
           </div>
 
           <!-- Decoration -->
           <div class="panel-section" id="panel-deco-sec" style="display:none;">
             <label>Included decoration</label>
-            <p class="muted" style="font-size:12px;margin-bottom:8px;margin-top:-2px;">This comes with the shirt you selected.</p>
+            <p class="muted" style="font-size:12px;margin-bottom:8px;margin-top:-2px;">This comes with the garment you selected.</p>
             <div id="panel-deco-tags"></div>
           </div>
 
@@ -1023,15 +1030,15 @@ footer a{color:var(--yellow);text-decoration:none}
 
           <!-- Notes for this item -->
           <div class="panel-section">
-            <label for="panel-item-notes">Notes for this shirt <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
-              <textarea id="panel-item-notes" placeholder="Any notes for this shirt, such as placement or sizing details..."></textarea>
+            <label for="panel-item-notes">Notes for this garment <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+              <textarea id="panel-item-notes" placeholder="Any notes for this garment, such as placement or sizing details..."></textarea>
           </div>
 
           <div class="panel-section" id="panel-price-box" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 13px;">
             <div class="price-line"><span>Base shirt</span><span id="pp-base">$0.00</span></div>
             <div class="price-line" id="pp-deco-line" style="display:none;"><span id="pp-deco-label">Decoration</span><span id="pp-deco">$0.00</span></div>
             <div class="price-line" id="pp-uni-line" style="display:none;"><span>Personalization</span><span id="pp-uni">$0.00</span></div>
-            <div class="price-line"><span>Per shirt</span><span id="pp-unit">$0.00</span></div>
+            <div class="price-line"><span>Per garment</span><span id="pp-unit">$0.00</span></div>
             <div class="price-line total"><span>This item (<span id="pp-qty">1</span>x)</span><span id="pp-total">$0.00</span></div>
           </div>
           <div style="display:flex;gap:8px;margin-top:10px;">
@@ -1040,7 +1047,7 @@ footer a{color:var(--yellow);text-decoration:none}
           </div>
         </div>
 
-        <div class="field-error" id="err-cart" style="margin-top:6px;">Please add at least one shirt to your order.</div>
+        <div class="field-error" id="err-cart" style="margin-top:6px;">Please add at least one garment to your order.</div>
 
         <!-- Order notes -->
         <div class="form-group" style="margin-top:16px;">
@@ -1108,11 +1115,11 @@ footer a{color:var(--yellow);text-decoration:none}
   </div>
   <hr class="divider">
   <div class="section-header" style="margin-bottom:8px;">
-    <div><div class="eyebrow" style="margin-bottom:2px;">Shirt Options</div><p class="muted" style="font-size:12px;">Add styles your group chooses from.</p></div>
+    <div><div class="eyebrow" style="margin-bottom:2px;">Garment Options</div><p class="muted" style="font-size:12px;">Add styles your group chooses from.</p></div>
     <button class="btn btn-outline btn-sm" onclick="addShirtOption()">+ Add Option</button>
   </div>
   <div class="shirt-options-list" id="shirt-options-builder"></div>
-  <div class="field-error" id="err-shirt-options">Add at least one shirt option.</div>
+  <div class="field-error" id="err-shirt-options">Add at least one garment option.</div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
     <button class="btn btn-outline" onclick="closeCreateModal()">Cancel</button>
     <button class="btn btn-yellow" id="create-order-btn" onclick="createOrder()">Create Order</button>
@@ -1178,9 +1185,17 @@ const SHIRT_STYLES=[
   {id:'hoodie',label:'Hoodie',icon:'&#129405;'},
   {id:'tank',label:'Tank Top',icon:'&#129713;'},
   {id:'zip',label:'Zip-Up Hoodie',icon:'&#129405;'},
-  {id:'vest',label:'Vest / Jacket',icon:'&#129470;'},
+  {id:'vest',label:'Jacket',icon:'&#129470;'},
   {id:'custom',label:'Custom / Other',icon:'&#9999;&#65039;'},
 ];
+// Garment fit/gender options. Leaders pick which are offered per shirt option;
+// members choose one when more than one is available.
+const FIT_OPTIONS=[
+  {id:'unisex',label:'Unisex'},
+  {id:'men',label:'Men'},
+  {id:'women',label:'Women'},
+];
+function fitLabel(id){const f=FIT_OPTIONS.find(x=>x.id===id);return f?f.label:'';}
 const UNIFORM_PRESETS=[
   {id:'name_back',label:'Name back',places:['name_back']},
   {id:'num_back',label:'Number back',places:['num_back']},
@@ -2077,9 +2092,10 @@ function renderOrderCard(order,compact){
     const imgTag=so.images&&so.images.length?`<img src="${so.images[0]}" style="width:34px;height:34px;border-radius:5px;object-fit:cover;border:1px solid var(--border);" alt="">`:`<span style="font-size:22px;">${si?si.icon:'&#128085;'}</span>`;
     const swatches=(so.colors||[]).map(c=>`<span class="color-swatch" style="background:${c.hex};" title="${esc(c.name)}"></span>`).join('');
     const priceInfo=(so.basePrice>0)?`<span style="font-size:10px;font-weight:800;color:var(--success);margin-left:6px;">${fmtPrice(so.basePrice)} base${(so.decos||[]).some(d=>d.price>0)?' + deco':''}</span>`:'';
+    const fitInfo=(Array.isArray(so.fits)&&so.fits.length)?`<span style="font-size:10px;font-weight:700;color:var(--muted);margin-left:6px;">${so.fits.map(fitLabel).join(' / ')}</span>`:'';
     return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;padding:5px 8px;background:var(--bg);border-radius:6px;border:.5px solid var(--border);">
       ${imgTag}
-      <div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:700;color:var(--navy);">${esc(so.styleName)}${priceInfo}</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:700;color:var(--navy);">${esc(so.styleName)}${priceInfo}${fitInfo}</div>
       <div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(so.desc||'')}</div>
       <div style="display:flex;gap:3px;margin-top:2px;">${swatches}</div></div></div>`;
   }).join('');
@@ -2094,7 +2110,7 @@ function renderOrderCard(order,compact){
           <span class="badge ${isOpen?'badge-open':'badge-closed'}">${isOpen?'Open':'Closed'}</span>
           ${ownerBadge}
         </div>
-        <div class="muted">Deadline: ${dl} &middot; ${order.responses.length} response${order.responses.length!==1?'s':''} &middot; ${totalShirts} shirt${totalShirts!==1?'s':''}</div>${order.purgeDate?`<div class="deadline-info">&#128465;&#65039; Auto-deletes ${new Date(order.purgeDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>`:''}
+        <div class="muted">Deadline: ${dl} &middot; ${order.responses.length} response${order.responses.length!==1?'s':''} &middot; ${totalShirts} garment${totalShirts!==1?'s':''}</div>${order.purgeDate?`<div class="deadline-info">&#128465;&#65039; Auto-deletes ${new Date(order.purgeDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>`:''}
       </div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
         <button class="btn btn-outline btn-sm" onclick="viewSubmissions('${order.id}')">Submissions</button>
@@ -2121,7 +2137,7 @@ function renderOrderCard(order,compact){
         </div>
       </div>`:''}
     </div>
-    ${totalShirts>0?`<div class="total-bar"><div class="total-bar-label">${cardRevenue>0?'Revenue / Shirts':'Total shirts'}</div><div style="display:flex;gap:12px;align-items:center;">${cardRevenue>0?`<div class="total-bar-value">${fmtPrice(cardRevenue)}</div><div style="color:rgba(255,255,255,0.3);">|</div>`:''}<div class="total-bar-value">${totalShirts} shirt${totalShirts!==1?'s':''}</div></div></div>`:''}
+    ${totalShirts>0?`<div class="total-bar"><div class="total-bar-label">${cardRevenue>0?'Revenue / Garments':'Total garments'}</div><div style="display:flex;gap:12px;align-items:center;">${cardRevenue>0?`<div class="total-bar-value">${fmtPrice(cardRevenue)}</div><div style="color:rgba(255,255,255,0.3);">|</div>`:''}<div class="total-bar-value">${totalShirts} garment${totalShirts!==1?'s':''}</div></div></div>`:''}
   </div>`;
 }
 
@@ -2302,7 +2318,7 @@ async function viewSubmissions(id){
     const itemRows=r.items.map((item,idx)=>`
       <tr style="${idx>0?'border-top:.5px solid #f0f0f0':''}">
         ${idx===0?`<td rowspan="${r.items.length}" style="font-weight:700;vertical-align:top;">${esc(r.name)}${anyPrice?`<br><span style="font-size:11px;font-weight:800;color:var(--success);">${fmtPrice(personTotal)}</span>`:''}</td>`:''}
-        <td style="font-size:12px;white-space:nowrap;">${esc(item.shirtLabel||'')}</td>
+        <td style="font-size:12px;white-space:nowrap;">${esc(item.shirtLabel||'')}${item.fit?`<br><span style="font-size:10px;color:var(--muted);">${esc(fitLabel(item.fit))}</span>`:''}</td>
         <td><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:50%;background:${colorHex(item.color)};border:1px solid rgba(0,0,0,0.15);flex-shrink:0;display:inline-block;"></span>${esc(item.color||'')}</span></td>
         <td style="font-size:11px;color:var(--muted);white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;" title="${esc(item.deco||'')}">${esc(item.deco||'--')}</td>
         <td style="font-size:11px;color:var(--navy);font-weight:600;max-width:180px;" title="${esc(uniformParts(item).readable)}">${uniformParts(item).readable?esc(uniformParts(item).readable):'<span style=\'color:var(--muted);font-weight:400;\'>--</span>'}</td>
@@ -2319,13 +2335,13 @@ async function viewSubmissions(id){
 
   document.getElementById('detail-modal-content').innerHTML=`
     <h2 style="margin-bottom:4px;">${esc(order.name)}</h2>
-    <p class="muted" style="margin-bottom:18px;">Deadline: ${dl} &middot; ${order.responses.length} response${order.responses.length!==1?'s':''} &middot; ${totalShirts} shirt${totalShirts!==1?'s':''} total</p>
+    <p class="muted" style="margin-bottom:18px;">Deadline: ${dl} &middot; ${order.responses.length} response${order.responses.length!==1?'s':''} &middot; ${totalShirts} garment${totalShirts!==1?'s':''} total</p>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Name</th><th>Style</th><th>Color</th><th>Decoration</th><th>Jersey (Name / No.)</th><th>Size</th><th>Qty</th>${anyPrice?'<th>Price</th>':''}<th>Item Notes</th><th>Date</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
-      ${totalShirts>0?`<div class="total-bar"><div class="total-bar-label">Total shirts</div><div style="display:flex;gap:16px;align-items:center;"><div class="total-bar-value">${totalShirts}</div>${anyPrice?`<div style="color:rgba(255,255,255,0.4);">|</div><div class="total-bar-label">Revenue</div><div class="total-bar-value">${fmtPrice(grandRevenue)}</div>`:''}</div></div>`:''}
+      ${totalShirts>0?`<div class="total-bar"><div class="total-bar-label">Total garments</div><div style="display:flex;gap:16px;align-items:center;"><div class="total-bar-value">${totalShirts}</div>${anyPrice?`<div style="color:rgba(255,255,255,0.4);">|</div><div class="total-bar-label">Revenue</div><div class="total-bar-value">${fmtPrice(grandRevenue)}</div>`:''}</div></div>`:''}
     </div>
     <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
       ${canManage(order)?`<button class="btn btn-yellow" onclick="addResponseForMember('${id}')">&#43; Add an order for someone</button>`:''}
@@ -2407,7 +2423,7 @@ function applyEditModeUI(editCtx){
   if(cancelBtn)cancelBtn.style.display='flex';
   if(editCtx.mode==='add'){
     if(heading)heading.textContent='Add an order for a member';
-    if(bannerText)bannerText.innerHTML='You’re adding a <strong>new order on a member’s behalf</strong>. Enter their name, add their shirts, then choose <strong>Add order</strong>. This works even if the order is closed.';
+    if(bannerText)bannerText.innerHTML='You’re adding a <strong>new order on a member’s behalf</strong>. Enter their name, add their garments, then choose <strong>Add order</strong>. This works even if the order is closed.';
     if(submitBtn)submitBtn.innerHTML='Add order';
     // start blank (loadOrderForm already cleared name/notes/cart)
     document.getElementById('member-name').value='';
@@ -2417,7 +2433,7 @@ function applyEditModeUI(editCtx){
   }else{ // 'edit'
     const resp=editCtx.response||{};
     if(heading)heading.textContent='Edit member’s order';
-    if(bannerText)bannerText.innerHTML='You’re editing <strong>'+esc(resp.name||'this member')+'</strong>’s order on their behalf. Adjust shirts, sizes, quantities or notes below, then choose <strong>Save changes</strong>. This works even if the order is closed.';
+    if(bannerText)bannerText.innerHTML='You’re editing <strong>'+esc(resp.name||'this member')+'</strong>’s order on their behalf. Adjust garments, sizes, quantities or notes below, then choose <strong>Save changes</strong>. This works even if the order is closed.';
     if(submitBtn)submitBtn.innerHTML='Save changes';
     document.getElementById('member-name').value=resp.name||'';
     document.getElementById('member-notes').value=resp.notes||'';
@@ -2425,6 +2441,7 @@ function applyEditModeUI(editCtx){
       shirtOptionId:it.shirtOptionId,
       shirtLabel:it.shirtLabel||null,
       color:it.color||null,
+      fit:it.fit||null,
       deco:it.deco||null,
       size:it.size,
       cat:it.cat||'adult',
@@ -2441,7 +2458,7 @@ function applyEditModeUI(editCtx){
 /* ════════════ CREATE ORDER MODAL ════════════ */
 let optCounter=0;
 let editingOrderId=null;
-const optImages={},optColors={},optStyleSel={},optUniform={};
+const optImages={},optColors={},optStyleSel={},optUniform={},optFits={};
 const ORDER_SIZES=[
   ['baby','0-3M'],['baby','3-6M'],['baby','6-12M'],['baby','12-18M'],['baby','18-24M'],
   ['toddler','2T'],['toddler','3T'],['toddler','4T'],['toddler','5T'],
@@ -2522,7 +2539,7 @@ function editOrder(id){
 
 function addShirtOption(prefill){
   optCounter++;const tid='opt'+optCounter;
-  optImages[tid]=[];optColors[tid]=[{hex:'#FFFFFF',name:'White'},{hex:'#000000',name:'Black'},{hex:'#1B2A4A',name:'Navy'}];optStyleSel[tid]=null;optUniform[tid]={on:false,places:{},price:5};
+  optImages[tid]=[];optColors[tid]=[{hex:'#FFFFFF',name:'White'},{hex:'#000000',name:'Black'},{hex:'#1B2A4A',name:'Navy'}];optStyleSel[tid]=null;optUniform[tid]={on:false,places:{},price:5};optFits[tid]=['unisex'];
   const div=document.createElement('div');div.className='shirt-option-builder';div.id='builder-'+tid;
   div.innerHTML=`
     <button type="button" class="remove-option-btn" onclick="removeShirtOption('${tid}')">&times;</button>
@@ -2530,12 +2547,18 @@ function addShirtOption(prefill){
     <div class="form-group" style="margin-bottom:10px;">
       <label style="margin-bottom:4px;">Style *</label>
       <div class="style-grid" id="sg-${tid}">${SHIRT_STYLES.map(s=>`<button type="button" class="style-btn" id="sb-${tid}-${s.id}" onclick="selStyle('${tid}','${s.id}','${s.label}')">${s.icon} ${s.label}</button>`).join('')}</div>
+      <input type="text" id="bstyle-custom-${tid}" placeholder="Name this garment (e.g. Dress)" style="display:none;margin-top:7px;">
+    </div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label style="margin-bottom:4px;">Fit</label>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Choose which fits members can pick for this garment.</div>
+      <div class="style-grid" id="fit-${tid}">${FIT_OPTIONS.map(f=>`<button type="button" class="style-btn ${(optFits[tid]||[]).includes(f.id)?'sel':''}" id="fit-${tid}-${f.id}" onclick="toggleFit('${tid}','${f.id}')">${f.label}</button>`).join('')}</div>
     </div>
     <div class="form-group" style="margin-bottom:10px;"><label style="margin-bottom:4px;">Description</label><input type="text" id="bdesc-${tid}" placeholder="e.g. White tee, base blank"></div>
     <div class="form-group" style="margin-bottom:10px;">
-      <label style="margin-bottom:4px;">Base shirt price (blank garment) *</label>
+      <label style="margin-bottom:4px;">Base garment price (blank) *</label>
       <div class="price-input-wrap"><input type="text" inputmode="decimal" class="price-input" id="bprice-${tid}" placeholder="0.00" value="12.00"></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:3px;">Price of the shirt before any printing/embroidery.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px;">Price of the garment before any printing/embroidery.</div>
     </div>
     <div class="form-group" style="margin-bottom:10px;">
       <label style="margin-bottom:4px;">Colors</label>
@@ -2582,7 +2605,7 @@ function addShirtOption(prefill){
           </div>`).join('')}
       </div>
       <div class="uni-priceline">
-        <label style="margin-bottom:0;">Personalization price (added per shirt)</label>
+        <label style="margin-bottom:0;">Personalization price (added per garment)</label>
         <div class="price-input-wrap"><input type="text" inputmode="decimal" class="price-input" id="uniprice-${tid}" placeholder="0.00" value="5.00" style="width:90px!important;"></div>
       </div>
     </div>`;
@@ -2590,6 +2613,13 @@ function addShirtOption(prefill){
   renderCB(tid);
   if(prefill){
     if(prefill.styleId){const sName=(SHIRT_STYLES.find(s=>s.id===prefill.styleId)||{}).label||prefill.styleName||'Custom';selStyle(tid,prefill.styleId,sName);}
+    // restore a typed custom garment title
+    if(prefill.styleId==='custom'){const ci=document.getElementById('bstyle-custom-'+tid);if(ci)ci.value=prefill.styleName||'';}
+    // restore selected fits
+    if(Array.isArray(prefill.fits)){
+      optFits[tid]=prefill.fits.slice();
+      FIT_OPTIONS.forEach(f=>document.getElementById('fit-'+tid+'-'+f.id)?.classList.toggle('sel',optFits[tid].includes(f.id)));
+    }
     const bd=document.getElementById('bdesc-'+tid);if(bd)bd.value=prefill.desc||'';
     const bp=document.getElementById('bprice-'+tid);if(bp)bp.value=(Number(prefill.basePrice)||0).toFixed(2);
     if(Array.isArray(prefill.colors)&&prefill.colors.length){optColors[tid]=prefill.colors.map(c=>({hex:c.hex,name:c.name}));renderCB(tid);}
@@ -2611,8 +2641,21 @@ function addShirtOption(prefill){
     }
   }
 }
-function removeShirtOption(tid){const el=document.getElementById('builder-'+tid);if(el)el.remove();delete optImages[tid];delete optColors[tid];delete optStyleSel[tid];delete optUniform[tid];}
-function selStyle(tid,sid,name){document.querySelectorAll(`#sg-${tid} .style-btn`).forEach(b=>b.classList.remove('sel'));document.getElementById(`sb-${tid}-${sid}`)?.classList.add('sel');optStyleSel[tid]={id:sid,name};}
+function removeShirtOption(tid){const el=document.getElementById('builder-'+tid);if(el)el.remove();delete optImages[tid];delete optColors[tid];delete optStyleSel[tid];delete optUniform[tid];delete optFits[tid];}
+function selStyle(tid,sid,name){
+  document.querySelectorAll(`#sg-${tid} .style-btn`).forEach(b=>b.classList.remove('sel'));
+  document.getElementById(`sb-${tid}-${sid}`)?.classList.add('sel');
+  optStyleSel[tid]={id:sid,name};
+  // "Custom / Other" lets the leader type their own garment title (e.g. Dress)
+  const ci=document.getElementById('bstyle-custom-'+tid);
+  if(ci){ci.style.display=sid==='custom'?'':'none';if(sid==='custom')ci.focus();}
+}
+function toggleFit(tid,fid){
+  const arr=optFits[tid]||(optFits[tid]=[]);
+  const i=arr.indexOf(fid);
+  if(i>=0)arr.splice(i,1);else arr.push(fid);
+  document.getElementById('fit-'+tid+'-'+fid)?.classList.toggle('sel',arr.includes(fid));
+}
 
 /* ── UNIFORM BUILDER HANDLERS ── */
 function toggleUniform(tid,on){
@@ -2757,7 +2800,14 @@ async function createOrder(){
         uniform={places,price:parsePrice(document.getElementById('uniprice-'+tid)?.value||'0')};
       }
     }
-    shirtOptions.push({id:'so-'+Date.now()+Math.random().toString(36).slice(2,5),styleId:sel?sel.id:'custom',styleName:sel?sel.name:'Custom',desc:document.getElementById('bdesc-'+tid)?.value.trim()||'',basePrice,colors:(optColors[tid]||[]).slice(),decos:decoObjs,images:(optImages[tid]||[]).slice(),uniform});
+    // for a custom garment, use the title the leader typed (fall back to "Custom")
+    const customName=document.getElementById('bstyle-custom-'+tid)?.value.trim()||'';
+    let styleName=sel?sel.name:'Custom';
+    if(sel&&sel.id==='custom')styleName=customName||'Custom';
+    // fits members can choose from; default to Unisex if none selected
+    const fits=(optFits[tid]||[]).slice();
+    if(!fits.length)fits.push('unisex');
+    shirtOptions.push({id:'so-'+Date.now()+Math.random().toString(36).slice(2,5),styleId:sel?sel.id:'custom',styleName,desc:document.getElementById('bdesc-'+tid)?.value.trim()||'',basePrice,colors:(optColors[tid]||[]).slice(),decos:decoObjs,images:(optImages[tid]||[]).slice(),fits,uniform});
   });
   if(!shirtOptions.length){document.getElementById('err-shirt-options').classList.add('show');valid=false;}else document.getElementById('err-shirt-options').classList.remove('show');
   if(!valid)return;
@@ -2888,13 +2938,13 @@ async function exportCSV(id){
   const order=getOrder(id);if(!order)return;
   const rr=await fetchResponsesByOrder(id);
   order.responses=rr.ok?rr.responses:(order.responses||[]);
-  const header='Name,Shirt Style,Color,Decoration,Name on Back,Number on Back,Name on Front,Number on Front,Size,Category,Quantity,Unit Price,Line Total,Item Notes,Order Notes,Date';
+  const header='Name,Garment Style,Fit,Color,Decoration,Name on Back,Number on Back,Name on Front,Number on Front,Size,Category,Quantity,Unit Price,Line Total,Item Notes,Order Notes,Date';
   const rows=[];
   order.responses.forEach(r=>r.items.forEach(i=>{
     const unit=Number(i.unitPrice)||0;
     const u=uniformParts(i);
     rows.push([
-      '"'+r.name.replace(/"/g,'""')+'"',i.shirtLabel||'',i.color||'',i.deco||'',
+      '"'+r.name.replace(/"/g,'""')+'"',i.shirtLabel||'',fitLabel(i.fit)||'',i.color||'',i.deco||'',
       '"'+u.nameBack.replace(/"/g,'""')+'"','"'+u.numBack.replace(/"/g,'""')+'"',
       '"'+u.nameFront.replace(/"/g,'""')+'"','"'+u.numFront.replace(/"/g,'""')+'"',
       i.size,i.cat.charAt(0).toUpperCase()+i.cat.slice(1),i.qty,
@@ -2903,11 +2953,11 @@ async function exportCSV(id){
       new Date(r.date).toLocaleDateString()
     ].join(','));
   }));
-  // grand total row (16 columns; total sits under the Line Total column)
+  // grand total row (17 columns; total sits under the Line Total column)
   const grand=order.responses.reduce((s,r)=>s+r.items.reduce((a,i)=>a+(Number(i.unitPrice)||0)*i.qty,0),0);
   if(grand>0){
-    const totalRow=new Array(16).fill('');
-    totalRow[12]='GRAND TOTAL: '+grand.toFixed(2);
+    const totalRow=new Array(17).fill('');
+    totalRow[13]='GRAND TOTAL: '+grand.toFixed(2);
     rows.push(totalRow.join(','));
   }
   const blob=new Blob([[header,...rows].join('\n')],{type:'text/csv'});
@@ -2932,7 +2982,7 @@ function pricingVisible(){const o=currentOrder();return o?o.showPricing!==false:
 // cart = array of {shirtOptionId,shirtLabel,color,deco,size,cat,qty,notes}
 let cart=[];
 // panel state
-let panelShirtId=null,panelColor=null,panelDeco=null,panelDecoPrice=0,panelSize=null,panelCat=null,panelQty=1;
+let panelShirtId=null,panelColor=null,panelDeco=null,panelDecoPrice=0,panelSize=null,panelCat=null,panelQty=1,panelFit=null;
 let panelUniform=null;       // {places:[...],price} from the option
 let panelUniformVals={};     // {name_back:'JOHNSON', num_back:'12', ...}
 let panelUniformPrice=0;
@@ -2972,7 +3022,7 @@ async function loadOrderForm(id,editCtx){
   if(siteHeader)siteHeader.style.display=currentRole?'':'none';
   setOrderBrand(null); // neutral label until the order (and its org name) loads
   currentOrderId=id;currentOrderData=null;cart=[];orderSubmitting=false;
-  panelShirtId=null;panelColor=null;panelDeco=null;panelSize=null;panelCat=null;panelQty=1;
+  panelShirtId=null;panelColor=null;panelDeco=null;panelSize=null;panelCat=null;panelQty=1;panelFit=null;
   document.getElementById('member-name').value='';
   document.getElementById('member-notes').value='';
   applyEditModeUI(null); // reset to member UI; real edit UI is applied after the form renders
@@ -3068,15 +3118,16 @@ async function loadOrderForm(id,editCtx){
 
 function openAddShirtPanel(){
   // reset panel
-  panelShirtId=null;panelColor=null;panelDeco=null;panelSize=null;panelCat=null;panelQty=1;
+  panelShirtId=null;panelColor=null;panelDeco=null;panelSize=null;panelCat=null;panelQty=1;panelFit=null;
   panelUniform=null;panelUniformVals={};panelUniformPrice=0;
   document.querySelectorAll('.shirt-option-card').forEach(c=>c.classList.remove('selected'));
   document.querySelectorAll('#add-shirt-panel .size-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('panel-color-sec').style.display='none';
+  document.getElementById('panel-fit-sec').style.display='none';
   document.getElementById('panel-deco-sec').style.display='none';
   document.getElementById('panel-uniform-sec').style.display='none';
   document.getElementById('panel-item-notes').value='';
-  ['perr-shirt','perr-color','perr-deco','perr-size','perr-uniform'].forEach(id=>document.getElementById(id)?.classList.remove('show'));
+  ['perr-shirt','perr-color','perr-fit','perr-deco','perr-size','perr-uniform'].forEach(id=>document.getElementById(id)?.classList.remove('show'));
   panelUpdateQty();
   document.getElementById('add-shirt-panel').classList.add('open');
   document.getElementById('add-shirt-btn').style.display='none';
@@ -3090,7 +3141,7 @@ function closeAddShirtPanel(){
 function panelSelectShirt(orderId,optionId){
   const order=currentOrder();if(!order)return;
   const opt=(order.shirtOptions||[]).find(s=>s.id===optionId);if(!opt)return;
-  panelShirtId=optionId;panelColor=null;
+  panelShirtId=optionId;panelColor=null;panelFit=null;
   // Decoration is set by the admin and baked into the option. Auto-apply ALL of its decorations.
   panelDeco=(opt.decos&&opt.decos.length)?opt.decos.map(d=>d.name).join(', '):null;
   panelDecoPrice=(opt.decos||[]).reduce((s,d)=>s+(Number(d.price)||0),0);
@@ -3104,10 +3155,21 @@ function panelSelectShirt(orderId,optionId){
     const singleColor=opt.colors.length===1;
     // With only one color there's nothing to choose — auto-select it so it's still recorded.
     if(singleColor)panelColor=opt.colors[0].name;
-    const colorLabel=colorSec.querySelector('label');if(colorLabel)colorLabel.textContent=singleColor?'Shirt color':'Shirt color *';
+    const colorLabel=colorSec.querySelector('label');if(colorLabel)colorLabel.textContent=singleColor?'Garment color':'Garment color *';
     document.getElementById('panel-color-swatches').innerHTML=opt.colors.map(c=>`
       <span class="color-swatch color-swatch-lg${singleColor&&c.name===panelColor?' sel-color':''}" style="background:${c.hex};" title="${esc(c.name)}" onclick="panelSelColor('${esc(c.name)}',this)"></span>`).join('');
   }else colorSec.style.display='none';
+  // Fit picker: only shown when the leader offered more than one fit; a single
+  // fit is auto-selected so it's still recorded.
+  const fitSec=document.getElementById('panel-fit-sec');
+  const fits=Array.isArray(opt.fits)&&opt.fits.length?opt.fits:['unisex'];
+  if(fits.length>1){
+    fitSec.style.display='block';
+    document.getElementById('panel-fit-btns').innerHTML=fits.map(f=>`<button type="button" class="style-btn" data-fit="${f}" onclick="panelSelFit('${f}',this)">${esc(fitLabel(f)||f)}</button>`).join('');
+  }else{
+    fitSec.style.display='none';
+    panelFit=fits[0];
+  }
   // Read-only decoration display (no picker) — shows what's included with this shirt
   if(opt.decos&&opt.decos.length){
     decoSec.style.display='block';
@@ -3184,6 +3246,7 @@ function panelRenderJersey(){
   </svg>`;
 }
 function panelSelColor(name,el){panelColor=name;document.querySelectorAll('#panel-color-swatches .color-swatch').forEach(s=>s.classList.remove('sel-color'));el.classList.add('sel-color');document.getElementById('perr-color')?.classList.remove('show');}
+function panelSelFit(fit,el){panelFit=fit;document.querySelectorAll('#panel-fit-btns .style-btn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');document.getElementById('perr-fit')?.classList.remove('show');}
 function panelSelectSize(btn){document.querySelectorAll('#add-shirt-panel .size-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');panelSize=btn.dataset.size;panelCat=btn.dataset.cat;document.getElementById('perr-size')?.classList.remove('show');}
 function panelChangeQty(d){panelQty=Math.max(1,Math.min(99,panelQty+d));panelUpdateQty();panelUpdatePrice();}
 function panelUpdateQty(){document.getElementById('panel-qty-num').textContent=panelQty;document.getElementById('panel-qty-minus').disabled=panelQty<=1;}
@@ -3220,6 +3283,8 @@ function addToCart(){
     const opt=(order.shirtOptions||[]).find(s=>s.id===panelShirtId);
     if(!panelShirtId){document.getElementById('perr-shirt').classList.add('show');valid=false;}else document.getElementById('perr-shirt').classList.remove('show');
     if(opt&&opt.colors&&opt.colors.length>1&&!panelColor){document.getElementById('perr-color').classList.add('show');valid=false;}else document.getElementById('perr-color')?.classList.remove('show');
+    const optFitsN=(opt&&Array.isArray(opt.fits)&&opt.fits.length)?opt.fits:['unisex'];
+    if(optFitsN.length>1&&!panelFit){document.getElementById('perr-fit')?.classList.add('show');valid=false;}else document.getElementById('perr-fit')?.classList.remove('show');
     // required uniform personalization fields must be filled
     if(panelUniform){
       const missing=(panelUniform.places||[]).some(pl=>pl.required&&!(panelUniformVals[pl.id]&&String(panelUniformVals[pl.id]).trim()));
@@ -3239,7 +3304,7 @@ function addToCart(){
       .map(pl=>pl.label.replace(/\s*\u2014\s*/,' ')+': '+(pl.kind==='num'?'#':'')+panelUniformVals[pl.id])
       .join(' \u00b7 ');
   }
-  cart.push({shirtOptionId:panelShirtId,shirtLabel:opt?.styleName||null,color:panelColor,deco:panelDeco,size:panelSize,cat:panelCat,qty:panelQty,notes:document.getElementById('panel-item-notes').value.trim(),personalization,uniformVals,unitPrice});
+  cart.push({shirtOptionId:panelShirtId,shirtLabel:opt?.styleName||null,color:panelColor,fit:panelFit||null,deco:panelDeco,size:panelSize,cat:panelCat,qty:panelQty,notes:document.getElementById('panel-item-notes').value.trim(),personalization,uniformVals,unitPrice});
   document.getElementById('err-cart')?.classList.remove('show');
   renderCart();
   closeAddShirtPanel();
@@ -3254,13 +3319,13 @@ function renderCart(){
   const totalShirts=cart.reduce((s,i)=>s+i.qty,0);
   const grandTotal=cart.reduce((s,i)=>s+(Number(i.unitPrice)||0)*i.qty,0);
   const anyPriceT=pricingVisible()&&cart.some(i=>i.unitPrice>0);
-  badge.textContent=totalShirts>0?totalShirts+' shirt'+(totalShirts!==1?'s':'') +' in your order':'';
+  badge.textContent=totalShirts>0?totalShirts+' garment'+(totalShirts!==1?'s':'') +' in your order':'';
   totalNum.innerHTML=anyPriceT?(totalShirts+' &middot; <span style="color:#fff;">'+fmtPrice(grandTotal)+'</span>'):totalShirts;
   totalRow.style.display=totalShirts>0?'flex':'none';
-  if(!cart.length){list.innerHTML='<div style="padding:12px 0;color:var(--muted);font-size:13px;font-style:italic;">No shirts added yet. Click "Add a shirt" below.</div>';return;}
+  if(!cart.length){list.innerHTML='<div style="padding:12px 0;color:var(--muted);font-size:13px;font-style:italic;">No garments added yet. Click "Add a garment" below.</div>';return;}
   const anyPrice=pricingVisible()&&cart.some(i=>i.unitPrice>0);
   list.innerHTML=cart.map((item,idx)=>{
-    const detail=[item.color,item.deco,item.size+(item.cat!=='adult'?' ('+item.cat+')':'')].filter(Boolean).join(' &middot; ');
+    const detail=[item.color,item.fit?fitLabel(item.fit):'',item.deco,item.size+(item.cat!=='adult'?' ('+item.cat+')':'')].filter(Boolean).join(' &middot; ');
     const lineTotal=(Number(item.unitPrice)||0)*item.qty;
     return `<div class="cart-item">
       <div class="cart-item-icon">&#128085;</div>
@@ -3337,7 +3402,7 @@ async function submitOrder(){
       if(r){r.name=name;r.items=cart.slice();r.notes=notes;r.orderTotal=grandTotal;}
       saveOrders(orders);
     }
-    addLog(name+'’s order edited by '+(currentRole==='admin'?'Shop Admin':'Group Leader')+' ('+totalShirts+' shirt'+(totalShirts!==1?'s':'')+'): '+(currentOrderData?currentOrderData.name:currentOrderId),'new');
+    addLog(name+'’s order edited by '+(currentRole==='admin'?'Shop Admin':'Group Leader')+' ('+totalShirts+' garment'+(totalShirts!==1?'s':'')+'): '+(currentOrderData?currentOrderData.name:currentOrderId),'new');
     if(btn){btn.disabled=false;btn.style.opacity='';btn.style.cursor='';btn.innerHTML=btnLabel;}
     const backId=editManagerReturnOrderId||currentOrderId;
     showToast('\u2713 Order updated for '+name);
@@ -3354,7 +3419,7 @@ async function submitOrder(){
         saveOrders(orders);
       }
     }
-    addLog(name+'’s order added by '+(currentRole==='admin'?'Shop Admin':'Group Leader')+' ('+totalShirts+' shirt'+(totalShirts!==1?'s':'')+'): '+(currentOrderData?currentOrderData.name:currentOrderId),'new');
+    addLog(name+'’s order added by '+(currentRole==='admin'?'Shop Admin':'Group Leader')+' ('+totalShirts+' garment'+(totalShirts!==1?'s':'')+'): '+(currentOrderData?currentOrderData.name:currentOrderId),'new');
     if(btn){btn.disabled=false;btn.style.opacity='';btn.style.cursor='';btn.innerHTML=btnLabel;}
     const backId=editManagerReturnOrderId||currentOrderId;
     showToast('\u2713 Order added for '+name);
@@ -3362,7 +3427,7 @@ async function submitOrder(){
     return;
   }
 
-  addLog(name+' submitted order ('+totalShirts+' shirt'+(totalShirts!==1?'s':'')+'): '+(currentOrderData?currentOrderData.name:currentOrderId),'new');
+  addLog(name+' submitted order ('+totalShirts+' garment'+(totalShirts!==1?'s':'')+'): '+(currentOrderData?currentOrderData.name:currentOrderId),'new');
 
   document.getElementById('order-form-content').classList.add('hide');
   const summaryHTML=`
@@ -3372,10 +3437,10 @@ async function submitOrder(){
         <strong>${esc(name)}</strong><br>
         ${cart.map(item=>{
           const lt=(Number(item.unitPrice)||0)*item.qty;
-          const d=[item.qty+'x '+esc(item.shirtLabel||'shirt'),esc(item.color||''),esc(item.size)+(item.cat!=='adult'?' ('+item.cat+')':'')].filter(Boolean).join(' &middot; ');
+          const d=[item.qty+'x '+esc(item.shirtLabel||'garment'),esc(item.color||''),item.fit?esc(fitLabel(item.fit)):'',esc(item.size)+(item.cat!=='adult'?' ('+item.cat+')':'')].filter(Boolean).join(' &middot; ');
           return `<span style="font-size:12px;display:block;">${d}${anySuccessPrice?' &mdash; <strong>'+fmtPrice(lt)+'</strong>':''}${item.personalization?'<br><span style=\"color:var(--muted);\">&#127944; '+esc(item.personalization)+'</span>':''}${item.notes?'<br><span style=\"color:var(--muted);\">&#128203; '+esc(item.notes)+'</span>':''}</span>`;
         }).join('')}
-        <span style="font-size:12px;color:var(--muted);display:block;margin-top:4px;">${totalShirts} shirt${totalShirts!==1?'s':''}${anySuccessPrice?' &middot; <strong style=\"color:var(--success);\">Total '+fmtPrice(grandTotal)+'</strong>':''}</span>
+        <span style="font-size:12px;color:var(--muted);display:block;margin-top:4px;">${totalShirts} garment${totalShirts!==1?'s':''}${anySuccessPrice?' &middot; <strong style=\"color:var(--success);\">Total '+fmtPrice(grandTotal)+'</strong>':''}</span>
       </div>
     </div>`;
   document.getElementById('success-cart-summary').innerHTML=summaryHTML;
