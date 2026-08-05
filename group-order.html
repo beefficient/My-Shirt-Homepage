@@ -1853,18 +1853,18 @@ async function doAdminLogin(){
       document.getElementById('login-err').classList.add('show');
       return;
     }
-    enterAsAdmin();
+    await enterAsAdmin();
     return;
   }
   // Local-only fallback (no Supabase connected): keep the original local password.
   if(pass===getPass()){
-    enterAsAdmin();
+    await enterAsAdmin();
     return;
   }
   document.getElementById('login-err').classList.add('show');
 }
 
-function enterAsAdmin(){
+async function enterAsAdmin(){
   currentRole='admin';
   currentLeaderId=null;
   currentLeaderName=null;
@@ -1878,6 +1878,9 @@ function enterAsAdmin(){
   document.getElementById('nav-orders').style.display='';
   document.getElementById('nav-log').style.display='';
   document.getElementById('nav-settings').style.display='';
+  // The admin must fetch all orders here. Unlike a leader's dashboard, this
+  // browser may not have the leader-created order in its local cache yet.
+  await refreshOrdersFromSupabase();
   showAdminPage('dashboard',{skipHistory:true});
   addLog('Admin logged in');
 }
