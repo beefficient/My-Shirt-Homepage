@@ -1354,9 +1354,10 @@ function dbOrderToApp(row){
     // Stored inside the existing shirt_options JSON so this feature works with
     // the current Supabase schema without requiring a database migration.
     availableSizes:Array.isArray(shirtOptions[0]?._availableSizes)?shirtOptions[0]._availableSizes:[],
-    // Fall back to the option JSON for Supabase projects that do not yet have
-    // the show_pricing column (missing values must not default to "shown").
-    showPricing:typeof row.show_pricing==='boolean'?row.show_pricing:shirtOptions[0]?._showPricing!==false,
+    // Prefer the copy in option JSON whenever present. This protects an order
+    // when an older Supabase schema silently keeps show_pricing at its default
+    // true value while the compatibility save records the leader's false value.
+    showPricing:typeof (shirtOptions[0]?._showPricing)==='boolean'?shirtOptions[0]._showPricing:row.show_pricing!==false,
     responses:[],
     created:row.created_at?new Date(row.created_at).getTime():Date.now(),
     ownerName:row.owner_id&&row.owner_id===currentLeaderId?(currentLeaderName||'Group Leader'):'Shop Admin',ownerId:row.owner_id||null,
