@@ -1147,6 +1147,12 @@ footer a{color:var(--yellow);text-decoration:none}
 
 <script>
 /* ════════════ CONSTANTS ════════════ */
+// The address customers use to open their order. Leaders can create orders on
+// the My Shirt site, but the link handed to their group should point at the
+// Beefficient-hosted portal so customers never see "My Shirt". Set this to the
+// live Beefficient URL of group-order.html. Leave it '' to just use whatever
+// site the leader is currently on.
+const CUSTOMER_PORTAL_URL='https://www.letsbeefficient.com/group-order.html';
 const STORE_KEY='myshirt_v5';
 const PASS_KEY='myshirt_pass';
 const LOG_KEY='myshirt_log';
@@ -2019,7 +2025,8 @@ function renderOrderCard(order,compact){
   const cardRevenue=order.responses.reduce((s,r)=>s+r.items.reduce((a,i)=>a+(Number(i.unitPrice)||0)*i.qty,0),0);
   const dl=order.deadline?new Date(order.deadline+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
   const isOpen=order.status==='open';
-  const shareUrl=location.href.split('?')[0]+'?order='+order.id;
+  const portalBase=CUSTOMER_PORTAL_URL||location.href.split('?')[0];
+  const shareUrl=portalBase+'?order='+order.id;
 
   // size tally
   const cats={baby:[],toddler:[],youth:[],adult:[]};
