@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<style>
+  :root { --primary:#173b57; --accent:#c74343; --bg:#f5f7fa; --card:#ffffff; --text:#1f2933; --border:#d8dee6; --ok:#2e7d32; }
+  * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,Segoe UI,Roboto,sans-serif; }
+  body { background:var(--bg); color:var(--text); padding:12px 12px 40px; max-width:520px; margin:0 auto; }
+  h1 { font-size:20px; color:var(--primary); margin:6px 0 12px; text-align:center; }
+  .types { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .types button { padding:14px 6px; font-size:15px; border:1px solid var(--border); border-radius:10px; background:var(--card); cursor:pointer; }
+  .types button.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; }
+  label { display:block; font-size:13px; font-weight:600; margin:10px 0 4px; }
+  input, select, textarea { width:100%; padding:12px; font-size:16px; border:1px solid var(--border); border-radius:8px; background:#fff; }
+  textarea { min-height:56px; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .balance { margin-top:10px; padding:12px; border-radius:8px; background:#eef3f8; color:var(--primary); font-size:15px; font-weight:700; }
+  #save { width:100%; margin-top:16px; padding:16px; font-size:17px; font-weight:700; color:#fff; background:var(--accent); border:0; border-radius:10px; cursor:pointer; }
+  #save:disabled { opacity:.5; }
+  #msg { margin-top:12px; padding:12px; border-radius:8px; font-size:14px; display:none; }
+  #msg.ok { display:block; background:#e7f4e8; color:var(--ok); }
+  #msg.err { display:block; background:#fdecea; color:var(--accent); }
+  .due-shell { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
+  .due-shell h2 { color:var(--primary); font-size:16px; margin-bottom:6px; }
+  .due-shell p { font-size:12px; color:#667; margin-bottom:10px; }
+  .due-actions { display:flex; gap:8px; margin-top:10px; }
+  .due-actions button, .mini-btn {
+    padding:10px 12px; font-size:14px; border-radius:8px; border:1px solid var(--border);
+    background:#fff; cursor:pointer;
+  }
+  .due-actions .primary, .mini-btn.primary { background:var(--primary); border-color:var(--primary); color:#fff; }
+  .mini-btn.danger { color:var(--accent); border-color:#efc1c1; }
+  .due-item { border:1px solid var(--border); border-radius:8px; padding:10px; margin-top:8px; font-size:14px; background:#fff; }
+  .due-item.editing { border-color:var(--primary); background:#eef3f8; }
+  .due-item b { color:var(--primary); }
+  .due-meta { margin-top:4px; color:#556; line-height:1.4; }
+  .due-note { margin-top:6px; font-size:12px; color:#667; }
+  .due-paybar { display:grid; grid-template-columns:1fr auto auto auto; gap:8px; margin-top:10px; align-items:center; }
+  .due-paybar input { padding:10px; font-size:14px; }
+  .hidden { display:none !important; }
+  .hint { font-size:12px; color:#667; margin-top:3px; }
+  @media (max-width:460px) {
+    .due-paybar { grid-template-columns:1fr 1fr; }
+    .due-paybar .mini-btn { width:100%; }
+    .due-actions { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+<h1>Print Shop Log</h1>
+
+<div class="types" id="types">
+  <button data-t="invoice_payment">Invoice Payment</button>
+  <button data-t="bill">Bills</button>
+  <button data-t="debt">Debt Payment</button>
+  <button data-t="cost">Vendor / Garment Cost</button>
+  <button data-t="memo">Employee Memo</button>
+  <button data-t="pay_commission">Pay Sherrie - Commission</button>
+  <button data-t="pay_card">CC Reimbursement (Sherrie)</button>
+</div>
+
+<div class="card">
+  <label>Date</label>
+  <input type="date" id="date">
+
+  <div id="f_invoice_payment" class="hidden">
+    <label>Invoice / Job #</label><input id="invoice_ip" inputmode="numeric" placeholder="e.g. 1042">
+    <label>Customer name</label><input id="ipCustomer" placeholder="Customer / company">
+    <label>Invoice total ($, incl. tax)</label><input id="ipTotal" inputmode="decimal" placeholder="0.00">
+    <label>How was it paid?</label>
+    <select id="method"><option value="">Not paid yet</option><option>Zelle</option><option>Check</option><option>Credit Card</option></select>
+    <label>Sales tax collected ($, optional)</label>
+    <input id="taxCollected" inputmode="decimal" placeholder="0.00">
+    <div class="hint">Writes Customer, Invoice Amount, tax and payment straight to the Jobs tab. Creates the job if it is not there yet.</div>
+  </div>
+
+  <div id="f_bill" class="hidden">
+    <label>Which bill?</label><select id="bill"></select>
+    <div class="hint">Use the amount field and Save Entry to record a regular bill payment.</div>
+
+    <div class="due-shell">
+      <h2>Bills Due</h2>
+      <p>Add, edit, pay, or delete tracked due bills here without switching tabs.</p>
+
+      <label>Name (who is owed?)</label><input id="dueName" placeholder="e.g. PGE, Rent, Insurance">
+      <div class="row2">
+        <div><label>Bill or Debt?</label><select id="dueKind"><option>Bill</option><option>Debt</option></select></div>
+        <div><label>Due date</label><input type="date" id="dueDate"></div>
+      </div>
+      <label>Invoice / Job # (optional)</label><input id="invoice_d" inputmode="numeric">
+      <label>Amount due ($)</label><input id="dueAmount" inputmode="decimal" placeholder="0.00">
+      <label>Note (optional)</label><textarea id="dueNote"></textarea>
+      <div class="hint" id="dueEditorState">Add a due bill here, or edit an existing one from the list below.</div>
+      <div class="due-actions">
+        <button type="button" class="primary" id="dueSaveBtn" onclick="saveDueDraft()">Add Due Bill</button>
+        <button type="button" id="dueCancelBtn" class="hidden" onclick="resetDueForm()">Cancel Edit</button>
+      </div>
+
+      <div id="dueList"></div>
+    </div>
+  </div>
+
+  <div id="f_debt" class="hidden">
+    <label>Which debt?</label><select id="debt"></select>
+    <div class="hint">Balances come straight from the Debt Tracker tab and refresh every time you open the app or save an entry.</div>
+  </div>
+
+  <div id="f_cost" class="hidden">
+    <div class="row2">
+      <div><label>Invoice / Job #</label><input id="invoice_c" inputmode="numeric" placeholder="e.g. 1042"></div>
+      <div><label>Cost Type</label>
+        <select id="costType">
+          <option>Product / Material</option><option>Vendor</option><option>Shipping</option><option>Other</option>
+        </select></div>
+    </div>
+    <label>Customer / Project</label><input id="project" placeholder="Type the customer name" autocomplete="off">
+    <label>Vendor / Supplier</label>
+    <select id="vendorSel" onchange="vendorToggle()">
+      <option>Nakoshi</option>
+      <option>San Mar</option>
+      <option>Mark Willard</option>
+      <option>S2S Digitizing</option>
+      <option>Signs365</option>
+      <option value="__other">Other (type below)</option>
+    </select>
+    <input id="vendorOther" class="hidden" placeholder="Type the vendor name" style="margin-top:8px">
+    <label>What is it?</label>
+    <select id="workSel" onchange="workToggle()">
+      <option>Screen Printing</option>
+      <option>Embroidery</option>
+      <option>Heat Transfers</option>
+      <option>Sign Printing</option>
+      <option value="__other">Other (type below)</option>
+    </select>
+    <input id="workOther" class="hidden" placeholder="Type what it is" style="margin-top:8px">
+    <label>Paid or still due?</label>
+    <select id="costPaid"><option value="no">Not paid yet (amount due)</option><option value="yes">Paid</option></select>
+    <div class="hint">The cost counts toward the job either way. Paid only marks the payment status on Costs &amp; Vendors.</div>
+  </div>
+
+  <div id="f_memo" class="hidden">
+    <div class="balance" id="memoBalance">Balance owed to Memo: loading...</div>
+    <label>Add to balance (worked today, not paid)</label>
+    <input id="balanceDue" inputmode="decimal" placeholder="0.00">
+    <div class="hint">A payment pays down the oldest balance first. This number and the Labor tab always match.</div>
+  </div>
+
+  <div id="f_pay_commission" class="hidden">
+    <div class="balance" id="commBalance">Commission owed to Sherrie: loading...</div>
+  </div>
+
+  <div id="f_pay_card" class="hidden">
+    <div class="balance" id="cardBalance">Card balance owed to Sherrie: loading...</div>
+  </div>
+
+  <div id="f_amount">
+    <label id="amountLabel">Amount paid ($)</label>
+    <input id="amount" inputmode="decimal" placeholder="0.00">
+  </div>
+
+  <label>Note (optional)</label><textarea id="note"></textarea>
+
+  <button id="save" onclick="save()">Save Entry</button>
+  <div id="msg"></div>
+</div>
+
+<script>
+var TYPE = 'bill';
+var DATA = { bills:[], debts:[], projects:[], dues:[], commissionOwed:0, cardOwed:0, memoOwed:0 };
+var PANELS = ['invoice_payment','bill','debt','cost','memo','pay_commission','pay_card'];
+var EDITING_DUE_ROW = 0;
+
+document.getElementById('date').value = new Date().toISOString().slice(0,10);
+document.querySelectorAll('#types button').forEach(function(b){
+  b.onclick = function(){ setType(b.dataset.t); };
+});
+setType('bill');
+resetDueForm();
+refreshData();
+
+function refreshData(){
+  google.script.run.withSuccessHandler(function(d){
+    DATA = d || DATA;
+    fill('bill', DATA.bills || []);
+    var ds = document.getElementById('debt');
+    ds.innerHTML = '';
+    (DATA.debts || []).forEach(function(x){
+      var o = document.createElement('option');
+      o.value = x.key;
+      o.textContent = x.label + '  ($' + Number(x.balance || 0).toFixed(2) + ' left)';
+      ds.appendChild(o);
+    });
+    document.getElementById('commBalance').textContent = 'Commission owed to Sherrie: $' + Number(DATA.commissionOwed || 0).toFixed(2);
+    document.getElementById('cardBalance').textContent = 'Card balance owed to Sherrie: $' + Number(DATA.cardOwed || 0).toFixed(2);
+    document.getElementById('memoBalance').textContent = 'Balance owed to Memo: $' + Number(DATA.memoOwed || 0).toFixed(2);
+    if (EDITING_DUE_ROW && !getDueByRow(EDITING_DUE_ROW)) resetDueForm();
+    renderDues();
+  }).getAppData();
+}
+
+function fill(id, arr) {
+  var s = document.getElementById(id);
+  s.innerHTML = '';
+  arr.forEach(function(v){
+    var o = document.createElement('option');
+    o.textContent = v;
+    s.appendChild(o);
+  });
+}
+
+function setType(t){
+  TYPE = t;
+  document.querySelectorAll('#types button').forEach(function(b){
+    b.classList.toggle('active', b.dataset.t === t);
+  });
+  PANELS.forEach(function(k){
+    var el = document.getElementById('f_' + k);
+    if (el) el.classList.toggle('hidden', k !== t);
+  });
+  var lbl = document.getElementById('amountLabel');
+  lbl.textContent = t === 'memo' ? 'Paid today ($)' :
+    t === 'cost' ? 'Amount ($)' :
+    t === 'invoice_payment' ? 'Amount received ($, optional)' :
+    (t === 'pay_commission' || t === 'pay_card') ? 'Paid to Sherrie ($)' : 'Amount paid ($)';
+  if (t === 'bill') renderDues();
+}
+
+function vendorToggle(){
+  var other = document.getElementById('vendorSel').value === '__other';
+  document.getElementById('vendorOther').classList.toggle('hidden', !other);
+}
+
+function workToggle(){
+  var other = document.getElementById('workSel').value === '__other';
+  document.getElementById('workOther').classList.toggle('hidden', !other);
+}
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getDueByRow(row) {
+  row = Number(row) || 0;
+  for (var i = 0; i < (DATA.dues || []).length; i++) {
+    if (Number(DATA.dues[i].row) === row) return DATA.dues[i];
+  }
+  return null;
+}
+
+function renderDues(){
+  var box = document.getElementById('dueList');
+  box.innerHTML = '';
+  if (!(DATA.dues || []).length) {
+    box.innerHTML = '<div class="hint" style="margin-top:10px;">Nothing is due right now.</div>';
+    return;
+  }
+  DATA.dues.forEach(function(x){
+    var d = document.createElement('div');
+    d.className = 'due-item' + (EDITING_DUE_ROW === Number(x.row) ? ' editing' : '');
+    d.innerHTML =
+      '<div><b>' + esc(x.name) + '</b> (' + esc(x.kind) + (x.invoice ? ' - Job #' + esc(x.invoice) : '') + ')</div>' +
+      '<div class="due-meta">Amount due: $' + Number(x.amountDue || 0).toFixed(2) +
+        ' | Paid: $' + Number(x.paidSoFar || 0).toFixed(2) +
+        ' | Remaining: $' + Number(x.remaining || 0).toFixed(2) +
+        (x.dueDate ? ' | due ' + esc(x.dueDate) : '') + '</div>' +
+      (x.note ? '<div class="due-note">' + esc(x.note) + '</div>' : '') +
+      '<div class="due-paybar">' +
+        '<input id="duePay_' + Number(x.row) + '" inputmode="decimal" value="' + Number(x.remaining || 0).toFixed(2) + '" aria-label="Payment amount for ' + esc(x.name) + '">' +
+        '<button type="button" class="mini-btn primary" onclick="payDueRow(' + Number(x.row) + ')">Pay</button>' +
+        '<button type="button" class="mini-btn" onclick="beginDueEdit(' + Number(x.row) + ')">Edit</button>' +
+        '<button type="button" class="mini-btn danger" onclick="deleteDueRow(' + Number(x.row) + ')">Delete</button>' +
+      '</div>';
+    box.appendChild(d);
+  });
+}
+
+function resetDueForm(){
+  EDITING_DUE_ROW = 0;
+  document.getElementById('dueName').value = '';
+  document.getElementById('dueKind').value = 'Bill';
+  document.getElementById('dueDate').value = '';
+  document.getElementById('invoice_d').value = '';
+  document.getElementById('dueAmount').value = '';
+  document.getElementById('dueNote').value = '';
+  document.getElementById('dueEditorState').textContent = 'Add a due bill here, or edit an existing one from the list below.';
+  document.getElementById('dueSaveBtn').textContent = 'Add Due Bill';
+  document.getElementById('dueCancelBtn').classList.add('hidden');
+  renderDues();
+}
+
+function beginDueEdit(row){
+  setType('bill');
+  var due = getDueByRow(row);
+  if (!due) return err('That due bill is no longer available. Refresh and try again.');
+  EDITING_DUE_ROW = Number(row);
+  document.getElementById('dueName').value = due.name || '';
+  document.getElementById('dueKind').value = due.kind || 'Bill';
+  document.getElementById('dueDate').value = due.dueDate || '';
+  document.getElementById('invoice_d').value = due.invoice || '';
+  document.getElementById('dueAmount').value = Number(due.amountDue || 0).toFixed(2);
+  document.getElementById('dueNote').value = due.note || '';
+  document.getElementById('dueEditorState').textContent = 'Editing ' + due.name + '. Paid so far stays at $' + Number(due.paidSoFar || 0).toFixed(2) + '.';
+  document.getElementById('dueSaveBtn').textContent = 'Save Changes';
+  document.getElementById('dueCancelBtn').classList.remove('hidden');
+  renderDues();
+  document.getElementById('dueName').focus();
+}
+
+function saveDueDraft(){
+  var amount = parseFloat(val('dueAmount'));
+  if (isNaN(amount) || amount <= 0) return err('Please enter an amount due greater than 0.');
+  var payload = {
+    row: EDITING_DUE_ROW || '',
+    name: val('dueName'),
+    kind: val('dueKind') || 'Bill',
+    dueDate: val('dueDate'),
+    invoice: val('invoice_d'),
+    amount: amount,
+    note: val('dueNote')
+  };
+  if (!payload.name) return err('Please enter who is owed.');
+  if (EDITING_DUE_ROW) {
+    var due = getDueByRow(EDITING_DUE_ROW);
+    if (!due) return err('That due bill is no longer available. Refresh and try again.');
+    payload.expectedName = due.name;
+    payload.expectedKind = due.kind;
+    payload.expectedRemaining = due.remaining;
+  }
+  var btn = document.getElementById('dueSaveBtn');
+  btn.disabled = true;
+  btn.textContent = EDITING_DUE_ROW ? 'Saving...' : 'Adding...';
+  google.script.run
+    .withSuccessHandler(function(res){
+      btn.disabled = false;
+      showMsg('ok', 'Saved! ' + (res.summary || ''));
+      resetDueForm();
+      refreshData();
+    })
+    .withFailureHandler(function(er){
+      btn.disabled = false;
+      btn.textContent = EDITING_DUE_ROW ? 'Save Changes' : 'Add Due Bill';
+      err(er.message || 'Could not save that due bill.');
+    })
+    .saveDueDraft(payload);
+}
+
+function payDueRow(row){
+  var due = getDueByRow(row);
+  if (!due) return err('That due bill is no longer available. Refresh and try again.');
+  var input = document.getElementById('duePay_' + Number(row));
+  var amount = parseFloat(input ? input.value : '');
+  if (isNaN(amount) || amount <= 0) return err('Enter a payment amount greater than 0.');
+  var entry = { type:'due_pay', date:val('date'), amount:amount, note:val('note'), row:due.row, name:due.name };
+  google.script.run
+    .withSuccessHandler(function(res){
+      showMsg('ok', 'Saved! ' + (res.summary || ''));
+      document.getElementById('note').value = '';
+      refreshData();
+    })
+    .withFailureHandler(function(er){
+      err(er.message || 'Could not record that payment.');
+    })
+    .saveEntry(entry);
+}
+
+function deleteDueRow(row){
+  var due = getDueByRow(row);
+  if (!due) return err('That due bill is no longer available. Refresh and try again.');
+  if (!confirm('Delete ' + due.name + '? This only removes the tracked due bill entry.')) return;
+  google.script.run
+    .withSuccessHandler(function(){
+      if (EDITING_DUE_ROW === Number(row)) resetDueForm();
+      showMsg('ok', 'Deleted ' + due.name + '.');
+      refreshData();
+    })
+    .withFailureHandler(function(er){
+      err(er.message || 'Could not delete that due bill.');
+    })
+    .deleteDue(due.row, due.name, due.kind, due.remaining);
+}
+
+function val(id){
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function showMsg(kind, text) {
+  var m = document.getElementById('msg');
+  m.className = kind;
+  m.textContent = text;
+}
+
+function save(){
+  var btn = document.getElementById('save');
+  var amount = parseFloat(val('amount'));
+  if (isNaN(amount)) amount = (TYPE === 'memo' || TYPE === 'invoice_payment') ? 0 : NaN;
+  if (isNaN(amount) || amount < 0) return err('Please enter the amount.');
+
+  var e = { type:TYPE, date:val('date'), amount:amount, note:val('note') };
+  if (TYPE === 'invoice_payment') {
+    e.invoice = val('invoice_ip');
+    e.method = val('method');
+    e.tax = val('taxCollected');
+    e.customer = val('ipCustomer');
+    e.invoiceTotal = val('ipTotal');
+    if (!e.invoice) return err('Please enter the invoice number.');
+  }
+  if (TYPE === 'memo') {
+    e.balanceDue = parseFloat(val('balanceDue')) || 0;
+    if (amount <= 0 && e.balanceDue <= 0) return err('Enter what was paid today, or an amount added to the balance.');
+  }
+  if (TYPE === 'bill') e.bill = val('bill');
+  if (TYPE === 'debt') {
+    e.debtKey = val('debt');
+    if (!e.debtKey) return err('The debt list has not loaded. Close and reopen the app.');
+  }
+  if (TYPE === 'cost') {
+    e.invoice = val('invoice_c');
+    e.project = val('project');
+    var vs = val('vendorSel');
+    e.vendor = vs === '__other' ? val('vendorOther') : vs;
+    var ws = val('workSel');
+    e.work = ws === '__other' ? val('workOther') : ws;
+    e.costType = val('costType');
+    e.paid = val('costPaid') === 'yes';
+    if (!e.vendor) return err('Please pick or type the vendor.');
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  google.script.run
+    .withSuccessHandler(function(res){
+      btn.disabled = false;
+      btn.textContent = 'Save Entry';
+      if (res.alreadyRecorded) {
+        showMsg('err', 'Already recorded: ' + (res.summary || 'This invoice payment was already entered.'));
+      } else {
+        showMsg('ok', 'Saved! ' + (res.summary || '') +
+          (res.jobCreated ? ' (a new Job was created)' : '') +
+          (res.newBalance !== null && res.newBalance !== undefined ? ' New balance: $' + Number(res.newBalance).toFixed(2) : ''));
+      }
+      document.getElementById('amount').value = '';
+      document.getElementById('note').value = '';
+      var tc = document.getElementById('taxCollected');
+      if (tc) tc.value = '';
+      ['ipCustomer','ipTotal'].forEach(function(id){ var el = document.getElementById(id); if (el) el.value = ''; });
+      refreshData();
+    })
+    .withFailureHandler(function(er){
+      btn.disabled = false;
+      btn.textContent = 'Save Entry';
+      err(er.message || 'Something went wrong. The entry was NOT saved.');
+    })
+    .saveEntry(e);
+}
+
+function err(t){
+  showMsg('err', t);
+  return false;
+}
+</script>
+</body>
+</html>
